@@ -1,6 +1,6 @@
 local v1 = {}
 local UserInputService = game:GetService("UserInputService")
-local MainUI = script:FindFirstAncestorOfClass("ScreenGui")
+local MainUI = script:FindFirstAncestor("ZolinOS") and script:FindFirstAncestorOfClass("ScreenGui");
 local ReplicatedWindow = MainUI:WaitForChild("ReplicatedWindow", 5)
 local ReplicatedWindowSys = MainUI:WaitForChild("ReplicatedWindow_Sys", 5);
 local bgPage = MainUI.__ScreenFrame:FindFirstChild("BackgroundPage")
