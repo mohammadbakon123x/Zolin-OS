@@ -2,7 +2,7 @@ local v2 = {}
 local TweenService = game:GetService("TweenService")
 
 -- References
-local MainUI = script:FindFirstAncestorOfClass("ScreenGui")
+local MainUI = script:FindFirstAncestor("ZolinOS") and script:FindFirstAncestorOfClass("ScreenGui");
 local DataFolder = MainUI and MainUI:FindFirstChild("__Zolin") and MainUI.__Zolin:FindFirstChild("Data")
 
 -- Get transition speed multiplier (default 1 if not found)
