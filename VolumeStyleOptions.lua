@@ -10,7 +10,7 @@ local UserInputService = game:GetService("UserInputService")
 -- ============================================
 -- REFERENCES
 -- ============================================
-local MainUI = script:FindFirstAncestorOfClass("ScreenGui")
+local MainUI = script:FindFirstAncestor("ZolinOS") and script:FindFirstAncestorOfClass("ScreenGui");
 local __ScreenFrame = MainUI and MainUI:WaitForChild("__ScreenFrame")
 local VolumeFrame = __ScreenFrame and __ScreenFrame:WaitForChild("VolumeFrame")
 local VolumeStyleOptionsFrame = __ScreenFrame and __ScreenFrame:WaitForChild("VolumeStyleOptionsFrame")
