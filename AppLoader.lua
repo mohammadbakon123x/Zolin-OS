@@ -1,7 +1,7 @@
 -- AppLoader.lua
 local AppLoader = {}
 
-local MainUI = script:FindFirstAncestorOfClass("ScreenGui")
+local MainUI = script:FindFirstAncestor("ZolinOS") and script:FindFirstAncestorOfClass("ScreenGui");
 local AppDataFolder = MainUI:FindFirstChild("AppData") or Instance.new("Folder", MainUI)
 AppDataFolder.Name = "AppData"
 
