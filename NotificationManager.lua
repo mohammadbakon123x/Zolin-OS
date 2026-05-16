@@ -7,7 +7,7 @@ local SoundService = game:GetService("SoundService")
 -- ================================
 -- REFERENCES
 -- ================================
-local MainUI = script:FindFirstAncestorOfClass("ScreenGui")
+local MainUI = script:FindFirstAncestor("ZolinOS") and script:FindFirstAncestorOfClass("ScreenGui");
 local __ScreenFrame = MainUI:WaitForChild("__ScreenFrame")
 local __NotificationFrame = __ScreenFrame:WaitForChild("__NotificationFrame")
 local __NotificationScrollFrame = __NotificationFrame:WaitForChild("ScrollingFrame")
