@@ -1,7 +1,7 @@
 -- SettingsManager.lua
 local SettingsManager = {}
 
-local MainUI = script:FindFirstAncestorOfClass("ScreenGui")
+local MainUI = script:FindFirstAncestor("ZolinOS") and script:FindFirstAncestorOfClass("ScreenGui");
 local UserInputService = game:GetService("UserInputService")
 local Players = game:GetService("Players")
 local player = Players.LocalPlayer
