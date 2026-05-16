@@ -1,6 +1,6 @@
 -- Clock ModuleScript | @Sky_Attacker
 local v1 = {};
-local MainUI = script:FindFirstAncestorOfClass("ScreenGui");
+local MainUI = script:FindFirstAncestor("ZolinOS") and script:FindFirstAncestorOfClass("ScreenGui");
 local Runtime = MainUI:FindFirstChild("__Zolin"):FindFirstChild("Runtime");
 local Clock = Runtime:FindFirstChild("Clock") or Instance.new("StringValue", Runtime);
 Clock.Value = "03:00 AM";
