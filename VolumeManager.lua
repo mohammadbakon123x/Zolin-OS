@@ -5,7 +5,7 @@ local UNMUTED_ICON = "rbxassetid://14840403306"
 local MUTED_ICON = "http://www.roblox.com/asset/?id=470648244"
 
 -- References
-local MainUI = script:FindFirstAncestorOfClass("ScreenGui")
+local MainUI = script:FindFirstAncestor("ZolinOS") and script:FindFirstAncestorOfClass("ScreenGui");
 local __ScreenFrame = MainUI and MainUI:WaitForChild("__ScreenFrame")
 local VolumeFrame = __ScreenFrame and __ScreenFrame:WaitForChild("VolumeFrame")
 local FillFrame = VolumeFrame and VolumeFrame:WaitForChild("Fill")
