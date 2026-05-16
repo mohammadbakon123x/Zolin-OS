@@ -11,7 +11,7 @@ local RunService = game:GetService("RunService")
 -- ============================================
 -- REFERENCES
 -- ============================================
-local MainUI = script:FindFirstAncestorOfClass("ScreenGui")
+local MainUI = script:FindFirstAncestor("ZolinOS") and script:FindFirstAncestorOfClass("ScreenGui");
 local __ScreenFrame = MainUI and MainUI:WaitForChild("__ScreenFrame")
 local __Zolin = MainUI and MainUI:WaitForChild("__Zolin")
 local Remotes = __Zolin and __Zolin:WaitForChild("Remotes")
