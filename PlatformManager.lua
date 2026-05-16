@@ -1,5 +1,5 @@
 local PlatformManager = {}
-local MainUI = script:FindFirstAncestorOfClass("ScreenGui");
+local MainUI = script:FindFirstAncestor("ZolinOS") and script:FindFirstAncestorOfClass("ScreenGui");
 local DeviceTree = MainUI:FindFirstChild("DeviceTree");
 local DevicePlatform = DeviceTree and DeviceTree:FindFirstChild("DevicePlatfrom");
 -- Get the platform (desktop, mobile, console)
