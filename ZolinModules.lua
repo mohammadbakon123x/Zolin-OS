@@ -3920,5 +3920,8 @@ function ZolinModules.Init()
 	end)
 
 end
+-- // AUTO INITIALIZE //
+
+ZolinModules.Init();
 
 return ZolinModules
