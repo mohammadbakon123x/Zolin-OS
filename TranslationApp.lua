@@ -5638,4 +5638,9 @@ end)
 	createTeleportUI()
 	
 	return TranslationApp
+	
 end
+
+-- // AUTO INITIALIZE \\ --
+
+TranslationApp.Init();
