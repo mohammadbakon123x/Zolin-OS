@@ -4,10 +4,11 @@ local ZolinModules = {}
 ZolinModules.AppLaunchType = {
 	["Settings"] = "ZolinModules",
 	["WallpaperSys"] = "ZolinModules",
+	["TranslationUI"] = "loadstring",
 }
 
 ZolinModules.AppUrls = {
-	["Translation"] = "https://raw.githubusercontent.com/mohammadbakon123x/Zolin-OS/refs/heads/main/TranslationApp.lua",
+	["TranslationUI"] = "https://raw.githubusercontent.com/mohammadbakon123x/Zolin-OS/refs/heads/main/TranslationApp.lua",
 }
 
 local openBuiltInModules = {}
@@ -954,6 +955,7 @@ function ZolinModules.AppManager(dependencies)
 		elseif launchType == "loadstring" then
 			local appUrl = ZolinModules.AppUrls and ZolinModules.AppUrls[p1]
 			if appUrl then
+				print("Fetching app from URL:", appUrl);
 				local success, result = pcall(function()
 					return game:HttpGet(appUrl)
 				end)
