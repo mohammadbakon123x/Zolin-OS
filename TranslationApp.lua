@@ -3,8 +3,8 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 	local l__TweenService__5 = game:GetService("TweenService");
 	local UIS = game:GetService("UserInputService");
 	local u6 = game:GetService("RunService")
-	local versionLabel = "v3.15"
-	local BuildVersion = "3.15"
+	local versionLabel = "v3.16"
+	local BuildVersion = "3.16"
 	local SettingsScript = {
 		RequireAway = false,
 		DisplayLogs = true,
@@ -486,7 +486,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 		{
 			id = "SMT_beatdown",
 			name = "SMT Beatdown",
-			description = "Long time no see SMT!",
+			description = "a huge Change for SMT's beatdown acts, Sky Attacker prefer SMT's Beatdown because it's has custom cutsence beating anyone with's his FOV or the beatdown itself. 06/07/2026 added Custom preloaded cutsence <{!}>",
 			color = Color3.fromRGB(0, 3, 172),
 			fireColor = Color3.fromRGB(26, 49, 255),
 			material = Enum.Material.Glacier,
@@ -1296,6 +1296,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 		ActiveChecks = {} -- Track which players we're monitoring
 	};
 	local PlayedActionLIGHT = false
+	local customCutsenceStarted = false -- Track if the custom cutscene is already playing | SMT STAND ONLY
 	local ColorCorrectionSystem = {
 		activeEffects = {},
 		globalColorCorrection = nil,
@@ -3036,7 +3037,7 @@ end
 	TitleDescInfo.Size = UDim2.new(1.021, 0, 0.15, 15);
 	TitleDescInfo.SizeConstraint = Enum.SizeConstraint.RelativeXY;
 	TitleDescInfo.Visible = true;
-	TitleDescInfo.ZIndex = 2;
+	TitleDescInfo.ZIndex = 6;
 	TitleDescInfo.Font = Enum.Font.Oswald;
 	TitleDescInfo.TextScaled = true;
 	TitleDescInfo.TextXAlignment = Enum.TextXAlignment.Left;
@@ -4668,15 +4669,129 @@ end
 									end
 								elseif modelData.id == "SMT_beatdown" then
 									if soundName == "Nukem" and s.IsPlaying then
+										
+										local customCutsceneTable = {
+											[1] = {time = 2.01, active = false, target = "VictimHead"},
+											[2] = {time = 1.11, active = false, target = "BeatdownHead"},
+											[3] = {time = 2.43, active = false, target = "VictimHead"},
+											[4] = {time = 0.712, active = false, target = "VictimHead"},
+											[5] = {time = 1.11, active = false, target = "VictimHead"},
+										}
+
 										local CutsenseCamPos = StandModel:FindFirstChild("CutsceneCameraPart")
 										if CutsenseCamPos then
 											CutsenseCamPos:Destroy()
 										end
-										if CurrentPlayer == lpr then
-											if s.Parent.Parent:FindFirstChild("Head") then
-												Camera.CFrame = s.Parent.Parent.Head.CFrame
+										
+										local function setCameraToTarget(targetType, player)
+											local targetPlayer = player or CurrentPlayer
+											if not targetPlayer or not targetPlayer.Character then return false end
+
+											if targetType == "VictimHead" then
+												-- Find the victim (the person being slapped)
+												local victim = nil
+												for _, p in ipairs(game.Players:GetPlayers()) do
+													if p ~= lpr and p.Character then
+														local LSB = p.Character:FindFirstChild("LastSlappedBy")
+														if LSB and LSB.Value == targetPlayer.Name then
+															victim = p
+															break
+														end
+													end
+												end
+												if victim and victim.Character then
+													local head = victim.Character:FindFirstChild("Head")
+													if head then
+														return head
+													end
+												end
+											elseif targetType == "BeatdownHead" then
+												-- Camera focuses on the beatdown stand's head
+												if targetPlayer and targetPlayer.Character then
+													local stand = targetPlayer.Character:FindFirstChild("Stand")
+													if stand then
+														local standHead = stand:FindFirstChild("Head")
+														if standHead then
+															return standHead
+														end
+													end
+													-- Fallback to player head if stand head not found
+													local head = targetPlayer.Character:FindFirstChild("Head")
+													if head then
+														print("Using player head for beatdown cutscene")
+														return head
+													end
+												end
+											end
+											return nil
+										end
+										
+										local function playCutscene()
+											if customCutsenceStarted then return end
+											customCutsenceStarted = true
+
+											local originalCameraCFrame = Camera.CFrame
+											local originalCameraFocus = Camera.Focus
+											local originalCameraType = Camera.CameraType
+
+											if SettingsScript.DisplayLogs then
+												print("Starting custom cutscene for SMT Beatdown")
+											end
+
+											for index, cutsceneData in ipairs(customCutsceneTable) do
+												-- Activate current segment
+												cutsceneData.active = true
+
+												local targetPart = nil
+												if cutsceneData.target ~= "Cutsence" then
+													targetPart = setCameraToTarget(cutsceneData.target, CurrentPlayer)
+												end
+
+												if SettingsScript.DisplayLogs then
+													print("Cutscene segment " .. index .. " - Target: " .. cutsceneData.target .. " - Duration: " .. cutsceneData.time .. "s")
+												end
+
+												-- Wait for the duration of this segment
+												local startTime = tick()
+												while tick() - startTime < cutsceneData.time and customCutsenceStarted do
+													-- Continuously update camera position if needed for dynamic targets
+													if targetPart and targetPart.Parent then
+														-- Update camera to follow the target part
+														Camera.CFrame = targetPart.CFrame
+													elseif cutsceneData.target ~= "Cutsence" then
+														-- Try to get target again if it was lost
+														local newTargetPart = setCameraToTarget(cutsceneData.target, CurrentPlayer)
+														if newTargetPart then
+															targetPart = newTargetPart
+															Camera.CFrame = targetPart.CFrame
+														end
+													end
+													task.wait()
+												end
+
+												-- Deactivate current segment
+												cutsceneData.active = false
+											end
+
+											-- Restore original camera settings
+											Camera.CameraType = originalCameraType
+											Camera.CFrame = originalCameraCFrame
+											Camera.Focus = originalCameraFocus
+											customCutsenceStarted = false
+
+											if SettingsScript.DisplayLogs then
+												print("Custom cutscene finished")
 											end
 										end
+										
+										if CurrentPlayer == lpr then
+											-- handle it here !!
+											if customCutsenceStarted == false then
+												playCutscene()
+												print("Cutsence SMT Beatdown")
+											end
+										end
+										
 										if not s:FindFirstChildOfClass("ReverbSoundEffect") then
 											for _, child in ipairs(game.Lighting:GetChildren()) do
 												if not child.Name:find("CutsenseJoJo") then
@@ -4747,6 +4862,9 @@ end
 										if s.Name ~= "explosion2" and s.Name ~= "Hit" and 
 											soundName ~= "Implosion" and soundName ~= "Male Scream Short Yelling Bursts Death Cries (SFX)" then
 											s.PlaybackSpeed = modelData.soundSpeed
+											--[ End Cutsence:
+												customCutsenceStarted = false
+											--]]
 										end
 									end
 								elseif modelData.id == "refraif_beatdown" then
