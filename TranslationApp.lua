@@ -1211,7 +1211,7 @@ else
 		print("Detected: Other Game")
 	end
 end
-local TranslationUI = ui.Parent or game.Players.LocalPlayer.PlayerGui:FindFirstChild("ZolinOS").__ScreenFrame.Applications:FindFirstChild("TranslationUI");
+local TranslationUI = game.Players.LocalPlayer.PlayerGui:FindFirstChild("ZolinOS").__ScreenFrame.Applications:FindFirstChild("TranslationUI");
 if not TranslationUI then
 	warn("TranslationUI not found in PlayerGui")
 	return
