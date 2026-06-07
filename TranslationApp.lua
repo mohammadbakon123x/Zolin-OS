@@ -1369,7 +1369,7 @@ end
 	SideButtons.Position = UDim2.new(0, 0, 0.35, 50);
 	SideButtons.Size = UDim2.new(0.1, 50, 0.4, 0);
 	SideButtons.SizeConstraint = Enum.SizeConstraint.RelativeXY;
-	SideButtons.ZIndex = 1;
+	SideButtons.ZIndex = 6;
 	SideButtons.Visible = true;
 	SideButtons.Transparency = 1;
 	local UIAspectRatio = Instance.new("UIAspectRatioConstraint", SideButtons);
@@ -1395,7 +1395,7 @@ end
 	ButtonCustomBeatdown.Name = "ButtonCustomBeatdown"
 	ButtonCustomBeatdown.Size = UDim2.new(0.42, 0, 0.3, 0)
 	ButtonCustomBeatdown.SizeConstraint = Enum.SizeConstraint.RelativeYY
-	ButtonCustomBeatdown.ZIndex = 4
+	ButtonCustomBeatdown.ZIndex = 6
 	ButtonCustomBeatdown.Visible = GameDetection.IsSlapBattles -- Only show in Slap Battles
 	ButtonCustomBeatdown.Font = Enum.Font.Oswald
 	ButtonCustomBeatdown.Text = ""
@@ -1428,7 +1428,7 @@ end
 	ImageLabel_ButtonCustomBeatdown.Position = UDim2.new(1, 0, 0.5, 0)
 	ImageLabel_ButtonCustomBeatdown.Size = UDim2.new(1, 0, 0.7, 0)
 	ImageLabel_ButtonCustomBeatdown.SizeConstraint = Enum.SizeConstraint.RelativeYY
-	ImageLabel_ButtonCustomBeatdown.ZIndex = 4
+	ImageLabel_ButtonCustomBeatdown.ZIndex = 6
 	ImageLabel_ButtonCustomBeatdown.Visible = true
 	ImageLabel_ButtonCustomBeatdown.Image = "rbxassetid://122044888299593"
 	ImageLabel_ButtonCustomBeatdown.ImageColor3 = Color3.fromRGB(113, 84, 255)
@@ -1443,7 +1443,7 @@ end
 	ButtonSettings.Name = "ButtonSettings";
 	ButtonSettings.Size = UDim2.new(0.42, 0, 0.3, 0);
 	ButtonSettings.SizeConstraint = Enum.SizeConstraint.RelativeYY;
-	ButtonSettings.ZIndex = 1;
+	ButtonSettings.ZIndex = 6;
 	ButtonSettings.Visible = true;
 	ButtonSettings.Font = Enum.Font.Oswald
 	ButtonSettings.Text = "";
@@ -1467,7 +1467,7 @@ end
 	UIStroke_ButtonSettings.LineJoinMode = Enum.LineJoinMode.Round;
 	UIStroke_ButtonSettings.StrokeSizingMode = Enum.StrokeSizingMode.FixedSize;
 	UIStroke_ButtonSettings.BorderStrokePosition = Enum.BorderStrokePosition.Outer;
-	UIStroke_ButtonSettings.ZIndex = 1;
+	UIStroke_ButtonSettings.ZIndex = 6;
 	UIStroke_ButtonSettings.Transparency = 0;
 	local ImageLabel_ButtonSettings = Instance.new("ImageLabel", ButtonSettings);
 	ImageLabel_ButtonSettings.AnchorPoint = Vector2.new(1, 0.5);
@@ -1492,7 +1492,7 @@ end
 	ButtonExternalSettings.Name = "ButtonExternalSettings"
 	ButtonExternalSettings.Size = UDim2.new(0.42, 0, 0.3, 0)
 	ButtonExternalSettings.SizeConstraint = Enum.SizeConstraint.RelativeYY
-	ButtonExternalSettings.ZIndex = 1
+	ButtonExternalSettings.ZIndex = 6
 	ButtonExternalSettings.Visible = true
 	ButtonExternalSettings.Font = Enum.Font.Oswald
 	ButtonExternalSettings.Text = ""
@@ -1517,7 +1517,7 @@ end
 	UIStroke_ButtonExternalSettings.LineJoinMode = Enum.LineJoinMode.Round
 	UIStroke_ButtonExternalSettings.StrokeSizingMode = Enum.StrokeSizingMode.FixedSize
 	UIStroke_ButtonExternalSettings.BorderStrokePosition = Enum.BorderStrokePosition.Outer
-	UIStroke_ButtonExternalSettings.ZIndex = 1
+	UIStroke_ButtonExternalSettings.ZIndex = 6
 	UIStroke_ButtonExternalSettings.Transparency = 0
 	local ImageLabel_ButtonExternalSettings = Instance.new("ImageLabel", ButtonExternalSettings)
 	ImageLabel_ButtonExternalSettings.AnchorPoint = Vector2.new(1, 0.5)
@@ -1542,7 +1542,7 @@ end
 	ButtonTeleport.Name = "ButtonTeleport"
 	ButtonTeleport.Size = UDim2.new(0.42, 0, 0.3, 0)
 	ButtonTeleport.SizeConstraint = Enum.SizeConstraint.RelativeYY
-	ButtonTeleport.ZIndex = 1
+	ButtonTeleport.ZIndex = 6
 	ButtonTeleport.Visible = true
 	ButtonTeleport.Font = Enum.Font.Oswald
 	ButtonTeleport.Text = ""
@@ -1566,7 +1566,7 @@ end
 	UIStroke_ButtonTeleport.LineJoinMode = Enum.LineJoinMode.Round
 	UIStroke_ButtonTeleport.StrokeSizingMode = Enum.StrokeSizingMode.FixedSize
 	UIStroke_ButtonTeleport.BorderStrokePosition = Enum.BorderStrokePosition.Outer
-	UIStroke_ButtonTeleport.ZIndex = 1
+	UIStroke_ButtonTeleport.ZIndex = 6
 	UIStroke_ButtonTeleport.Transparency = 0
 	local ImageLabel_ButtonTeleport = Instance.new("ImageLabel", ButtonTeleport)
 	ImageLabel_ButtonTeleport.AnchorPoint = Vector2.new(1, 0.5)
@@ -1592,7 +1592,7 @@ end
 	Settings.Position = UDim2.new(0.5, 0, 0.5, 0);
 	Settings.Size = UDim2.new(0.6, 50, 0.5, 50);
 	Settings.SizeConstraint = Enum.SizeConstraint.RelativeXY;
-	Settings.ZIndex = 1;
+	Settings.ZIndex = 6;
 	Settings.Visible = false;
 	Settings.ClipsDescendants = true;
 	Settings.AutomaticCanvasSize = Enum.AutomaticSize.X;
@@ -1619,7 +1619,7 @@ end
 	UIStroke_Settings.StrokeSizingMode = Enum.StrokeSizingMode.FixedSize;
 	UIStroke_Settings.Thickness = 4.3;
 	UIStroke_Settings.Transparency = 0.33;
-	UIStroke_Settings.ZIndex = 1;
+	UIStroke_Settings.ZIndex = 6;
 	--[
 	local RealTimeClock = nil
 	local ClockFrame = nil
@@ -1636,7 +1636,7 @@ end
 		ClockFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 40)
 		ClockFrame.BorderSizePixel = 0
 		ClockFrame.Visible = false
-		ClockFrame.ZIndex = 1000
+		ClockFrame.ZIndex = 6000
 		local UICorner = Instance.new("UICorner", ClockFrame)
 		UICorner.CornerRadius = UDim.new(0, 10)
 		local UIStroke = Instance.new("UIStroke", ClockFrame)
@@ -1774,7 +1774,7 @@ end
 		ExternalSettingsUI.Position = UDim2.new(0.5, 0, 0.5, 0)
 		ExternalSettingsUI.Size = UDim2.new(0.7, 0, 0.65, 0)
 		ExternalSettingsUI.SizeConstraint = Enum.SizeConstraint.RelativeXY
-		ExternalSettingsUI.ZIndex = 4
+		ExternalSettingsUI.ZIndex = 6
 		ExternalSettingsUI.Visible = false
 		ExternalSettingsUI.ClipsDescendants = true
 		local UICorner_ExternalSettings = Instance.new("UICorner", ExternalSettingsUI)
@@ -1792,7 +1792,7 @@ end
 		UIStroke_ExternalSettings.StrokeSizingMode = Enum.StrokeSizingMode.FixedSize
 		UIStroke_ExternalSettings.Thickness = 4.3
 		UIStroke_ExternalSettings.Transparency = 0.33
-		UIStroke_ExternalSettings.ZIndex = 4
+		UIStroke_ExternalSettings.ZIndex = 6
 		local Title = Instance.new("TextLabel", ExternalSettingsUI)
 		Title.Name = "Title"
 		Title.AnchorPoint = Vector2.new(0.5, 0)
@@ -1805,7 +1805,7 @@ end
 		Title.TextScaled = true
 		Title.TextWrapped = true
 		Title.TextXAlignment = Enum.TextXAlignment.Center
-		Title.ZIndex = 5
+		Title.ZIndex = 6
 		ExternalSettingsFrame = Instance.new("ScrollingFrame", ExternalSettingsUI)
 		ExternalSettingsFrame.Name = "ExternalSettingsFrame"
 		ExternalSettingsFrame.AnchorPoint = Vector2.new(0.5, 0)
@@ -1817,7 +1817,7 @@ end
 		ExternalSettingsFrame.ScrollBarThickness = 6
 		ExternalSettingsFrame.ScrollBarImageColor3 = Color3.fromRGB(182, 146, 244)
 		ExternalSettingsFrame.ClipsDescendants = true
-		ExternalSettingsFrame.ZIndex = 4
+		ExternalSettingsFrame.ZIndex = 6
 		ExternalSettingsFrame.ScrollingDirection = Enum.ScrollingDirection.Y
 		local SettingsListLayout = Instance.new("UIListLayout", ExternalSettingsFrame)
 		SettingsListLayout.Padding = UDim.new(0.02, 0)
@@ -1839,7 +1839,7 @@ end
 		CloseButton.TextColor3 = Color3.fromRGB(255, 255, 255)
 		CloseButton.TextScaled = true
 		CloseButton.Font = Enum.Font.Oswald
-		CloseButton.ZIndex = 5
+		CloseButton.ZIndex = 6
 
 		local UICorner_Close = Instance.new("UICorner", CloseButton)
 		UICorner_Close.CornerRadius = UDim.new(0, 5)
@@ -1866,7 +1866,7 @@ end
 		optionFrame.Size = UDim2.new(1, 0, 0, 70)
 		optionFrame.BackgroundColor3 = Color3.fromRGB(35, 31, 59)
 		optionFrame.BackgroundTransparency = 0
-		optionFrame.ZIndex = 5
+		optionFrame.ZIndex = 6
 		local UICorner_Option = Instance.new("UICorner", optionFrame)
 		UICorner_Option.CornerRadius = UDim.new(0, 5)
 		local UIStroke_Option = Instance.new("UIStroke", optionFrame)
@@ -1882,7 +1882,7 @@ end
 		Title.TextScaled = true
 		Title.TextXAlignment = Enum.TextXAlignment.Left
 		Title.Font = Enum.Font.Oswald
-		Title.ZIndex = 5
+		Title.ZIndex = 6
 		local Desc = Instance.new("TextLabel", optionFrame)
 		Desc.Name = "Description"
 		Desc.Size = UDim2.new(0.7, 0, 0.4, 0)
@@ -1894,7 +1894,7 @@ end
 		Desc.TextXAlignment = Enum.TextXAlignment.Left
 		Desc.Font = Enum.Font.Gotham
 		Desc.TextSize = 12
-		Desc.ZIndex = 5
+		Desc.ZIndex = 6
 		local ToggleButton = Instance.new("TextButton", optionFrame)
 		ToggleButton.Name = "Toggle"
 		ToggleButton.Size = UDim2.new(0.2, 0, 0.6, 0)
@@ -1905,7 +1905,7 @@ end
 		ToggleButton.TextColor3 = Color3.fromRGB(255, 255, 255)
 		ToggleButton.TextScaled = true
 		ToggleButton.Font = Enum.Font.Oswald
-		ToggleButton.ZIndex = 5
+		ToggleButton.ZIndex = 6
 		local UICorner_Toggle = Instance.new("UICorner", ToggleButton)
 		UICorner_Toggle.CornerRadius = UDim.new(0, 5)
 		local UIStroke_Toggle = Instance.new("UIStroke", ToggleButton)
@@ -2027,7 +2027,7 @@ end
 		end
 		if ExternalSettingsUI.Visible then
 			addExternalSettingsToUI()
-			ExternalSettingsUI.ZIndex = 5
+			ExternalSettingsUI.ZIndex = 6
 			if SettingsScript.DisplayLogs then
 				print("External Settings opened")
 			end
@@ -2082,7 +2082,7 @@ end
 		TeleportUI.Position = UDim2.new(0.5, 0, 0.5, 0)
 		TeleportUI.Size = UDim2.new(0.5, 0, 0.7, 0) -- Made taller
 		TeleportUI.SizeConstraint = Enum.SizeConstraint.RelativeXY
-		TeleportUI.ZIndex = 1
+		TeleportUI.ZIndex = 7
 		TeleportUI.Visible = false
 		TeleportUI.ClipsDescendants = true
 		TeleportUI.Name = "TeleportUI"
@@ -2101,7 +2101,7 @@ end
 		UIStroke_TeleportUI.StrokeSizingMode = Enum.StrokeSizingMode.FixedSize
 		UIStroke_TeleportUI.Thickness = 4.3
 		UIStroke_TeleportUI.Transparency = 0.33
-		UIStroke_TeleportUI.ZIndex = 1
+		UIStroke_TeleportUI.ZIndex = 6
 		local TeleportTitle = Instance.new("TextLabel", TeleportUI)
 		TeleportTitle.AnchorPoint = Vector2.new(0.5, 0)
 		TeleportTitle.Active = true
@@ -2111,7 +2111,7 @@ end
 		TeleportTitle.Size = UDim2.new(1, 0, 0.08, 0)
 		TeleportTitle.SizeConstraint = Enum.SizeConstraint.RelativeXY
 		TeleportTitle.Visible = true
-		TeleportTitle.ZIndex = 5
+		TeleportTitle.ZIndex = 6
 		TeleportTitle.Font = Enum.Font.Oswald
 		TeleportTitle.Text = "TELEPORT TO PLAYER"
 		TeleportTitle.TextColor3 = Color3.fromRGB(113, 84, 255)
@@ -2136,7 +2136,7 @@ end
 		PlayerCountLabel.TextSize = 14
 		PlayerCountLabel.Font = Enum.Font.Gotham
 		PlayerCountLabel.TextXAlignment = Enum.TextXAlignment.Left
-		PlayerCountLabel.ZIndex = 4
+		PlayerCountLabel.ZIndex = 6
 		local PlayersScrollFrame = Instance.new("ScrollingFrame", PlayersListContainer)
 		PlayersScrollFrame.Name = "PlayersScrollFrame"
 		PlayersScrollFrame.Position = UDim2.new(0, 0, 0.08, 0)
@@ -2206,7 +2206,7 @@ end
 		playerButton.BackgroundTransparency = 0
 		playerButton.AutoButtonColor = true
 		playerButton.Text = ""
-		playerButton.ZIndex = 4
+		playerButton.ZIndex = 6
 		local UICorner = Instance.new("UICorner", playerButton)
 		UICorner.CornerRadius = UDim.new(0, 8)
 		local UIStroke = Instance.new("UIStroke", playerButton)
@@ -2217,7 +2217,7 @@ end
 		infoContainer.BackgroundTransparency = 1
 		infoContainer.Visible = true
 		local statusIcon = Instance.new("ImageLabel", infoContainer)
-		statusIcon.ZIndex = 4
+		statusIcon.ZIndex = 6
 		statusIcon.Name = "StatusIcon"
 		statusIcon.Size = UDim2.new(0, 30, 0, 30)
 		statusIcon.Position = UDim2.new(0, 10, 0.5, -15)
@@ -2233,7 +2233,7 @@ end
 			friendBadge.Image = ""
 			friendBadge.ImageColor3 = Color3.fromRGB(84, 255, 113)
 			friendBadge.ScaleType = Enum.ScaleType.Fit
-			friendBadge.ZIndex = 5
+			friendBadge.ZIndex = 6
 		end
 		spawn(function()
 			local userId = player.UserId
@@ -2262,7 +2262,7 @@ end
 		nameLabel.Font = Enum.Font.GothamBold
 		nameLabel.TextXAlignment = Enum.TextXAlignment.Left
 		nameLabel.TextTruncate = Enum.TextTruncate.AtEnd
-		nameLabel.ZIndex = 4
+		nameLabel.ZIndex = 6
 		local displayLabel = Instance.new("TextLabel", infoContainer)
 		displayLabel.Name = "DisplayLabel"
 		displayLabel.Size = UDim2.new(0.6, 0, 0.5, 0)
@@ -2274,7 +2274,7 @@ end
 		displayLabel.Font = Enum.Font.Gotham
 		displayLabel.TextXAlignment = Enum.TextXAlignment.Left
 		displayLabel.TextTruncate = Enum.TextTruncate.AtEnd
-		displayLabel.ZIndex = 4
+		displayLabel.ZIndex = 6
 		local actionFrame = Instance.new("Frame", infoContainer)
 		actionFrame.Name = "ActionFrame"
 		actionFrame.Size = UDim2.new(0.3, 0, 1, 0)
@@ -2293,7 +2293,7 @@ end
 			selfLabel.TextScaled = true
 			local selfCorner = Instance.new("UICorner", selfLabel)
 			selfCorner.CornerRadius = UDim.new(0, 6)
-			selfLabel.ZIndex = 4
+			selfLabel.ZIndex = 6
 		elseif isFriendPlayer then
 			local friendText = Instance.new("TextLabel", infoContainer)
 			friendText.Name = "FriendText"
@@ -2306,7 +2306,7 @@ end
 			friendText.TextSize = 10
 			friendText.Font = Enum.Font.GothamBold
 			friendText.TextScaled = true
-			friendText.ZIndex = 4
+			friendText.ZIndex = 6
 			local friendCorner = Instance.new("UICorner", friendText)
 			friendCorner.CornerRadius = UDim.new(0, 4)
 		end
@@ -2320,7 +2320,7 @@ end
 		teleportBtn.TextSize = 11
 		teleportBtn.Font = Enum.Font.GothamBold
 		teleportBtn.AutoButtonColor = false
-		teleportBtn.ZIndex = 4
+		teleportBtn.ZIndex = 6
 		if not isSelf then
 			teleportBtn.Visible = true
 		else
@@ -2412,7 +2412,7 @@ end
 	Desclabel.Position = UDim2.new(0.5, 0, 0.35, 0);
 	Desclabel.Size = UDim2.new(1, 0, 0.6, 0);
 	Desclabel.SizeConstraint = Enum.SizeConstraint.RelativeXY;
-	Desclabel.ZIndex = 3;
+	Desclabel.ZIndex = 6;
 	Desclabel.Visible = true
 	Desclabel.Font = Enum.Font.Oswald;
 	Desclabel.RichText = true;
@@ -2447,7 +2447,7 @@ end
 	SliderSelection1.Size = UDim2.new(1, 0, 0.2, 0);
 	SliderSelection1.SizeConstraint = Enum.SizeConstraint.RelativeXY;
 	SliderSelection1.Visible = true
-	SliderSelection1.ZIndex = 1;
+	SliderSelection1.ZIndex = 6;
 	local UICorner_Slider1 = Instance.new("UICorner", SliderSelection1);
 	UICorner_Slider1.CornerRadius = UDim.new(0, 5);
 	local Title_Slider1 = Instance.new("TextLabel", SliderSelection1);
@@ -2458,7 +2458,7 @@ end
 	Title_Slider1.Size = UDim2.new(1, 0, 1, 0);
 	Title_Slider1.SizeConstraint = Enum.SizeConstraint.RelativeXY;
 	Title_Slider1.Visible = true;
-	Title_Slider1.ZIndex = 1;
+	Title_Slider1.ZIndex = 6;
 	Title_Slider1.RichText = true;
 	Title_Slider1.Text = "  Fly Mode:"
 	Title_Slider1.TextColor3 = Color3.fromRGB(194, 194, 194);
@@ -2474,7 +2474,7 @@ end
 	UIStroke_Title_Slider1.Color = Color3.fromRGB(103, 92, 150);
 	UIStroke_Title_Slider1.StrokeSizingMode = Enum.StrokeSizingMode.FixedSize;
 	UIStroke_Title_Slider1.LineJoinMode = Enum.LineJoinMode.Round;
-	UIStroke_Title_Slider1.ZIndex = 1;
+	UIStroke_Title_Slider1.ZIndex = 6;
 	UIStroke_Title_Slider1.Transparency = 0;
 	UIStroke_Title_Slider1.Enabled = false;
 	--[ Add after SliderSelection1
@@ -2486,7 +2486,7 @@ end
 	SliderSelection2.Size = UDim2.new(1, 0, 0.2, 0);
 	SliderSelection2.SizeConstraint = Enum.SizeConstraint.RelativeXY;
 	SliderSelection2.Visible = true
-	SliderSelection2.ZIndex = 1;
+	SliderSelection2.ZIndex = 6;
 	SliderSelection2.LayoutOrder = 1;
 	local UICorner_Slider2 = Instance.new("UICorner", SliderSelection2);
 	UICorner_Slider2.CornerRadius = UDim.new(0, 5);
@@ -2498,7 +2498,7 @@ end
 	Title_Slider2.Size = UDim2.new(1, 0, 1, 0);
 	Title_Slider2.SizeConstraint = Enum.SizeConstraint.RelativeXY;
 	Title_Slider2.Visible = true;
-	Title_Slider2.ZIndex = 1;
+	Title_Slider2.ZIndex = 6;
 	Title_Slider2.RichText = true;
 	Title_Slider2.Text = "  Fly Speed:"
 	Title_Slider2.TextColor3 = Color3.fromRGB(194, 194, 194);
@@ -2514,7 +2514,7 @@ end
 	UIStroke_Title_Slider2.Color = Color3.fromRGB(103, 92, 150);
 	UIStroke_Title_Slider2.StrokeSizingMode = Enum.StrokeSizingMode.FixedSize;
 	UIStroke_Title_Slider2.LineJoinMode = Enum.LineJoinMode.Round;
-	UIStroke_Title_Slider2.ZIndex = 1;
+	UIStroke_Title_Slider2.ZIndex = 6;
 	UIStroke_Title_Slider2.Transparency = 0;
 	UIStroke_Title_Slider2.Enabled = false;
 	local UIPadding_TitleSlider2 = Instance.new("UIPadding", Title_Slider2);
@@ -2532,7 +2532,7 @@ end
 	Button_Slider2.Size = UDim2.new(0, 200, 0, 31);
 	Button_Slider2.SizeConstraint = Enum.SizeConstraint.RelativeXY;
 	Button_Slider2.Visible = true;
-	Button_Slider2.ZIndex = 4;
+	Button_Slider2.ZIndex = 6;
 	Button_Slider2.Name = "SpeedSlider";
 	Button_Slider2.Font = Enum.Font.Oswald;
 	Button_Slider2.FontFace.Weight = Enum.FontWeight.Bold
@@ -2553,7 +2553,7 @@ end
 	UIStroke_TitleSlider2.Color = Color3.fromRGB(103, 92, 150);
 	UIStroke_TitleSlider2.StrokeSizingMode = Enum.StrokeSizingMode.FixedSize;
 	UIStroke_TitleSlider2.LineJoinMode = Enum.LineJoinMode.Round;
-	UIStroke_TitleSlider2.ZIndex = 1;
+	UIStroke_TitleSlider2.ZIndex = 6;
 	UIStroke_TitleSlider2.Transparency = 0;
 	local SlapSetting2 = Instance.new("Frame", Desclabel);
 	SlapSetting2.Name = "SlapSetting2";
@@ -2572,7 +2572,7 @@ end
 	SliderSelection3.Size = UDim2.new(1, 0, 0.2, 0);
 	SliderSelection3.SizeConstraint = Enum.SizeConstraint.RelativeXY;
 	SliderSelection3.Visible = true
-	SliderSelection3.ZIndex = 1;
+	SliderSelection3.ZIndex = 6;
 	SliderSelection3.LayoutOrder = 4;
 	local UICorner_Slider3 = Instance.new("UICorner", SliderSelection3);
 	UICorner_Slider3.CornerRadius = UDim.new(0, 5);
@@ -2584,7 +2584,7 @@ end
 	Title_Slider3.Size = UDim2.new(1, 0, 1, 0);
 	Title_Slider3.SizeConstraint = Enum.SizeConstraint.RelativeXY;
 	Title_Slider3.Visible = true;
-	Title_Slider3.ZIndex = 1;
+	Title_Slider3.ZIndex = 6;
 	Title_Slider3.RichText = true;
 	Title_Slider3.Text = " Ban System [Not Tested]:"
 	Title_Slider3.TextColor3 = Color3.fromRGB(194, 194, 194);
@@ -2602,7 +2602,7 @@ end
 	Button_Slider_3.Size = UDim2.new(0, 200, 0, 31);
 	Button_Slider_3.SizeConstraint = Enum.SizeConstraint.RelativeXY;
 	Button_Slider_3.Visible = true;
-	Button_Slider_3.ZIndex = 4;
+	Button_Slider_3.ZIndex = 6;
 	Button_Slider_3.Name = "Slider";
 	Button_Slider_3.Font = Enum.Font.Oswald;
 	Button_Slider_3.FontFace.Weight = Enum.FontWeight.Bold
@@ -2633,7 +2633,7 @@ end
 	else
 		SlapSetting2.Visible = false;
 	end
-	SlapSetting2.ZIndex = 4;
+	SlapSetting2.ZIndex = 6;
 	SlapSetting2.LayoutOrder = 5;
 	local UICorner_Slap2 = Instance.new("UICorner", SlapSetting2);
 	UICorner_Slap2.CornerRadius = UDim.new(0, 5);
@@ -2644,7 +2644,7 @@ end
 	Title_Slap2.Size = UDim2.new(1, 0, 1, 0);
 	Title_Slap2.SizeConstraint = Enum.SizeConstraint.RelativeXY;
 	Title_Slap2.Visible = true;
-	Title_Slap2.ZIndex = 4;
+	Title_Slap2.ZIndex = 6;
 	Title_Slap2.RichText = true;
 	Title_Slap2.Text = "  Beatdown Bigger Hitbox Ability:";
 	Title_Slap2.TextColor3 = Color3.fromRGB(194, 194, 194);
@@ -2669,7 +2669,7 @@ end
 	Button_Slap2.Size = UDim2.new(0, 200, 0, 31);
 	Button_Slap2.SizeConstraint = Enum.SizeConstraint.RelativeXY;
 	Button_Slap2.Visible = true;
-	Button_Slap2.ZIndex = 4;
+	Button_Slap2.ZIndex = 6;
 	Button_Slap2.Font = Enum.Font.Oswald;
 	Button_Slap2.FontFace.Weight = Enum.FontWeight.Bold;
 	Button_Slap2.FontFace.Style = Enum.FontStyle.Italic;
@@ -2703,7 +2703,7 @@ end
 	else
 		SlapSetting3.Visible = false;
 	end
-	SlapSetting3.ZIndex = 1;
+	SlapSetting3.ZIndex = 6;
 	SlapSetting3.LayoutOrder = 6;
 	local UICorner_Slap3 = Instance.new("UICorner", SlapSetting3);
 	UICorner_Slap3.CornerRadius = UDim.new(0, 5);
@@ -2714,7 +2714,7 @@ end
 	Title_Slap3.Size = UDim2.new(1, 0, 1, 0);
 	Title_Slap3.SizeConstraint = Enum.SizeConstraint.RelativeXY;
 	Title_Slap3.Visible = true;
-	Title_Slap3.ZIndex = 1;
+	Title_Slap3.ZIndex = 6;
 	Title_Slap3.RichText = true;
 	Title_Slap3.Text = "  Homerun Bigger Hitbox [Beta]:";
 	Title_Slap3.TextColor3 = Color3.fromRGB(194, 194, 194);
@@ -2739,7 +2739,7 @@ end
 	Button_Slap3.Size = UDim2.new(0, 200, 0, 31);
 	Button_Slap3.SizeConstraint = Enum.SizeConstraint.RelativeXY;
 	Button_Slap3.Visible = true;
-	Button_Slap3.ZIndex = 4;
+	Button_Slap3.ZIndex = 6;
 	Button_Slap3.Font = Enum.Font.Oswald;
 	Button_Slap3.FontFace.Weight = Enum.FontWeight.Bold;
 	Button_Slap3.FontFace.Style = Enum.FontStyle.Italic;
@@ -2759,7 +2759,7 @@ end
 	UIStroke_ButtonSlap3.Color = Color3.fromRGB(103, 92, 150);
 	UIStroke_ButtonSlap3.StrokeSizingMode = Enum.StrokeSizingMode.FixedSize;
 	UIStroke_ButtonSlap3.LineJoinMode = Enum.LineJoinMode.Round;
-	UIStroke_ButtonSlap3.ZIndex = 1;
+	UIStroke_ButtonSlap3.ZIndex = 6;
 	UIStroke_ButtonSlap3.Transparency = 0;
 	local SlapSetting4 = Instance.new("Frame", Desclabel);
 	SlapSetting4.Name = "SlapSetting4";
@@ -2774,7 +2774,7 @@ end
 	else
 		SlapSetting4.Visible = false;
 	end
-	SlapSetting4.ZIndex = 1;
+	SlapSetting4.ZIndex = 6;
 	SlapSetting4.LayoutOrder = 7;
 	SlapSetting4.Visible = false;
 	local UICorner_Slap4 = Instance.new("UICorner", SlapSetting4);
@@ -2785,7 +2785,7 @@ end
 	Title_Slap4.Position = UDim2.new(0.5, 0, 0, 0);
 	Title_Slap4.Size = UDim2.new(1, 0, 1, 0);
 	Title_Slap4.SizeConstraint = Enum.SizeConstraint.RelativeXY;
-	Title_Slap4.ZIndex = 1;
+	Title_Slap4.ZIndex = 6;
 	Title_Slap4.RichText = true;
 	Title_Slap4.Text = "  Custom Beatdown Animations [Beta]:";
 	Title_Slap4.TextColor3 = Color3.fromRGB(194, 194, 194);
@@ -2810,7 +2810,7 @@ end
 	Button_Slap4.Size = UDim2.new(0, 200, 0, 31);
 	Button_Slap4.SizeConstraint = Enum.SizeConstraint.RelativeXY;
 	Button_Slap4.Visible = true;
-	Button_Slap4.ZIndex = 4;
+	Button_Slap4.ZIndex = 6;
 	Button_Slap4.Font = Enum.Font.Oswald;
 	Button_Slap4.FontFace.Weight = Enum.FontWeight.Bold;
 	Button_Slap4.FontFace.Style = Enum.FontStyle.Italic;
@@ -2830,7 +2830,7 @@ end
 	UIStroke_ButtonSlap4.Color = Color3.fromRGB(103, 92, 150);
 	UIStroke_ButtonSlap4.StrokeSizingMode = Enum.StrokeSizingMode.FixedSize;
 	UIStroke_ButtonSlap4.LineJoinMode = Enum.LineJoinMode.Round;
-	UIStroke_ButtonSlap4.ZIndex = 1;
+	UIStroke_ButtonSlap4.ZIndex = 6;
 	UIStroke_ButtonSlap4.Transparency = 0;
 	--]]
 	--[
@@ -2842,7 +2842,7 @@ end
 	SlapSetting6.BackgroundTransparency = 0;
 	SlapSetting6.Size = UDim2.new(1, 0, 0.2, 0);
 	SlapSetting6.SizeConstraint = Enum.SizeConstraint.RelativeXY;
-	SlapSetting6.ZIndex = 1;
+	SlapSetting6.ZIndex = 6;
 	SlapSetting6.LayoutOrder = 7;
 	local UICorner_Slap6 = Instance.new("UICorner", SlapSetting6);
 	UICorner_Slap6.CornerRadius = UDim.new(0, 5);
@@ -2853,7 +2853,7 @@ end
 	Title_Slap6.Size = UDim2.new(1, 0, 1, 0);
 	Title_Slap6.SizeConstraint = Enum.SizeConstraint.RelativeXY;
 	Title_Slap6.Visible = true;
-	Title_Slap6.ZIndex = 1;
+	Title_Slap6.ZIndex = 6;
 	Title_Slap6.RichText = true;
 	Title_Slap6.Text = "  Badge Awarder [Not Tested]:";
 	Title_Slap6.TextColor3 = Color3.fromRGB(194, 194, 194);
@@ -2877,7 +2877,7 @@ end
 	Button_Slap6.Size = UDim2.new(0, 200, 0, 31);
 	Button_Slap6.SizeConstraint = Enum.SizeConstraint.RelativeXY;
 	Button_Slap6.Visible = true;
-	Button_Slap6.ZIndex = 4;
+	Button_Slap6.ZIndex = 6;
 	Button_Slap6.Font = Enum.Font.Oswald;
 	Button_Slap6.FontFace.Weight = Enum.FontWeight.Bold;
 	Button_Slap6.FontFace.Style = Enum.FontStyle.Italic;
@@ -2899,7 +2899,7 @@ end
 	UIStroke_ButtonSlap6.Color = Color3.fromRGB(103, 92, 150);
 	UIStroke_ButtonSlap6.StrokeSizingMode = Enum.StrokeSizingMode.FixedSize;
 	UIStroke_ButtonSlap6.LineJoinMode = Enum.LineJoinMode.Round;
-	UIStroke_ButtonSlap6.ZIndex = 1;
+	UIStroke_ButtonSlap6.ZIndex = 6;
 	UIStroke_ButtonSlap6.Transparency = 0;
 	--]]
 
@@ -2914,7 +2914,7 @@ end
 		Separator.Size = UDim2.new(1, -20, 0.01, 0);
 		Separator.SizeConstraint = Enum.SizeConstraint.RelativeXY;
 		Separator.Visible = true;
-		Separator.ZIndex = 1;
+		Separator.ZIndex = 6;
 		Separator.LayoutOrder = 2;
 		local UICorner_Separator = Instance.new("UICorner", Separator);
 		UICorner_Separator.CornerRadius = UDim.new(0, 5);
@@ -2926,7 +2926,7 @@ end
 		SectionTitle.Size = UDim2.new(1, 0, 0.1, 20);
 		SectionTitle.SizeConstraint = Enum.SizeConstraint.RelativeXY;
 		SectionTitle.Visible = true;
-		SectionTitle.ZIndex = 1;
+		SectionTitle.ZIndex = 6;
 		SectionTitle.LayoutOrder = 3;
 		SectionTitle.Font = Enum.Font.Oswald;
 		SectionTitle.Text = "  Slap Battles Features:";
@@ -2944,7 +2944,7 @@ end
 		SlapSetting1.Size = UDim2.new(1, 0, 0.2, 0);
 		SlapSetting1.SizeConstraint = Enum.SizeConstraint.RelativeXY;
 		SlapSetting1.Visible = true;
-		SlapSetting1.ZIndex = 1;
+		SlapSetting1.ZIndex = 6;
 		SlapSetting1.LayoutOrder = 4;
 		local UICorner_Slap1 = Instance.new("UICorner", SlapSetting1);
 		UICorner_Slap1.CornerRadius = UDim.new(0, 5);
@@ -2955,7 +2955,7 @@ end
 		Title_Slap1.Size = UDim2.new(1, 0, 1, 0);
 		Title_Slap1.SizeConstraint = Enum.SizeConstraint.RelativeXY;
 		Title_Slap1.Visible = true;
-		Title_Slap1.ZIndex = 1;
+		Title_Slap1.ZIndex = 6;
 		Title_Slap1.RichText = true;
 		Title_Slap1.Text = " Custom Beatdown Stand:"
 		Title_Slap1.TextColor3 = Color3.fromRGB(194, 194, 194);
@@ -2980,7 +2980,7 @@ end
 		Button_Slap1.Size = UDim2.new(0, 200, 0, 31);
 		Button_Slap1.SizeConstraint = Enum.SizeConstraint.RelativeXY;
 		Button_Slap1.Visible = true;
-		Button_Slap1.ZIndex = 4;
+		Button_Slap1.ZIndex = 6;
 		Button_Slap1.Font = Enum.Font.Oswald;
 		Button_Slap1.FontFace.Weight = Enum.FontWeight.Bold;
 		Button_Slap1.FontFace.Style = Enum.FontStyle.Italic;
@@ -3000,7 +3000,7 @@ end
 		UIStroke_ButtonSlap1.Color = Color3.fromRGB(103, 92, 150);
 		UIStroke_ButtonSlap1.StrokeSizingMode = Enum.StrokeSizingMode.FixedSize;
 		UIStroke_ButtonSlap1.LineJoinMode = Enum.LineJoinMode.Round;
-		UIStroke_ButtonSlap1.ZIndex = 1;
+		UIStroke_ButtonSlap1.ZIndex = 6;
 		UIStroke_ButtonSlap1.Transparency = 0;
 	end
 	--]]
@@ -3013,7 +3013,7 @@ end
 	TitleDesc.Size = UDim2.new(1, 0, 0.1, 15);
 	TitleDesc.SizeConstraint = Enum.SizeConstraint.RelativeXY;
 	TitleDesc.Visible = true;
-	TitleDesc.ZIndex = 1;
+	TitleDesc.ZIndex = 6;
 	TitleDesc.Font = Enum.Font.Oswald;
 	TitleDesc.Text = "Settings";
 	TitleDesc.TextColor3 = Color3.fromRGB(113, 84, 255);
@@ -3075,7 +3075,7 @@ end
 	Button_Slider1.Size = UDim2.new(0, 200, 0, 31);
 	Button_Slider1.SizeConstraint = Enum.SizeConstraint.RelativeXY;
 	Button_Slider1.Visible = true;
-	Button_Slider1.ZIndex = 4;
+	Button_Slider1.ZIndex = 6;
 	Button_Slider1.Name = "Slider";
 	Button_Slider1.Font = Enum.Font.Oswald;
 	Button_Slider1.FontFace.Weight = Enum.FontWeight.Bold
@@ -3096,7 +3096,7 @@ end
 	UIStroke_TitleSlider1.Color = Color3.fromRGB(103, 92, 150);
 	UIStroke_TitleSlider1.StrokeSizingMode = Enum.StrokeSizingMode.FixedSize;
 	UIStroke_TitleSlider1.LineJoinMode = Enum.LineJoinMode.Round;
-	UIStroke_TitleSlider1.ZIndex = 1;
+	UIStroke_TitleSlider1.ZIndex = 6;
 	UIStroke_TitleSlider1.Transparency = 0;
 	copyrightLabel = Instance.new("TextLabel")
 	copyrightLabel.Size = UDim2.new(0, 200, 0, 20)
@@ -3112,7 +3112,7 @@ end
 	else
 		copyrightLabel.Text = "Made Specially For KING_DRACULE"
 	end
-	copyrightLabel.ZIndex = 1250
+	copyrightLabel.ZIndex = 6250
 	copyrightLabel.Parent = TranslationUI
 	local Camera = game.Workspace.Camera
 	local BodyVelocity = Instance.new("BodyVelocity")
@@ -3953,7 +3953,7 @@ end
 		CustomBeatdownUI.Position = UDim2.new(0.5, 0, 0.5, 0)
 		CustomBeatdownUI.Size = UDim2.new(0.8, 0, 0.85, 0)
 		CustomBeatdownUI.SizeConstraint = Enum.SizeConstraint.RelativeXY
-		CustomBeatdownUI.ZIndex = 4
+		CustomBeatdownUI.ZIndex = 6
 		CustomBeatdownUI.Visible = false
 		CustomBeatdownUI.ClipsDescendants = true
 		local UICorner_CustomBeatdownUI = Instance.new("UICorner", CustomBeatdownUI)
@@ -4250,7 +4250,7 @@ end
 			TeleportData.TeleportUI.Visible = false
 		end
 		if CustomBeatdownUI.Visible then
-			CustomBeatdownUI.ZIndex = 5
+			CustomBeatdownUI.ZIndex = 6
 			loadModelIntoViewport(SelectedBeatdownModel)
 			if SettingsScript.DisplayLogs then
 				print("Custom Beatdown UI opened - " .. #CustomBeatdownModels .. " models available")
@@ -5350,7 +5350,7 @@ end
 		else
 			ViewStandsSetting.Visible = false
 		end
-		ViewStandsSetting.ZIndex = 4
+		ViewStandsSetting.ZIndex = 6
 		ViewStandsSetting.LayoutOrder = 9
 		local UICorner_ViewStands = Instance.new("UICorner", ViewStandsSetting)
 		UICorner_ViewStands.CornerRadius = UDim.new(0, 5)
@@ -5361,7 +5361,7 @@ end
 		Title_ViewStands.Size = UDim2.new(1, 0, 1, 0)
 		Title_ViewStands.SizeConstraint = Enum.SizeConstraint.RelativeXY
 		Title_ViewStands.Visible = true
-		Title_ViewStands.ZIndex = 4
+		Title_ViewStands.ZIndex = 6
 		Title_ViewStands.RichText = true
 		Title_ViewStands.Text = "  View Others' Custom Stands:"
 		Title_ViewStands.TextColor3 = Color3.fromRGB(194, 194, 194)
@@ -5386,7 +5386,7 @@ end
 		Button_ViewStands.Size = UDim2.new(0, 200, 0, 31)
 		Button_ViewStands.SizeConstraint = Enum.SizeConstraint.RelativeXY
 		Button_ViewStands.Visible = true
-		Button_ViewStands.ZIndex = 4
+		Button_ViewStands.ZIndex = 6
 		Button_ViewStands.Font = Enum.Font.Oswald
 		Button_ViewStands.FontFace.Weight = Enum.FontWeight.Bold
 		Button_ViewStands.FontFace.Style = Enum.FontStyle.Italic
