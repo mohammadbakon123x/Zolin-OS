@@ -2082,7 +2082,7 @@ end
 		TeleportUI.Position = UDim2.new(0.5, 0, 0.5, 0)
 		TeleportUI.Size = UDim2.new(0.5, 0, 0.7, 0) -- Made taller
 		TeleportUI.SizeConstraint = Enum.SizeConstraint.RelativeXY
-		TeleportUI.ZIndex = 7
+		TeleportUI.ZIndex = 6
 		TeleportUI.Visible = false
 		TeleportUI.ClipsDescendants = true
 		TeleportUI.Name = "TeleportUI"
