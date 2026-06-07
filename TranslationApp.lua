@@ -4815,9 +4815,7 @@ end
 											-- handle it here !!
 											if not cutsceneRunning then
 												spawn(function()
-												cutsceneRunning = true
 												playCutscene()
-												print("Cutscene SMT Beatdown")
 												end)
 											end
 										end
