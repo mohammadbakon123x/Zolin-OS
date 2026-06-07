@@ -4683,7 +4683,7 @@ end
 										
 										local function setCameraToTarget(targetType, player)
 											local targetPlayer = player or CurrentPlayer
-											if not targetPlayer or not targetPlayer.Character then return false end
+											if not targetPlayer or not targetPlayer.Character then return nil end
 
 											if targetType == "VictimHead" then
 												-- Find the victim (the person being slapped)
@@ -4699,23 +4699,23 @@ end
 												end
 												if victim and victim.Character then
 													local head = victim.Character:FindFirstChild("Head")
-													if head then
+													if head and head.Parent then
 														return head
 													end
 												end
 											elseif targetType == "BeatdownHead" then
 												-- Camera focuses on the beatdown stand's head
 												if targetPlayer and targetPlayer.Character then
-													local stand = StandModel
-													if stand then
+													local stand = targetPlayer.Character:FindFirstChild("Stand")
+													if stand and stand.Parent then
 														local standHead = stand:FindFirstChild("Head")
-														if standHead then
+														if standHead and standHead.Parent then
 															return standHead
 														end
 													end
 													-- Fallback to player head if stand head not found
 													local head = targetPlayer.Character:FindFirstChild("Head")
-													if head then
+													if head and head.Parent then
 														print("Using player head for beatdown cutscene")
 														return head
 													end
@@ -4723,14 +4723,21 @@ end
 											end
 											return nil
 										end
-										
+
 										local function playCutscene()
 											if customCutsenceStarted then return end
 											customCutsenceStarted = true
 
+											-- Store references to avoid duplication
+											local currentTargetPart = nil
+											local currentTargetType = nil
+											local lastValidCFrame = nil
+
+											-- Store original camera settings
 											local originalCameraCFrame = Camera.CFrame
 											local originalCameraFocus = Camera.Focus
 											local originalCameraType = Camera.CameraType
+											Camera.CameraType = Enum.CameraType.Scriptable
 
 											if SettingsScript.DisplayLogs then
 												print("Starting custom cutscene for SMT Beatdown")
@@ -4740,9 +4747,19 @@ end
 												-- Activate current segment
 												cutsceneData.active = true
 
-												local targetPart = nil
+												-- Get new target for this segment
 												if cutsceneData.target ~= "Cutsence" then
-													targetPart = setCameraToTarget(cutsceneData.target, CurrentPlayer)
+													currentTargetPart = setCameraToTarget(cutsceneData.target, CurrentPlayer)
+													currentTargetType = cutsceneData.target
+
+													-- Store initial CFrame if target found
+													if currentTargetPart and currentTargetPart.Parent then
+														lastValidCFrame = currentTargetPart.CFrame
+														Camera.CFrame = lastValidCFrame
+													elseif lastValidCFrame then
+														-- Use last valid CFrame if target not found
+														Camera.CFrame = lastValidCFrame
+													end
 												end
 
 												if SettingsScript.DisplayLogs then
@@ -4751,28 +4768,60 @@ end
 
 												-- Wait for the duration of this segment
 												local startTime = tick()
+												local lastUpdateTime = startTime
+
 												while tick() - startTime < cutsceneData.time and customCutsenceStarted do
-													-- Continuously update camera position if needed for dynamic targets
-													if targetPart and targetPart.Parent then
-														-- Update camera to follow the target part
-														Camera.CFrame = targetPart.CFrame
-													elseif cutsceneData.target ~= "Cutsence" then
-														-- Try to get target again if it was lost
-														local newTargetPart = setCameraToTarget(cutsceneData.target, CurrentPlayer)
-														if newTargetPart then
-															targetPart = newTargetPart
-															Camera.CFrame = targetPart.CFrame
+													-- Update camera position based on current segment
+													if cutsceneData.target ~= "Cutsence" then
+														-- Check if current target part still exists and is valid
+														if currentTargetPart and currentTargetPart.Parent and currentTargetPart:IsA("BasePart") then
+															-- Smoothly update camera to follow target
+															lastValidCFrame = currentTargetPart.CFrame
+															Camera.CFrame = lastValidCFrame
+														else
+															-- Try to reacquire the target
+															local newTargetPart = setCameraToTarget(cutsceneData.target, CurrentPlayer)
+															if newTargetPart and newTargetPart.Parent then
+																currentTargetPart = newTargetPart
+																lastValidCFrame = currentTargetPart.CFrame
+																Camera.CFrame = lastValidCFrame
+															elseif lastValidCFrame then
+																-- Keep last known position if target lost
+																Camera.CFrame = lastValidCFrame
+															end
 														end
 													end
-													task.wait()
+
+													-- Small delay to prevent excessive updates
+													task.wait(0.016) -- ~60 FPS
+												end
+
+												-- Clear current target before next segment to prevent glitching
+												if cutsceneData.target ~= "Cutsence" then
+													currentTargetPart = nil
+													-- Small delay between segments to smooth transition
+													task.wait(0.05)
 												end
 
 												-- Deactivate current segment
 												cutsceneData.active = false
 											end
 
-											-- Restore original camera settings
-											Camera.CameraType = Enum.CameraType.Custom
+											-- Restore original camera settings with a smooth transition
+											local tweenService = game:GetService("TweenService")
+											local tweenInfo = TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
+
+											-- Create a temporary camera to tween back to original position
+											local tween = tweenService:Create(Camera, tweenInfo, {
+												CFrame = originalCameraCFrame,
+												Focus = originalCameraFocus
+											})
+
+											tween:Play()
+											tween.Completed:Wait()
+
+											-- Restore camera type
+											Camera.CameraType = originalCameraType
 											customCutsenceStarted = false
 
 											if SettingsScript.DisplayLogs then
