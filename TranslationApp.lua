@@ -4768,20 +4768,27 @@ end
 													print("Cutscene segment " .. index .. " - Target: " .. cutsceneData.target .. " - Duration: " .. cutsceneData.time .. "s")
 												end
 
-												local startTime = tick()
+												local segmentFinished = false
 
-												-- Single camera update loop for this segment
-												while tick() - startTime < cutsceneData.time and cutsceneRunning do
-													if cutsceneData.target == "VictimHead" then
-														if victimHeadPart and victimHeadPart.Parent then
-															Camera.CFrame = victimHeadPart.CFrame
+												spawn(function()
+													local startTime = tick()
+													while tick() - startTime < cutsceneData.time and cutsceneRunning and segmentFinished == false do
+														if cutsceneData.target == "VictimHead" then
+															if victimHeadPart and victimHeadPart.Parent then
+																Camera.CFrame = victimHeadPart.CFrame
+															end
+														elseif cutsceneData.target == "BeatdownHead" then
+															if beatdownHeadPart and beatdownHeadPart.Parent then
+																Camera.CFrame = beatdownHeadPart.CFrame
+															end
 														end
-													elseif cutsceneData.target == "BeatdownHead" then
-														if beatdownHeadPart and beatdownHeadPart.Parent then
-															Camera.CFrame = beatdownHeadPart.CFrame
-														end
+														task.wait()
 													end
-													-- For "Cutsence" target, do nothing (keep current camera)
+													segmentFinished = true
+												end)
+
+												-- Wait for segment to complete
+												while not segmentFinished and cutsceneRunning do
 													task.wait()
 												end
 
@@ -4807,8 +4814,11 @@ end
 										if CurrentPlayer == lpr then
 											-- handle it here !!
 											if not cutsceneRunning then
+												spawn(function()
+												cutsceneRunning = true
 												playCutscene()
 												print("Cutscene SMT Beatdown")
+												end)
 											end
 										end
 										
