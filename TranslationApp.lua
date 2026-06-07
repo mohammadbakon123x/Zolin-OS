@@ -1297,6 +1297,13 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 	};
 	local PlayedActionLIGHT = false
 	local customCutsenceStarted = false -- Track if the custom cutscene is already playing | SMT STAND ONLY
+	local customCutsceneTable = {
+		[1] = {time = 2.01, active = false, target = "VictimHead"},
+		[2] = {time = 1.11, active = false, target = "BeatdownHead"},
+		[3] = {time = 2.43, active = false, target = "VictimHead"},
+		[4] = {time = 0.712, active = false, target = "VictimHead"},
+		[5] = {time = 1.11, active = false, target = "VictimHead"},
+	}
 	local ColorCorrectionSystem = {
 		activeEffects = {},
 		globalColorCorrection = nil,
@@ -4669,15 +4676,6 @@ end
 									end
 								elseif modelData.id == "SMT_beatdown" then
 									if soundName == "Nukem" and s.IsPlaying then
-										
-										local customCutsceneTable = {
-											[1] = {time = 2.01, active = false, target = "VictimHead"},
-											[2] = {time = 1.11, active = false, target = "BeatdownHead"},
-											[3] = {time = 2.43, active = false, target = "VictimHead"},
-											[4] = {time = 0.712, active = false, target = "VictimHead"},
-											[5] = {time = 1.11, active = false, target = "VictimHead"},
-										}
-
 										local CutsenseCamPos = StandModel:FindFirstChild("CutsceneCameraPart")
 										if CutsenseCamPos then
 											CutsenseCamPos:Destroy()
@@ -4708,7 +4706,7 @@ end
 											elseif targetType == "BeatdownHead" then
 												-- Camera focuses on the beatdown stand's head
 												if targetPlayer and targetPlayer.Character then
-													local stand = targetPlayer.Character:FindFirstChild("Stand")
+													local stand = StandModel
 													if stand then
 														local standHead = stand:FindFirstChild("Head")
 														if standHead then
@@ -4774,9 +4772,7 @@ end
 											end
 
 											-- Restore original camera settings
-											Camera.CameraType = originalCameraType
-											Camera.CFrame = originalCameraCFrame
-											Camera.Focus = originalCameraFocus
+											Camera.CameraType = Enum.CameraType.Custom
 											customCutsenceStarted = false
 
 											if SettingsScript.DisplayLogs then
