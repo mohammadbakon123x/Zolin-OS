@@ -4681,62 +4681,78 @@ end
 											CutsenseCamPos:Destroy()
 										end
 										
-										local function setCameraToTarget(targetType, player)
-											local targetPlayer = player or CurrentPlayer
-											if not targetPlayer or not targetPlayer.Character then return nil end
-
-											if targetType == "VictimHead" then
-												-- Find the victim (the person being slapped)
-												local victim = nil
-												for _, p in ipairs(game.Players:GetPlayers()) do
-													if p ~= lpr and p.Character then
-														local LSB = p.Character:FindFirstChild("LastSlappedBy")
-														if LSB and LSB.Value == targetPlayer.Name then
-															victim = p
-															break
+										local victimHeadPart = nil
+										local beatdownHeadPart = nil
+										local cutsceneRunning = false
+										
+										-- Pre-fetch targets once before cutscene starts
+										local function getVictimHead()
+											for _, p in ipairs(game.Players:GetPlayers()) do
+												if p ~= lpr and p.Character then
+													local LSB = p.Character:FindFirstChild("LastSlappedBy")
+													if LSB and LSB.Value == CurrentPlayer.Name then
+														local head = p.Character:FindFirstChild("Head")
+														if head and head.Parent then
+															return head
 														end
-													end
-												end
-												if victim and victim.Character then
-													local head = victim.Character:FindFirstChild("Head")
-													if head and head.Parent then
-														return head
-													end
-												end
-											elseif targetType == "BeatdownHead" then
-												-- Camera focuses on the beatdown stand's head
-												if targetPlayer and targetPlayer.Character then
-													local stand = targetPlayer.Character:FindFirstChild("Stand")
-													if stand and stand.Parent then
-														local standHead = stand:FindFirstChild("Head")
-														if standHead and standHead.Parent then
-															return standHead
-														end
-													end
-													-- Fallback to player head if stand head not found
-													local head = targetPlayer.Character:FindFirstChild("Head")
-													if head and head.Parent then
-														print("Using player head for beatdown cutscene")
-														return head
 													end
 												end
 											end
 											return nil
 										end
+										
+										local function getBeatdownHead()
+											if CurrentPlayer and CurrentPlayer.Character then
+												local stand = StandModel or CurrentPlayer.Character:FindFirstChild("Stand")
+												if stand and stand.Parent then
+													local standHead = stand:FindFirstChild("Head")
+													if standHead and standHead.Parent then
+														return standHead
+													end
+												end
+											end
+											return nil
+										end
+										
+										-- Store targets before cutscene starts
+										victimHeadPart = getVictimHead()
+										beatdownHeadPart = getBeatdownHead()
+										
+										local function setCameraToTarget(targetType)
+											if targetType == "VictimHead" then
+												if victimHeadPart and victimHeadPart.Parent then
+													Camera.CFrame = victimHeadPart.CFrame
+													return true
+												end
+											elseif targetType == "BeatdownHead" then
+												if beatdownHeadPart and beatdownHeadPart.Parent then
+													Camera.CFrame = beatdownHeadPart.CFrame
+													return true
+												end
+											end
+											return false
+										end
 
 										local function playCutscene()
-											if customCutsenceStarted then return end
-											customCutsenceStarted = true
+											if cutsceneRunning then return end
+											cutsceneRunning = true
 
-											-- Store references to avoid duplication
-											local currentTargetPart = nil
-											local currentTargetType = nil
-											local lastValidCFrame = nil
+											-- Re-fetch targets to ensure they're valid
+											victimHeadPart = getVictimHead()
+											beatdownHeadPart = getBeatdownHead()
+
+											if not victimHeadPart and not beatdownHeadPart then
+												print("No targets found for cutscene")
+												cutsceneRunning = false
+												return
+											end
 
 											-- Store original camera settings
 											local originalCameraCFrame = Camera.CFrame
 											local originalCameraFocus = Camera.Focus
 											local originalCameraType = Camera.CameraType
+											local originalCameraSubject = Camera.CameraSubject
+
 											Camera.CameraType = Enum.CameraType.Scriptable
 
 											if SettingsScript.DisplayLogs then
@@ -4744,96 +4760,55 @@ end
 											end
 
 											for index, cutsceneData in ipairs(customCutsceneTable) do
-												-- Activate current segment
+												if not cutsceneRunning then break end
+
 												cutsceneData.active = true
-
-												-- Get new target for this segment
-												if cutsceneData.target ~= "Cutsence" then
-													currentTargetPart = setCameraToTarget(cutsceneData.target, CurrentPlayer)
-													currentTargetType = cutsceneData.target
-
-													-- Store initial CFrame if target found
-													if currentTargetPart and currentTargetPart.Parent then
-														lastValidCFrame = currentTargetPart.CFrame
-														Camera.CFrame = lastValidCFrame
-													elseif lastValidCFrame then
-														-- Use last valid CFrame if target not found
-														Camera.CFrame = lastValidCFrame
-													end
-												end
 
 												if SettingsScript.DisplayLogs then
 													print("Cutscene segment " .. index .. " - Target: " .. cutsceneData.target .. " - Duration: " .. cutsceneData.time .. "s")
 												end
 
-												-- Wait for the duration of this segment
 												local startTime = tick()
-												local lastUpdateTime = startTime
 
-												while tick() - startTime < cutsceneData.time and customCutsenceStarted do
-													-- Update camera position based on current segment
-													if cutsceneData.target ~= "Cutsence" then
-														-- Check if current target part still exists and is valid
-														if currentTargetPart and currentTargetPart.Parent and currentTargetPart:IsA("BasePart") then
-															-- Smoothly update camera to follow target
-															lastValidCFrame = currentTargetPart.CFrame
-															Camera.CFrame = lastValidCFrame
-														else
-															-- Try to reacquire the target
-															local newTargetPart = setCameraToTarget(cutsceneData.target, CurrentPlayer)
-															if newTargetPart and newTargetPart.Parent then
-																currentTargetPart = newTargetPart
-																lastValidCFrame = currentTargetPart.CFrame
-																Camera.CFrame = lastValidCFrame
-															elseif lastValidCFrame then
-																-- Keep last known position if target lost
-																Camera.CFrame = lastValidCFrame
-															end
+												-- Single camera update loop for this segment
+												while tick() - startTime < cutsceneData.time and cutsceneRunning do
+													if cutsceneData.target == "VictimHead" then
+														if victimHeadPart and victimHeadPart.Parent then
+															Camera.CFrame = victimHeadPart.CFrame
+														end
+													elseif cutsceneData.target == "BeatdownHead" then
+														if beatdownHeadPart and beatdownHeadPart.Parent then
+															Camera.CFrame = beatdownHeadPart.CFrame
 														end
 													end
-
-													-- Small delay to prevent excessive updates
-													task.wait(0.016) -- ~60 FPS
+													-- For "Cutsence" target, do nothing (keep current camera)
+													task.wait()
 												end
 
-												-- Clear current target before next segment to prevent glitching
-												if cutsceneData.target ~= "Cutsence" then
-													currentTargetPart = nil
-													-- Small delay between segments to smooth transition
-													task.wait(0.05)
-												end
-
-												-- Deactivate current segment
 												cutsceneData.active = false
 											end
 
-											-- Restore original camera settings with a smooth transition
-											local tweenService = game:GetService("TweenService")
-											local tweenInfo = TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
+											-- Restore original camera settings
+											Camera.CameraType = originalCameraType
+											Camera.CameraSubject = originalCameraSubject
 
-											-- Create a temporary camera to tween back to original position
-											local tween = tweenService:Create(Camera, tweenInfo, {
+											-- Smooth transition back to original position
+											local tweenService = game:GetService("TweenService")
+											local tween = tweenService:Create(Camera, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
 												CFrame = originalCameraCFrame,
 												Focus = originalCameraFocus
 											})
-
 											tween:Play()
 											tween.Completed:Wait()
 
-											-- Restore camera type
-											Camera.CameraType = originalCameraType
-											customCutsenceStarted = false
-
-											if SettingsScript.DisplayLogs then
-												print("Custom cutscene finished")
-											end
+											cutsceneRunning = false
 										end
 										
 										if CurrentPlayer == lpr then
 											-- handle it here !!
-											if customCutsenceStarted == false then
+											if not cutsceneRunning then
 												playCutscene()
-												print("Cutsence SMT Beatdown")
+												print("Cutscene SMT Beatdown")
 											end
 										end
 										
