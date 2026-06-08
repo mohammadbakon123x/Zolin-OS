@@ -1298,8 +1298,8 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 	local PlayedActionLIGHT = false
 	local customCutsenceStarted = false -- Track if the custom cutscene is already playing | SMT STAND ONLY
 	local customCutsceneTable = {
-		[1] = {time = 2.01, target = "VictimHead"},
-		[2] = {time = 2.11, target = "BeatdownHead"},
+		[1] = {time = 2.01, target = "BeatdownHead"},
+		[2] = {time = 2.11, target = "VictimHead"},
 		[3] = {time = 1.43, target = "VictimHead"},
 		[4] = {time = 0.412, target = "VictimHead"},
 		[5] = {time = 1.11, target = "BeatdownHead"},
@@ -4788,7 +4788,7 @@ end
 											-- Restore camera type
 											task.wait(0.25)
 
-											Camera.CameraType = originalCameraType
+											Camera.CameraType = Enum.CameraType.Custom
 											Camera.CameraSubject = originalCameraSubject
 
 											if SettingsScript.DisplayLogs then
