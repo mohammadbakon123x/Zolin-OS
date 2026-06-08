@@ -1821,12 +1821,13 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 		local UIStroke_Close = Instance.new("UIStroke", CloseButton)
 		UIStroke_Close.Color = Color3.fromRGB(113, 84, 255)
 		UIStroke_Close.Thickness = 2
-		TranslationApp.trackConnection(CloseButton.MouseButton1Click:Connect(function()
+		local Se23 = CloseButton.MouseButton1Click:Connect(function()
 			if SettingsScript.SaveDataSettings then
 				saveAllExternalSettings()
 			end
 			ExternalSettingsUI.Visible = false
-		end))
+		end)
+		TranslationApp.trackConnection(Se23);
 		CloseButton.MouseEnter:Connect(function()
 			CloseButton.BackgroundColor3 = Color3.fromRGB(85, 75, 110)
 		end)
@@ -1941,7 +1942,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 				toggleButton.BackgroundColor3 = Color3.fromRGB(70, 60, 95)
 				toggleButton.Text = "OFF"
 			end
-			TranslationApp.trackConnection(toggleButton.MouseButton1Click:Connect(function()
+			local Se24 = toggleButton.MouseButton1Click:Connect(function()
 				isEnabled = not isEnabled
 				saveExternalSetting(setting.name, isEnabled)
 				if isEnabled then
@@ -1971,7 +1972,8 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 				if SettingsScript.DisplayLogs then
 					print(setting.name .. ": " .. (isEnabled and "Enabled" or "Disabled"))
 				end
-			end))
+			end)
+			TranslationApp.trackConnection(Se24);
 			toggleButton.MouseEnter:Connect(function()
 				if isEnabled then
 					toggleButton.BackgroundColor3 = Color3.fromRGB(100, 255, 130)
@@ -2309,7 +2311,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 		teleportBtn.MouseLeave:Connect(function()
 			teleportBtn.BackgroundColor3 = Color3.fromRGB(85, 93, 255)
 		end)
-		teleportBtn.MouseButton1Click:Connect(function()
+		local Se27 = teleportBtn.MouseButton1Click:Connect(function()
 			teleportBtn.BackgroundColor3 = Color3.fromRGB(113, 255, 84)
 			teleportBtn.Text = "✓"
 			local success = teleportToPlayerInstant(player)
@@ -2317,6 +2319,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 			teleportBtn.BackgroundColor3 = Color3.fromRGB(85, 93, 255)
 			teleportBtn.Text = "TP"
 		end)
+		TranslationApp.trackConnection(Se27);
 		return playerButton
 	end
 	local function updatePlayerList2()
@@ -4171,7 +4174,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 			selectLabel.TextSize = 11
 			selectLabel.Font = Enum.Font.Gotham
 			selectLabel.TextXAlignment = Enum.TextXAlignment.Right
-			button.MouseButton1Click:Connect(function()
+			local Se28 = button.MouseButton1Click:Connect(function()
 				SelectedBeatdownModel = modelData.id
 				ModelNameLabel.Text = modelData.name
 				ModelIdLabel.Text = "ID: " .. modelData.id
@@ -4205,6 +4208,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 					print("Selected beatdown model: " .. modelData.name .. " (" .. modelData.id .. ")")
 				end
 			end)
+			TranslationApp.trackConnection(Se28);
 			return button
 		end
 		for _, model in ipairs(CustomBeatdownModels) do
@@ -5403,18 +5407,20 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 			if player.Character then
 				setupCharacterMonitoring(player.Character)
 			end
-			TranslationApp.trackConnection(player.CharacterAdded:Connect(function(character)
+			local Se25 = player.CharacterAdded:Connect(function(character)
 				setupCharacterMonitoring(character)
-			end))
+			end)
+			TranslationApp.trackConnection(Se25)
 		end
 		for _, player in ipairs(game.Players:GetPlayers()) do
 			monitorPlayer(player)
 		end
-		TranslationApp.trackConnection(game.Players.PlayerAdded:Connect(function(player)
+		local Se26 = game.Players.PlayerAdded:Connect(function(player)
 			if ViewOtherCustomStands.Enabled then
 				monitorPlayer(player)
 			end
-		end))
+		end)
+		TranslationApp.trackConnection(Se26)
 		if SettingsScript.DisplayLogs then
 			print("Started monitoring other players' stands")
 		end
@@ -5502,7 +5508,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 		UIStroke_ButtonViewStands.StrokeSizingMode = Enum.StrokeSizingMode.FixedSize
 		UIStroke_ButtonViewStands.LineJoinMode = Enum.LineJoinMode.Round
 		UIStroke_ButtonViewStands.Transparency = 0
-		Button_ViewStands.MouseButton1Click:Connect(function()
+		local Se29 = Button_ViewStands.MouseButton1Click:Connect(function()
 			ViewOtherCustomStands.Enabled = not ViewOtherCustomStands.Enabled
 			if ViewOtherCustomStands.Enabled then
 				Button_ViewStands.Text = "Enabled"
@@ -5520,6 +5526,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 				stopMonitoringOtherStands()
 			end
 		end)
+		TranslationApp.trackConnection(Se29)
 		return ViewStandsSetting, Button_ViewStands
 	end
 	local function modifyBeatdownAnimations(enable)
@@ -5800,7 +5807,8 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 		end
 	end
 	--// RUN SERVICES
-	TranslationApp.trackConnection(u6.RenderStepped:Connect(function()
+	
+	local tracked = u6.RenderStepped:Connect(function()
 		if not BodyVelocity or not BodyVelocity.Parent or not v3 or not v3.Parent then
 			ensureBodyInstances()
 			if Flying then
@@ -5853,7 +5861,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 				end
 			end
 		end
-		Button_Slap4.MouseButton1Click:Connect(function()
+		local Se30 = Button_Slap4.MouseButton1Click:Connect(function()
 			SlapBattlesSettings.CustomAnimations = not SlapBattlesSettings.CustomAnimations
 			if SlapBattlesSettings.CustomAnimations then
 				Button_Slap4.Text = "Enabled"
@@ -5871,9 +5879,11 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 				modifyBeatdownAnimations(false)
 			end
 		end)
-	end))
+		TranslationApp.trackConnection(Se30)
+	end)
+	TranslationApp.trackConnection(tracked)
 	--// BUTTONS
-	TranslationApp.trackConnection(ButtonSettings.MouseButton1Click:Connect(function()
+	local Se11 = ButtonSettings.MouseButton1Click:Connect(function()
 		if Settings.Visible == false then
 			Settings.Visible = true
 		else
@@ -5888,8 +5898,9 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 		if ExternalSettingsUI and ExternalSettingsUI.Visible then
 			ExternalSettingsUI.Visible = false;
 		end;
-	end))
-	TranslationApp.trackConnection(Button_Slider1.MouseButton1Click:Connect(function()
+	end)
+	TranslationApp.trackConnection(Se11)
+	local Se12 = Button_Slider1.MouseButton1Click:Connect(function()
 		if Flying == false then
 			Flying = true
 			if l__HumanoidRootPart__9 and l__Humanoid__8 ~= nil then
@@ -5925,8 +5936,9 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 				Button_Slider1.Text = "Disabled"
 			end
 		end
-	end));
-	TranslationApp.trackConnection(Button_Slider2.MouseButton1Click:Connect(function()
+	end);
+	TranslationApp.trackConnection(Se12)
+	local Se13 = Button_Slider2.MouseButton1Click:Connect(function()
 		CurrentFlySpeed = CurrentFlySpeed + 1
 		if CurrentFlySpeed > #FlySpeeds then
 			CurrentFlySpeed = 1
@@ -5937,10 +5949,10 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 			BackgroundColor3 = speedInfo.color,
 			TextColor3 = Color3.fromRGB(255, 255, 255)
 		}):Play()
-	end))
-
+	end)
+	TranslationApp.trackConnection(Se13)
 	-- // DETECTORS
-	TranslationApp.trackConnection(UIS.InputBegan:Connect(function(p6, p7)
+	local Se14 = UIS.InputBegan:Connect(function(p6, p7)
 		if p6.UserInputType == Enum.UserInputType.MouseButton1 or p6.UserInputType == Enum.UserInputType.Touch then
 			if p7 then
 				return;
@@ -5993,7 +6005,8 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 				setupFlying()
 			end
 		end
-	end));
+	end);
+	TranslationApp.trackConnection(Se14)
 	if RemoteEventBanSys and RemoteEventBanSys ~= nil then
 		if SettingsScript.DisplayLogs then
 			print("Hidden Features Activated")
@@ -6114,7 +6127,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 				end
 			end
 		end
-		TranslationApp.trackConnection(Button_Slap1.MouseButton1Click:Connect(function()
+		local Se15 = Button_Slap1.MouseButton1Click:Connect(function()
 			SlapBattlesSettings.ForceOverwriteBeatdown = not SlapBattlesSettings.ForceOverwriteBeatdown
 			if SlapBattlesSettings.ForceOverwriteBeatdown then
 				Button_Slap1.Text = "Enabled"
@@ -6135,8 +6148,9 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 					print("Force Overwrite Beatdown Model: Disabled")
 				end
 			end
-		end))
-		TranslationApp.trackConnection(Button_Slap2.MouseButton1Click:Connect(function()
+		end);
+		TranslationApp.trackConnection(Se15)
+		local Se16 = Button_Slap2.MouseButton1Click:Connect(function()
 			SlapBattlesSettings.BiggerHitbox = not SlapBattlesSettings.BiggerHitbox
 			if SlapBattlesSettings.BiggerHitbox then
 				Button_Slap2.Text = "Enabled"
@@ -6154,8 +6168,9 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 				end
 				modifyStandHitbox()
 			end
-		end))
-		TranslationApp.trackConnection(Button_Slap3.MouseButton1Click:Connect(function()
+		end)
+		TranslationApp.trackConnection(Se16)
+		local Se17 = Button_Slap3.MouseButton1Click:Connect(function()
 			SlapBattlesSettings.HomerunBiggerHitbox = not SlapBattlesSettings.HomerunBiggerHitbox
 			if SlapBattlesSettings.HomerunBiggerHitbox then
 				Button_Slap3.Text = "Enabled"
@@ -6170,7 +6185,8 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 					print("Homerun Bigger Hitbox: Disabled")
 				end
 			end
-		end))
+		end)
+		TranslationApp.trackConnection(Se17);
 		addViewOtherStandsSetting();
 		spawn(function()
 			task.wait(3)
@@ -6181,21 +6197,27 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 		end
 	end
 	--// CONSTANTS
-	TranslationApp.trackConnection(ButtonTeleport.MouseButton1Click:Connect(toggleTeleportUI))
-	TranslationApp.trackConnection(ButtonCustomBeatdown.MouseButton1Click:Connect(toggleCustomBeatdownUI))
-	TranslationApp.trackConnection(ButtonExternalSettings.MouseButton1Click:Connect(toggleExternalSettingsUI))
+	local Se18 = ButtonTeleport.MouseButton1Click:Connect(toggleTeleportUI)
+	local Se19 = ButtonCustomBeatdown.MouseButton1Click:Connect(toggleCustomBeatdownUI)
+	local Se20 = ButtonExternalSettings.MouseButton1Click:Connect(toggleExternalSettingsUI)
 	
-	TranslationApp.trackConnection(game.Players.PlayerAdded:Connect(function(player)
+	TranslationApp.trackConnection(Se18)
+	TranslationApp.trackConnection(Se19)
+	TranslationApp.trackConnection(Se20)
+	
+	local Se21 = game.Players.PlayerAdded:Connect(function(player)
 		task.wait(0.5)
 		if TeleportData.TeleportUI and TeleportData.TeleportUI.Visible then
 			updatePlayerList2()
 		end
-	end))
-	TranslationApp.trackConnection(game.Players.PlayerRemoving:Connect(function(player)
+	end)
+	TranslationApp.trackConnection(Se21)
+	local Se22 = game.Players.PlayerRemoving:Connect(function(player)
 		if TeleportData.TeleportUI and TeleportData.TeleportUI.Visible then
 			updatePlayerList2()
 		end
-	end))
+	end)
+	TranslationApp.trackConnection(Se22)
 
 	-- Clean up the script when the app is destroyed
 	-- Function to safely cleanup everything
