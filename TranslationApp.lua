@@ -3,7 +3,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 	local l__TweenService__5 = game:GetService("TweenService");
 	local UIS = game:GetService("UserInputService");
 	local u6 = game:GetService("RunService")
-	local BuildVersion = "3.18.9"
+	local BuildVersion = "3.19.0"
 	local versionLabel = "v"..BuildVersion;
 	local SettingsScript = {
 		RequireAway = false,
@@ -5463,39 +5463,94 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 										end
 										
 										if CurrentPlayer == lpr then
-											-- handle it here !!
-										if CustomCutsenseUncle3 then
-											if CamPosActive then
-											if not CamPos1 and not CamPos2 and not FinalCamPos then
-												if s.Parent.Parent:FindFirstChild("Head") then
-													Camera.CFrame = s.Parent.Parent.Head.CFrame
-												end
-												elseif CamPos1 and not CamPos2 and not FinalCamPos then
-													-- stand's head
-													if beatdownHead then
-														Camera.CFrame = beatdownHead.CFrame
-														print("Head")
-													else
-														warn("no head")
+											spawn(function()
+											if CustomCutsenseUncle3 and not CamPosActive then
+												CamPosActive = true
+
+												-- Define timers for camera positions
+												local CamPos1_timer = 1.5  -- Switch to beatdown head at 1.5 seconds
+												local CamPos2_timer = 3.5  -- Switch back to victim head at 3.5 seconds
+												local totalDuration = 7    -- Total cutscene duration
+
+												-- Reset flags
+												local CamPos1 = false
+												local CamPos2 = false
+												local FinalCamPos = false
+
+												-- Store original camera settings
+												local originalCameraType = Camera.CameraType
+												Camera.CameraType = Enum.CameraType.Scriptable
+
+												local startTime = tick()
+												print("Starting unified cutscene loop")
+
+												-- Single loop handling both timer and camera updates
+												while CamPosActive and (tick() - startTime) < totalDuration do
+													local elapsedTime = tick() - startTime
+
+													-- Update timer flags
+													if not CamPos1 and elapsedTime >= CamPos1_timer then
+														CamPos1 = true
+														print("CamPos1 triggered at " .. string.format("%.2f", elapsedTime) .. "s")
 													end
-												elseif CamPos1 and CamPos2 and not FinalCamPos then
-													Camera.CFrame = s.Parent.Parent.Head.CFrame
-												elseif CamPos1 and CamPos2 and FinalCamPos then
-													if beatdownHead then
-														Camera.CFrame = beatdownHead.CFrame
+
+													if not CamPos2 and elapsedTime >= CamPos2_timer then
+														CamPos2 = true
+														print("CamPos2 triggered at " .. string.format("%.2f", elapsedTime) .. "s")
+													end
+
+													if not FinalCamPos and elapsedTime >= totalDuration then
+														FinalCamPos = true
+														print("FinalCamPos triggered at " .. string.format("%.2f", elapsedTime) .. "s")
+													end
+
+													-- Get target parts
+													local victimHead = s and s.Parent and s.Parent.Parent and s.Parent.Parent:FindFirstChild("Head")
+													local beatdownHeadPart = beatdownHead
+
+													-- Camera positioning based on current flags
+													if not CamPos1 and not CamPos2 and not FinalCamPos then
+														-- Initial position: Victim Head
+														if victimHead then
+															Camera.CFrame = victimHead.CFrame
+														end
+													elseif CamPos1 and not CamPos2 and not FinalCamPos then
+														-- Position 1: Beatdown Stand Head
+														if beatdownHeadPart and beatdownHeadPart.Parent then
+															Camera.CFrame = beatdownHeadPart.CFrame
+														elseif victimHead then
+															-- Fallback to victim head
+															Camera.CFrame = victimHead.CFrame
+														end
+													elseif CamPos1 and CamPos2 and not FinalCamPos then
+														-- Position 2: Back to Victim Head
+														if victimHead then
+															Camera.CFrame = victimHead.CFrame
+														end
+													elseif CamPos1 and CamPos2 and FinalCamPos then
+														-- Final position: Beatdown Head
+														if beatdownHeadPart and beatdownHeadPart.Parent then
+															Camera.CFrame = beatdownHeadPart.CFrame
+														elseif victimHead then
+															-- Fallback to victim head
+															Camera.CFrame = victimHead.CFrame
+														end
 													else
-														warn("no head. fallback to head victim")
-														if s.Parent.Parent:FindFirstChild("Head") then
-														Camera.CFrame = s.Parent.Parent.Head.CFrame
+														-- Default fallback
+														if victimHead then
+															Camera.CFrame = victimHead.CFrame
 														end
 													end
-												else
-														if s.Parent.Parent:FindFirstChild("Head") then
-															Camera.CFrame = s.Parent.Parent.Head.CFrame
-														end
-													end
+
+													game:GetService("RunService").RenderStepped:Wait()
 												end
+
+												-- Restore camera
+												Camera.CameraType = originalCameraType
+												CamPosActive = false
+												print("Cutscene completed")
 											end
+											end)
 										end
 
 										if not s:FindFirstChildOfClass("ReverbSoundEffect") then
@@ -5528,40 +5583,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 											startColorCorrectionEffectSMT();
 										end
 										--]]
-										
-										--[
-										if CurrentPlayer == lpr then
-											spawn(function()
-												if CustomCutsenseUncle3 and not CamPosActive then
-												CamPosActive = true
-												-- make a timer count from number 0 to 7 [Countup]
-												for i = 0, 7, 0.1 do
-													if not CamPosActive then break end
-													task.wait(0.1);
-													if i == CamPos1_timer and not CamPos1 then
-														print("CamPos1")
-														CamPos1 = true
-													end
-													if i == CamPos2_timer and not CamPos2 then
-														print("CamPos2")
-														CamPos2 = true
-													end
-													if i == 7 then
-														print("FinalCamPos | Ended")
-														if not FinalCamPos then
-															FinalCamPos = true
-														end
-														break
-													end
-														if not CustomCutsenseUncle3 or not CamPosActive then
-														print("Ended")
-														break
-													end
-												end
-											end
-											end)
-										end
-										--]]
+
 										end
 									end
 									if modelData.customSounds and modelData.customSounds[soundName] then
