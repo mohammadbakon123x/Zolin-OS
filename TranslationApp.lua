@@ -5507,7 +5507,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 													-- Get target parts
 													local victimHead = s and s.Parent and s.Parent.Parent and s.Parent.Parent:FindFirstChild("Head")
 													local beatdownHeadPart = beatdownHead
-													local camOffset = Vector3.new(1.1, 0.2, 1.1) -- a little bit fornt
+													local camOffset = Vector3.new(0, 0.2, -1) -- a little bit fornt
 													-- Camera positioning based on current flags
 													if not CamPos1 and not CamPos2 and not FinalCamPos then
 														-- Initial position: Victim Head
