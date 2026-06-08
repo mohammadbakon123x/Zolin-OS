@@ -3,7 +3,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 	local l__TweenService__5 = game:GetService("TweenService");
 	local UIS = game:GetService("UserInputService");
 	local u6 = game:GetService("RunService")
-	local BuildVersion = "3.18.5"
+	local BuildVersion = "3.18.6"
 	local versionLabel = "v"..BuildVersion;
 	local SettingsScript = {
 		RequireAway = true,
@@ -5548,6 +5548,13 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 										if s.Name == "Male Scream Short Yelling Bursts Death Cries (SFX)" then
 											s.SoundId = "rbxassetid://128298841397286"
 											s.PlaybackSpeed = modelData.soundSpeed
+											
+											if CustomCutsenseUncle3 then
+												CamPos1 = false
+												CamPos2 = false
+												FinalCamPos = false
+												print("Reset")
+											end
 										--[[
 										if CurrentPlayer == lpr then
 											spawn(function()
@@ -5560,6 +5567,13 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 										elseif s.Name == "Yell" then
 											s.SoundId = "rbxassetid://130301204112009"
 											s.PlaybackSpeed = modelData.soundSpeed
+											
+											if CustomCutsenseUncle3 then
+												CamPos1 = false
+												CamPos2 = false
+												FinalCamPos = false
+												print("Reset")
+											end
 										--[[
 										if CurrentPlayer == lpr then
 											spawn(function()
@@ -5585,12 +5599,6 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 										if s.Name ~= "explosion2" and s.Name ~= "Hit" and 
 											soundName ~= "Implosion" and soundName ~= "Male Scream Short Yelling Bursts Death Cries (SFX)" then
 											s.PlaybackSpeed = modelData.soundSpeed
-											if CustomCutsenseUncle3 then
-											CamPos1 = false
-											CamPos2 = false
-											FinalCamPos = false
-											print("Reset")
-											end
 										end
 									end
 								elseif modelData.id == "mhe_beatdown" then
