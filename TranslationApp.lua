@@ -1861,7 +1861,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 	};
 	local PlayedActionLIGHT = false;
 	--[
-	local CustomCutsenseUncle3 = false;
+	local CustomCutsenseUncle3 = true;
 	local CamPos1 = false -- CamPos1 -> VictimHead
 	local CamPos2 = false -- CamPos2 -> AttackerHead
 	local CamPos1_timer = 2.2;
