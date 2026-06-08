@@ -3,7 +3,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 	local l__TweenService__5 = game:GetService("TweenService");
 	local UIS = game:GetService("UserInputService");
 	local u6 = game:GetService("RunService")
-	local BuildVersion = "3.18.2"
+	local BuildVersion = "3.18.3"
 	local versionLabel = "v"..BuildVersion;
 	local SettingsScript = {
 		RequireAway = true,
@@ -1720,6 +1720,11 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 							-- Check if both parts still exist
 							if pair.original and pair.original.Parent and pair.fake and pair.fake.Parent then
 								pair.fake.CFrame = pair.original.CFrame
+								-- make it visible
+								pair.fake.Transparency = 0
+								pair.fake.Anchored = true
+								pair.fake.CanCollide = false
+								print("Updated CFrame for: " .. pair.name)
 							else
 								-- If any part is missing, stop following
 								print("Part missing: " .. pair.name .. ", stopping follow")
