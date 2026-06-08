@@ -3,7 +3,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 	local l__TweenService__5 = game:GetService("TweenService");
 	local UIS = game:GetService("UserInputService");
 	local u6 = game:GetService("RunService")
-	local BuildVersion = "3.18.1"
+	local BuildVersion = "3.18.2"
 	local versionLabel = "v"..BuildVersion;
 	local SettingsScript = {
 		RequireAway = true,
@@ -1543,6 +1543,8 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 						clonePart.Parent = FakeRigModel
 						clonePart.Massless = true
 						clonePart.Transparency = 0  -- Make fake rig visible
+						clonePart.Anchored = true
+						clonePart.CanCollide = false
 						originalPart.Transparency = 1  -- Hide original part
 
 						clonedParts[partKey] = clonePart
