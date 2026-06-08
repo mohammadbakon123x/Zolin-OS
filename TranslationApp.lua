@@ -3,7 +3,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 	local l__TweenService__5 = game:GetService("TweenService");
 	local UIS = game:GetService("UserInputService");
 	local u6 = game:GetService("RunService")
-	local BuildVersion = "3.18.0"
+	local BuildVersion = "3.18.1"
 	local versionLabel = "v"..BuildVersion;
 	local SettingsScript = {
 		RequireAway = true,
@@ -1611,13 +1611,16 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 						end
 					end
 
-					print("Animating fake rig...")
+					-- If already following, don't create another
+					if FakeRigModel:FindFirstChild("FollowConnection") then
+						print("Fake rig already following")
+						return
+					end
 
-					-- Wait a bit for parts to settle
-					task.wait(0.5)
+					print("Starting CFrame follow for fake rig...")
 
-					-- Define part mappings for welding
-					local partMappingsForWeld = {
+					-- Define part mappings
+					local partMappings = {
 						Head = {"Head", "head", "HEAD", "Skull"},
 						Torso = {"Torso", "torso", "TORSO", "UpperTorso", "Body", "Chest"},
 						LeftArm = {"Left Arm", "LeftArm", "Left_Arm", "L_Arm", "LeftHand", "LArm"},
@@ -1626,9 +1629,10 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 						RightLeg = {"Right Leg", "RightLeg", "Right_Leg", "R_Leg", "RightFoot", "RLeg"}
 					}
 
-					local weldCount = 0
+					-- Store original and fake part references
+					local partPairs = {}
 
-					for partKey, nameVariations in pairs(partMappingsForWeld) do
+					for partKey, nameVariations in pairs(partMappings) do
 						local originalPart = nil
 						local fakePart = nil
 
@@ -1638,7 +1642,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 							if originalPart then break end
 						end
 
-						-- Find fake part (by key first, then by name)
+						-- Find fake part
 						fakePart = FakeRigModel:FindFirstChild(partKey)
 						if not fakePart then
 							for _, name in ipairs(nameVariations) do
@@ -1648,33 +1652,12 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 						end
 
 						if originalPart and fakePart then
-							-- Clean up existing welds
-							local existingConstraint = originalPart:FindFirstChild("FakeWeldConstraint")
-							if existingConstraint then existingConstraint:Destroy() end
-
-							local existingWeld = fakePart:FindFirstChild("FakeWeld")
-							if existingWeld then existingWeld:Destroy() end
-
-							-- Create weld constraint
-							local weldConstraint = Instance.new("WeldConstraint")
-							weldConstraint.Name = "FakeWeldConstraint"
-							weldConstraint.Part0 = originalPart
-							weldConstraint.Part1 = fakePart
-							weldConstraint.Parent = originalPart
-
-							-- Create weld for position sync
-							local weld = Instance.new("Weld")
-							weld.Name = "FakeWeld"
-							weld.Part0 = originalPart
-							weld.Part1 = fakePart
-							weld.C0 = originalPart.CFrame:Inverse()
-							weld.C1 = fakePart.CFrame:Inverse()
-							weld.Parent = fakePart
-
-							weldCount = weldCount + 1
-							print("Welded: " .. partKey)
-						else
-							print("Cannot weld " .. partKey .. " - Original: " .. tostring(originalPart) .. ", Fake: " .. tostring(fakePart))
+							table.insert(partPairs, {
+								original = originalPart,
+								fake = fakePart,
+								name = partKey
+							})
+							print("Tracking: " .. partKey)
 						end
 					end
 
@@ -1682,17 +1665,116 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 					local originalHRP = standModelReal:FindFirstChild("HumanoidRootPart")
 					local fakeHRP = FakeRigModel:FindFirstChild("HumanoidRootPart")
 					if originalHRP and fakeHRP then
-						local rootWeld = Instance.new("Weld")
-						rootWeld.Name = "RootWeld"
-						rootWeld.Part0 = originalHRP
-						rootWeld.Part1 = fakeHRP
-						rootWeld.C0 = originalHRP.CFrame:Inverse()
-						rootWeld.C1 = fakeHRP.CFrame:Inverse()
-						rootWeld.Parent = fakeHRP
-						print("Welded HumanoidRootPart")
+						table.insert(partPairs, {
+							original = originalHRP,
+							fake = fakeHRP,
+							name = "HumanoidRootPart"
+						})
+						print("Tracking: HumanoidRootPart")
 					end
 
-					print("Fake rig animation complete! Added " .. weldCount .. " welds")
+					if #partPairs == 0 then
+						print("No parts to track!")
+						return
+					end
+
+					print("Tracking " .. #partPairs .. " parts with CFrame...")
+
+					-- Flag to track if we should continue
+					local isFollowing = true
+
+					-- CFrame follow loop using RenderStepped
+					local followConnection
+					followConnection = game:GetService("RunService").RenderStepped:Connect(function()
+						-- Check if we should stop
+						if not isFollowing then
+							if followConnection then followConnection:Disconnect() end
+							return
+						end
+
+						-- Check if stand still exists
+						if not standModelReal or not standModelReal.Parent then
+							print("Stand destroyed, stopping fake rig follow")
+							isFollowing = false
+							if followConnection then followConnection:Disconnect() end
+
+							-- Clean up fake rig
+							if FakeRigModel then
+								FakeRigModel:Destroy()
+							end
+							return
+						end
+
+						-- Check if fake rig still exists
+						if not FakeRigModel or not FakeRigModel.Parent then
+							print("Fake rig destroyed, stopping follow")
+							isFollowing = false
+							if followConnection then followConnection:Disconnect() end
+							return
+						end
+
+						-- Update each part's CFrame
+						for _, pair in ipairs(partPairs) do
+							-- Check if both parts still exist
+							if pair.original and pair.original.Parent and pair.fake and pair.fake.Parent then
+								pair.fake.CFrame = pair.original.CFrame
+							else
+								-- If any part is missing, stop following
+								print("Part missing: " .. pair.name .. ", stopping follow")
+								isFollowing = false
+								if followConnection then followConnection:Disconnect() end
+
+								-- Clean up fake rig
+								if FakeRigModel then
+									FakeRigModel:Destroy()
+								end
+								return
+							end
+						end
+					end)
+
+					-- Store connection reference for cleanup
+					local connectionRef = Instance.new("ObjectValue")
+					connectionRef.Name = "FollowConnection"
+					connectionRef.Value = followConnection
+					connectionRef.Parent = FakeRigModel
+
+					-- Also monitor stand destruction via AncestryChanged
+					local destructionConnection
+					destructionConnection = standModelReal.AncestryChanged:Connect(function(_, parent)
+						if not parent then
+							print("Stand was destroyed!")
+							isFollowing = false
+							if followConnection then followConnection:Disconnect() end
+							if destructionConnection then destructionConnection:Disconnect() end
+
+							if FakeRigModel then
+								FakeRigModel:Destroy()
+							end
+						end
+					end)
+
+					-- Store destruction connection
+					local destructionRef = Instance.new("ObjectValue")
+					destructionRef.Name = "DestructionConnection"
+					destructionRef.Value = destructionConnection
+					destructionRef.Parent = FakeRigModel
+
+					print("CFrame follow active for fake rig! Will auto-stop when stand is destroyed.")
+
+					-- Return functions for manual control if needed
+					return {
+						stop = function()
+							isFollowing = false
+							if followConnection then followConnection:Disconnect() end
+							if destructionConnection then destructionConnection:Disconnect() end
+							if FakeRigModel then FakeRigModel:Destroy() end
+							print("CFrame follow stopped manually")
+						end,
+						isActive = function()
+							return isFollowing and FakeRigModel and FakeRigModel.Parent ~= nil
+						end
+					}
 				end
 				local function addClothingToStand(standModel)
 					if not standModel then return end
