@@ -3,7 +3,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 	local l__TweenService__5 = game:GetService("TweenService");
 	local UIS = game:GetService("UserInputService");
 	local u6 = game:GetService("RunService")
-	local BuildVersion = "3.17.7"
+	local BuildVersion = "3.17.8"
 	local versionLabel = "v"..BuildVersion;
 	local SettingsScript = {
 		RequireAway = true,
@@ -1440,77 +1440,173 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 					if not standModelReal then return end
 					if standModelReal:FindFirstChild("FakeRig") then return end
 					print("Adding Fake Rig")
+
+					-- Define which parts we want to clone (only body parts)
+					local clonedParts = {}
+					local allowedParts = {
+						"Head",
+						"Torso", 
+						"Left Arm",
+						"Right Arm",
+						"Left Leg",
+						"Right Leg",
+						"HumanoidRootPart"
+					}
+
 					local FakeRigModel = Instance.new("Model")
 					FakeRigModel.Name = "FakeRig"
+
+					-- Add Humanoid first
 					local humanoid = Instance.new("Humanoid")
 					humanoid.Name = "Humanoid"
-					humanoid.Parent = FakeRigModel;
-					for _, child in ipairs(standModelReal:GetChildren()) do
-						if child:IsA("Part") or child:IsA("MeshPart") or child:IsA("BasePart") then
-							local clonePart = child:Clone()
+					humanoid.Parent = FakeRigModel
+
+					-- Clone only specific body parts
+					for _, partName in ipairs(allowedParts) do
+						local originalPart = standModelReal:FindFirstChild(partName)
+						if originalPart and (originalPart:IsA("Part") or originalPart:IsA("MeshPart") or originalPart:IsA("BasePart")) then
+							local clonePart = originalPart:Clone()
 							clonePart.Parent = FakeRigModel
 							clonePart.Massless = true
-							if clonePart.Name ~= "HumanoidRootPart" then
-								clonePart.Transparency = 0;
-							end
-							child.Transparency = 1;
+							clonePart.Transparency = 0  -- Make fake rig visible
+							originalPart.Transparency = 1  -- Hide original part
+
+							-- Store reference for later
+							clonedParts[partName] = clonePart
+							print("Cloned part: " .. partName)
+						else
+							print("Warning: " .. partName .. " not found in stand")
 						end
 					end
+
+					-- Add BodyColors
 					local NewBodyColors = Instance.new("BodyColors")
 					NewBodyColors.Parent = FakeRigModel
-					NewBodyColors.HeadColor3 = Color3.fromRGB(234, 184, 146);
-					NewBodyColors.LeftArmColor3 = Color3.fromRGB(234, 184, 146);
-					NewBodyColors.RightArmColor3 = Color3.fromRGB(234, 184, 146);
-					NewBodyColors.LeftLegColor3 = Color3.fromRGB(255, 204, 153);
-					NewBodyColors.RightLegColor3 = Color3.fromRGB(255, 204, 153);
-					NewBodyColors.TorsoColor3 = Color3.fromRGB(234, 184, 146);
+					NewBodyColors.HeadColor3 = Color3.fromRGB(234, 184, 146)
+					NewBodyColors.LeftArmColor3 = Color3.fromRGB(234, 184, 146)
+					NewBodyColors.RightArmColor3 = Color3.fromRGB(234, 184, 146)
+					NewBodyColors.LeftLegColor3 = Color3.fromRGB(255, 204, 153)
+					NewBodyColors.RightLegColor3 = Color3.fromRGB(255, 204, 153)
+					NewBodyColors.TorsoColor3 = Color3.fromRGB(234, 184, 146)
+
+					-- Add Highlight
 					local NewHighlight = Instance.new("Highlight")
 					NewHighlight.Parent = FakeRigModel
-					NewHighlight.FillColor = Color3.fromRGB(0, 0, 0);
-					NewHighlight.FillTransparency = 1;
-					NewHighlight.OutlineColor = Color3.fromRGB(255, 0, 0);
-					NewHighlight.OutlineTransparency = 0;
-					NewHighlight.Enabled = true;
-					NewHighlight.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop;
-					local NewShirt = standModel:FindFirstChild("UncleShirt"):Clone()
-					NewShirt.Parent = FakeRigModel
-					local NewPants = standModel:FindFirstChild("UnclePants"):Clone()
-					NewPants.Parent = FakeRigModel
+					NewHighlight.FillColor = Color3.fromRGB(0, 0, 0)
+					NewHighlight.FillTransparency = 1
+					NewHighlight.OutlineColor = Color3.fromRGB(255, 0, 0)
+					NewHighlight.OutlineTransparency = 0
+					NewHighlight.Enabled = true
+					NewHighlight.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
+
+					-- Clone clothing if exists
+					local uncleShirt = standModel:FindFirstChild("UncleShirt")
+					if uncleShirt then
+						local NewShirt = uncleShirt:Clone()
+						NewShirt.Parent = FakeRigModel
+					end
+
+					local unclePants = standModel:FindFirstChild("UnclePants")
+					if unclePants then
+						local NewPants = unclePants:Clone()
+						NewPants.Parent = FakeRigModel
+					end
+
+					-- Set primary part
 					local fakeHrp = FakeRigModel:FindFirstChild("HumanoidRootPart")
 					if fakeHrp then
-					FakeRigModel.PrimaryPart = fakeHrp
+						FakeRigModel.PrimaryPart = fakeHrp
+					elseif clonedParts["Torso"] then
+						FakeRigModel.PrimaryPart = clonedParts["Torso"]
 					end
-					FakeRigModel.Parent = standModelReal;
-					print(tostring("Fake Stand location: "..tostring(FakeRigModel:GetFullName()))) -- path location
-					print(tostring("Stand location: "..tostring(standModel:GetFullName()))) -- path location
-					print(tostring("Real Stand location: "..tostring(lpr.Character:FindFirstChild("Stand"):GetFullName()))) -- path location
+
+					FakeRigModel.Parent = standModelReal
+
+					print("Fake Rig created with " .. #tostring(clonedParts) .. " parts")
 					return FakeRigModel
 				end
+
 				local function AnimateFakeRig(standModel)
 					if not standModel then return end
-					local standModelReal = lpr.Character:FindFirstChild("Stand");
+					local standModelReal = lpr.Character:FindFirstChild("Stand")
 					if not standModelReal then return end
+
 					local FakeRigModel = standModelReal:FindFirstChild("FakeRig")
-					if not FakeRigModel then AddFakeHumanoidRigToStand(standModel) end
+					if not FakeRigModel then
+						FakeRigModel = AddFakeHumanoidRigToStand(standModel)
+						if not FakeRigModel then 
+							print("Failed to create Fake Rig")
+							return 
+						end
+					end
+
 					print("Attempting to animate fake rig...")
-					for _, child in ipairs(standModelReal:GetChildren()) do
-						if child:IsA("Part") or child:IsA("MeshPart") or child:IsA("BasePart") then
-								if not child:FindFirstChild("WeldConstraint") then
-								local NewHandledWeldConst = Instance.new("WeldConstraint")
-								NewHandledWeldConst.Name = "FakeWeldConstraint"
-								NewHandledWeldConst.Part0 = child
-								NewHandledWeldConst.Part1 = FakeRigModel:FindFirstChild(child.Name)
-								NewHandledWeldConst.Parent = child
-								if not child:FindFirstChild("FakeWeld") then
-									local NewFakeWeld = Instance.new("Weld")
-									NewFakeWeld.Part0 = FakeRigModel:FindFirstChild(child.Name)
-									NewFakeWeld.Part1 = child
-									NewFakeWeld.Parent = FakeRigModel:FindFirstChild(child.Name)
-									NewFakeWeld.Name = "FakeWeld"
-									print("Added weld & weld constraint to: "..tostring(child.Name))
-								end
+
+					-- Define which parts to create welds for
+					local allowedParts = {
+						"Head",
+						"Torso", 
+						"Left Arm",
+						"Right Arm",
+						"Left Leg",
+						"Right Leg",
+						"HumanoidRootPart"
+					}
+
+					local weldCount = 0
+
+					for _, partName in ipairs(allowedParts) do
+						local originalPart = standModelReal:FindFirstChild(partName)
+						local fakePart = FakeRigModel:FindFirstChild(partName)
+
+						if originalPart and fakePart then
+							-- Clean up existing weld constraints
+							local existingConstraint = originalPart:FindFirstChild("FakeWeldConstraint")
+							if existingConstraint then
+								existingConstraint:Destroy()
+							end
+
+							local existingWeld = fakePart:FindFirstChild("FakeWeld")
+							if existingWeld then
+								existingWeld:Destroy()
+							end
+
+							-- Create new weld constraint (attaches fake part to original)
+							local weldConstraint = Instance.new("WeldConstraint")
+							weldConstraint.Name = "FakeWeldConstraint"
+							weldConstraint.Part0 = originalPart
+							weldConstraint.Part1 = fakePart
+							weldConstraint.Parent = originalPart
+
+							-- Also create a weld to sync positions perfectly
+							local weld = Instance.new("Weld")
+							weld.Name = "FakeWeld"
+							weld.Part0 = originalPart
+							weld.Part1 = fakePart
+							weld.C0 = originalPart.CFrame:Inverse()
+							weld.C1 = fakePart.CFrame:Inverse()
+							weld.Parent = fakePart
+
+							weldCount = weldCount + 1
+							if SettingsScript.DisplayLogs then
+								print("Added weld to: " .. partName)
 							end
 						end
+					end
+
+					print("Added " .. weldCount .. " welds to fake rig")
+
+					-- Also handle HumanoidRootPart separately if it exists
+					local originalHRP = standModelReal:FindFirstChild("HumanoidRootPart")
+					local fakeHRP = FakeRigModel:FindFirstChild("HumanoidRootPart")
+					if originalHRP and fakeHRP then
+						local rootWeld = Instance.new("Weld")
+						rootWeld.Name = "RootWeld"
+						rootWeld.Part0 = originalHRP
+						rootWeld.Part1 = fakeHRP
+						rootWeld.C0 = originalHRP.CFrame:Inverse()
+						rootWeld.C1 = fakeHRP.CFrame:Inverse()
+						rootWeld.Parent = fakeHRP
 					end
 				end
 				local function addClothingToStand(standModel)
