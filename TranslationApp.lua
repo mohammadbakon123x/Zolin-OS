@@ -5771,6 +5771,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 			print("Character respawned - Fly system reinitialized")
 		end
 	end
+	print(tostring(lpr));
 	if lpr.Character then
 		handleCharacterRespawn(lpr.Character)
 	end
