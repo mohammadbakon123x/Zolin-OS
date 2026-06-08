@@ -1442,7 +1442,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 					FakeRigModel.Name = "FakeRig"				
 					local humanoid = Instance.new("Humanoid")
 					humanoid.Name = "Humanoid"
-					humanoid.Parent = standModel
+					humanoid.Parent = FakeRigModel;
 					for _, child in ipairs(standModel:GetChildren()) do
 						if child:IsA("BasePart") then
 							local clonePart = child:Clone()
@@ -1490,6 +1490,13 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 								NewHandledWeldConst.Part0 = child
 								NewHandledWeldConst.Part1 = FakeRigModel:FindFirstChild(child.Name)
 								NewHandledWeldConst.Parent = child
+								if not child:FindFirstChild("FakeWeld") then
+									local NewFakeWeld = Instance.new("Weld")
+									NewFakeWeld.Part0 = FakeRigModel:FindFirstChild(child.Name)
+									NewFakeWeld.Part1 = child
+									NewFakeWeld.Parent = FakeRigModel:FindFirstChild(child.Name)
+									NewFakeWeld.Name = "FakeWeld"
+								end
 							end
 						end
 					end
