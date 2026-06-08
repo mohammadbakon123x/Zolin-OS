@@ -1,4 +1,7 @@
 local TranslationApp = {}
+local cleanupConnections = {}  -- Store all connections for cleanup
+local cleanupInstances = {}    -- Store all instances for cleanup
+local isCleanedUp = false      -- Flag to prevent double cleanup
 function TranslationApp.Init(ui, launchArgs, appFolder)
 	local l__TweenService__5 = game:GetService("TweenService");
 	local UIS = game:GetService("UserInputService");
@@ -12,6 +15,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 		AntiExploit = false,
 		SaveDataSettings = false,
 	}
+	
 	local CurrentExternalData = {};
 	local ReplicatedStorage = game:GetService("ReplicatedStorage");
 	local RemotesServerEvents = ReplicatedStorage:WaitForChild("HiddenRemoteEventSignals", 1.5);
@@ -1328,39 +1332,6 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 			print("Detected: Other Game")
 		end
 	end
-	local function cleanupDuplicateScripts(parent)
-		for _, child in ipairs(parent:GetChildren()) do
-			if child:IsA("LocalScript") then
-				if child:GetAttribute("__TranslationUI_indexNumber35") == false then
-					child:Destroy();
-					print("Removed duplicate LocalScript from " .. parent.Name)
-				end
-			end
-		end
-	end
-	if lpr.PlayerGui:FindFirstChild("NewMainUI") then
-		lpr.PlayerGui.NewMainUI:Destroy();
-		if lpr.Character then
-			cleanupDuplicateScripts(lpr.Character)
-		end
-		cleanupDuplicateScripts(lpr.PlayerGui)
-		print("Old UI Removed");
-		task.delay(1, function()
-			script:SetAttribute("__TranslationUI_indexNumber35", false);
-			if SettingsScript.DisplayLogs then
-				print("Reset duplication check attribute");
-			end
-		end)
-	end
---[[
-if script.Parent ~= MainUI then
-	script.Parent = MainUI;
-	script.Name = "MainUI_Handler"
-	print("UI Parented Correctly");
-else
-	print("UI Parented Already");
-end
---]]
 	local TranslationUI = game.Players.LocalPlayer.PlayerGui:FindFirstChild("ZolinOS").__ScreenFrame.Applications:FindFirstChild("TranslationUI");
 	if not TranslationUI then
 		warn("TranslationUI not found in PlayerGui")
@@ -1850,12 +1821,12 @@ end
 		local UIStroke_Close = Instance.new("UIStroke", CloseButton)
 		UIStroke_Close.Color = Color3.fromRGB(113, 84, 255)
 		UIStroke_Close.Thickness = 2
-		CloseButton.MouseButton1Click:Connect(function()
+		TranslationApp.trackConnection(CloseButton.MouseButton1Click:Connect(function()
 			if SettingsScript.SaveDataSettings then
 				saveAllExternalSettings()
 			end
 			ExternalSettingsUI.Visible = false
-		end)
+		end))
 		CloseButton.MouseEnter:Connect(function()
 			CloseButton.BackgroundColor3 = Color3.fromRGB(85, 75, 110)
 		end)
@@ -1970,7 +1941,7 @@ end
 				toggleButton.BackgroundColor3 = Color3.fromRGB(70, 60, 95)
 				toggleButton.Text = "OFF"
 			end
-			toggleButton.MouseButton1Click:Connect(function()
+			TranslationApp.trackConnection(toggleButton.MouseButton1Click:Connect(function()
 				isEnabled = not isEnabled
 				saveExternalSetting(setting.name, isEnabled)
 				if isEnabled then
@@ -2000,7 +1971,7 @@ end
 				if SettingsScript.DisplayLogs then
 					print(setting.name .. ": " .. (isEnabled and "Enabled" or "Disabled"))
 				end
-			end)
+			end))
 			toggleButton.MouseEnter:Connect(function()
 				if isEnabled then
 					toggleButton.BackgroundColor3 = Color3.fromRGB(100, 255, 130)
@@ -4396,6 +4367,11 @@ end
 				if LSB and LSB.Value == CurrentPlayer.Name then
 					local torso = p.Character:FindFirstChild("Torso")
 					local head = p.Character:FindFirstChild("Head");
+					
+					local victimHeadPart = head
+					local beatdownHeadPart = nil
+					local cutsceneRunning = false
+					
 					if torso and head then
 						for _, s in ipairs(torso:GetChildren()) do
 							if s:IsA("Sound") then
@@ -4678,9 +4654,7 @@ end
 											CutsenseCamPos:Destroy()
 										end
 										
-										local victimHeadPart = head
-										local beatdownHeadPart = nil
-										local cutsceneRunning = false
+
 										
 										local function getBeatdownHead()
 											if CurrentPlayer and CurrentPlayer.Character then
@@ -4696,31 +4670,19 @@ end
 										end
 										
 										beatdownHeadPart = getBeatdownHead()
-										
-										local function setCameraToTarget(targetType)
-											if targetType == "VictimHead" then
-												if victimHeadPart and victimHeadPart.Parent then
-													Camera.CFrame = victimHeadPart.CFrame
-													return true
-												end
-											elseif targetType == "BeatdownHead" then
-												if beatdownHeadPart and beatdownHeadPart.Parent then
-													Camera.CFrame = beatdownHeadPart.CFrame
-													return true
-												end
-											end
-											return false
-										end
 
 										local function playCutscene()
 											if cutsceneRunning then return end
 											cutsceneRunning = true
 
+											-- Refresh targets right before cutscene starts
 											beatdownHeadPart = getBeatdownHead()
-											-- victimHeadPart is already defined earlier, no need to call again
 
-											if not victimHeadPart and not beatdownHeadPart then
-												print("No targets found for cutscene")
+											-- Store beatdown head position as backup in case stand disappears
+											local beatdownHeadLastPosition = beatdownHeadPart and beatdownHeadPart.CFrame or nil
+
+											if not victimHeadPart then
+												print("Victim head not found for cutscene")
 												cutsceneRunning = false
 												return
 											end
@@ -4771,8 +4733,17 @@ end
 														Camera.CFrame = victimHeadPart.CFrame
 													end
 												elseif currentSegmentData.target == "BeatdownHead" then
-													if beatdownHeadPart and beatdownHeadPart.Parent then
-														Camera.CFrame = beatdownHeadPart.CFrame
+													-- Try to get current beatdown head first
+													local currentBeatdownHead = getBeatdownHead()
+													if currentBeatdownHead and currentBeatdownHead.Parent then
+														Camera.CFrame = currentBeatdownHead.CFrame
+														beatdownHeadLastPosition = currentBeatdownHead.CFrame
+													elseif beatdownHeadLastPosition then
+														-- Use last known position if stand disappeared
+														Camera.CFrame = beatdownHeadLastPosition
+													elseif victimHeadPart and victimHeadPart.Parent then
+														-- Fallback to victim head if beatdown head completely lost
+														Camera.CFrame = victimHeadPart.CFrame
 													end
 												end
 
@@ -5432,18 +5403,18 @@ end
 			if player.Character then
 				setupCharacterMonitoring(player.Character)
 			end
-			player.CharacterAdded:Connect(function(character)
+			TranslationApp.trackConnection(player.CharacterAdded:Connect(function(character)
 				setupCharacterMonitoring(character)
-			end)
+			end))
 		end
 		for _, player in ipairs(game.Players:GetPlayers()) do
 			monitorPlayer(player)
 		end
-		game.Players.PlayerAdded:Connect(function(player)
+		TranslationApp.trackConnection(game.Players.PlayerAdded:Connect(function(player)
 			if ViewOtherCustomStands.Enabled then
 				monitorPlayer(player)
 			end
-		end)
+		end))
 		if SettingsScript.DisplayLogs then
 			print("Started monitoring other players' stands")
 		end
@@ -5800,7 +5771,7 @@ end
 			print("Character respawned - Fly system reinitialized")
 		end
 	end
-	lpr.CharacterAdded:Connect(handleCharacterRespawn)
+	TranslationApp.trackConnection(lpr.CharacterAdded:Connect(handleCharacterRespawn))
 	if lpr.Character then
 		handleCharacterRespawn(lpr.Character)
 	end
@@ -5829,7 +5800,7 @@ end
 		end
 	end
 	--// RUN SERVICES
-	u6.RenderStepped:Connect(function()
+	TranslationApp.trackConnection(u6.RenderStepped:Connect(function()
 		if not BodyVelocity or not BodyVelocity.Parent or not v3 or not v3.Parent then
 			ensureBodyInstances()
 			if Flying then
@@ -5900,9 +5871,9 @@ end
 				modifyBeatdownAnimations(false)
 			end
 		end)
-	end)
+	end))
 	--// BUTTONS
-	ButtonSettings.MouseButton1Click:Connect(function()
+	TranslationApp.trackConnection(ButtonSettings.MouseButton1Click:Connect(function()
 		if Settings.Visible == false then
 			Settings.Visible = true
 		else
@@ -5917,8 +5888,8 @@ end
 		if ExternalSettingsUI and ExternalSettingsUI.Visible then
 			ExternalSettingsUI.Visible = false;
 		end;
-	end)
-	Button_Slider1.MouseButton1Click:Connect(function()
+	end))
+	TranslationApp.trackConnection(Button_Slider1.MouseButton1Click:Connect(function()
 		if Flying == false then
 			Flying = true
 			if l__HumanoidRootPart__9 and l__Humanoid__8 ~= nil then
@@ -5954,8 +5925,8 @@ end
 				Button_Slider1.Text = "Disabled"
 			end
 		end
-	end);
-	Button_Slider2.MouseButton1Click:Connect(function()
+	end));
+	TranslationApp.trackConnection(Button_Slider2.MouseButton1Click:Connect(function()
 		CurrentFlySpeed = CurrentFlySpeed + 1
 		if CurrentFlySpeed > #FlySpeeds then
 			CurrentFlySpeed = 1
@@ -5966,10 +5937,10 @@ end
 			BackgroundColor3 = speedInfo.color,
 			TextColor3 = Color3.fromRGB(255, 255, 255)
 		}):Play()
-	end)
+	end))
 
 	-- // DETECTORS
-	UIS.InputBegan:Connect(function(p6, p7)
+	TranslationApp.trackConnection(UIS.InputBegan:Connect(function(p6, p7)
 		if p6.UserInputType == Enum.UserInputType.MouseButton1 or p6.UserInputType == Enum.UserInputType.Touch then
 			if p7 then
 				return;
@@ -6022,7 +5993,7 @@ end
 				setupFlying()
 			end
 		end
-	end);
+	end));
 	if RemoteEventBanSys and RemoteEventBanSys ~= nil then
 		if SettingsScript.DisplayLogs then
 			print("Hidden Features Activated")
@@ -6143,7 +6114,7 @@ end
 				end
 			end
 		end
-		Button_Slap1.MouseButton1Click:Connect(function()
+		TranslationApp.trackConnection(Button_Slap1.MouseButton1Click:Connect(function()
 			SlapBattlesSettings.ForceOverwriteBeatdown = not SlapBattlesSettings.ForceOverwriteBeatdown
 			if SlapBattlesSettings.ForceOverwriteBeatdown then
 				Button_Slap1.Text = "Enabled"
@@ -6164,8 +6135,8 @@ end
 					print("Force Overwrite Beatdown Model: Disabled")
 				end
 			end
-		end)
-		Button_Slap2.MouseButton1Click:Connect(function()
+		end))
+		TranslationApp.trackConnection(Button_Slap2.MouseButton1Click:Connect(function()
 			SlapBattlesSettings.BiggerHitbox = not SlapBattlesSettings.BiggerHitbox
 			if SlapBattlesSettings.BiggerHitbox then
 				Button_Slap2.Text = "Enabled"
@@ -6183,8 +6154,8 @@ end
 				end
 				modifyStandHitbox()
 			end
-		end)
-		Button_Slap3.MouseButton1Click:Connect(function()
+		end))
+		TranslationApp.trackConnection(Button_Slap3.MouseButton1Click:Connect(function()
 			SlapBattlesSettings.HomerunBiggerHitbox = not SlapBattlesSettings.HomerunBiggerHitbox
 			if SlapBattlesSettings.HomerunBiggerHitbox then
 				Button_Slap3.Text = "Enabled"
@@ -6199,7 +6170,7 @@ end
 					print("Homerun Bigger Hitbox: Disabled")
 				end
 			end
-		end)
+		end))
 		addViewOtherStandsSetting();
 		spawn(function()
 			task.wait(3)
@@ -6210,34 +6181,127 @@ end
 		end
 	end
 	--// CONSTANTS
-	ButtonTeleport.MouseButton1Click:Connect(toggleTeleportUI)
-	ButtonCustomBeatdown.MouseButton1Click:Connect(toggleCustomBeatdownUI)
-	ButtonExternalSettings.MouseButton1Click:Connect(toggleExternalSettingsUI)
-	game.Players.PlayerAdded:Connect(function(player)
+	TranslationApp.trackConnection(ButtonTeleport.MouseButton1Click:Connect(toggleTeleportUI))
+	TranslationApp.trackConnection(ButtonCustomBeatdown.MouseButton1Click:Connect(toggleCustomBeatdownUI))
+	TranslationApp.trackConnection(ButtonExternalSettings.MouseButton1Click:Connect(toggleExternalSettingsUI))
+	
+	TranslationApp.trackConnection(game.Players.PlayerAdded:Connect(function(player)
 		task.wait(0.5)
 		if TeleportData.TeleportUI and TeleportData.TeleportUI.Visible then
 			updatePlayerList2()
 		end
-	end)
-	game.Players.PlayerRemoving:Connect(function(player)
+	end))
+	TranslationApp.trackConnection(game.Players.PlayerRemoving:Connect(function(player)
 		if TeleportData.TeleportUI and TeleportData.TeleportUI.Visible then
 			updatePlayerList2()
 		end
-	end)
+	end))
 
+	-- Clean up the script when the app is destroyed
+	-- Function to safely cleanup everything
+	local function cleanupEverything()
+		if isCleanedUp then return end
+		isCleanedUp = true
+
+		if SettingsScript.DisplayLogs then
+			print("Cleaning up all resources...")
+		end
+
+		-- Disable flying if active
+		if Flying then
+			Flying = false
+			if l__Humanoid__8 then
+				pcall(function()
+					l__Humanoid__8:SetStateEnabled(Enum.HumanoidStateType.Running, true)
+					l__Humanoid__8:SetStateEnabled(Enum.HumanoidStateType.Climbing, true)
+					l__Humanoid__8:SetStateEnabled(Enum.HumanoidStateType.FallingDown, true)
+					l__Humanoid__8:SetStateEnabled(Enum.HumanoidStateType.Freefall, true)
+					l__Humanoid__8.PlatformStand = false
+				end)
+			end
+		end
+
+		-- Cleanup BodyVelocity and BodyGyro
+		cleanupBodyInstances()
+
+		-- Stop monitoring other stands
+		stopMonitoringOtherStands()
+
+		-- Disconnect all connections
+		for _, connection in ipairs(cleanupConnections) do
+			pcall(function()
+				if connection and connection.Disconnect then
+					connection:Disconnect()
+				end
+			end)
+		end
+		cleanupConnections = {}
+
+		-- Destroy all instances
+		for _, instance in ipairs(cleanupInstances) do
+			pcall(function()
+				if instance and instance.Destroy then
+					instance:Destroy()
+				end
+			end)
+		end
+		cleanupInstances = {}
+
+		-- Cleanup ColorCorrection effects
+		for _, child in ipairs(game.Lighting:GetChildren()) do
+			if child:IsA("ColorCorrectionEffect") and child.Name:find("CutsenseJoJo") then
+				pcall(function() child:Destroy() end)
+			end
+		end
+
+		-- Cleanup SoundService effects
+		pcall(function()
+			game:GetService("SoundService").AmbientReverb = Enum.ReverbType.NoReverb
+			local timestop = game:GetService("SoundService"):FindFirstChild("Timestop")
+			if timestop then timestop:Stop() end
+			local timeresume = game:GetService("SoundService"):FindFirstChild("Timeresume")
+			if timeresume then timeresume:Stop() end
+			local clock = game:GetService("SoundService"):FindFirstChild("Clock")
+			if clock then clock:Stop() end
+		end)
+
+		if SettingsScript.DisplayLogs then
+			print("Cleanup completed")
+		end
+	end
+	
+	-- Helper function to track connections and instances
+	function TranslationApp.trackConnection(connection)
+		if connection then
+			table.insert(cleanupConnections, connection)
+		end
+		return connection
+	end
+
+	function TranslationApp.trackInstance(instance)
+		if instance then
+			table.insert(cleanupInstances, instance)
+		end
+		return instance
+	end
 
 	--// INITIALIZE
 	startAutoUpdate()
 	createTeleportUI()
 	
-	-- kill script when app is closed
 	spawn(function()
 		while true do
-			task.wait(0.5);
+			task.wait(0.5)
+			local TranslationUI = game.Players.LocalPlayer.PlayerGui:FindFirstChild("ZolinOS")
+			if TranslationUI and TranslationUI:FindFirstChild("__ScreenFrame") then
+				TranslationUI = TranslationUI.__ScreenFrame.Applications:FindFirstChild("TranslationUI")
+			end
+
 			if TranslationUI == nil then
-				print("App killed")
-				script:Destroy();
-				break;
+				print("App killed - cleaning up...")
+				cleanupEverything()
+				script:Destroy()
+				break
 			end
 		end
 	end)
