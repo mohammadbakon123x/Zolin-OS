@@ -1,8 +1,5 @@
 local TranslationApp = {}
 function TranslationApp.Init(ui, launchArgs, appFolder)
-	local cleanupConnections = {}  -- Store all connections for cleanup
-	local cleanupInstances = {}    -- Store all instances for cleanup
-	local isCleanedUp = false      -- Flag to prevent double cleanup
 	local l__TweenService__5 = game:GetService("TweenService");
 	local UIS = game:GetService("UserInputService");
 	local u6 = game:GetService("RunService")
@@ -15,7 +12,6 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 		AntiExploit = false,
 		SaveDataSettings = false,
 	}
-	
 	local CurrentExternalData = {};
 	local ReplicatedStorage = game:GetService("ReplicatedStorage");
 	local RemotesServerEvents = ReplicatedStorage:WaitForChild("HiddenRemoteEventSignals", 1.5);
@@ -1283,6 +1279,245 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 				end
 			end
 		},
+		{
+			id = "Uncle_beatdown3",
+			name = "Your_Uncle Beatdown CoolOutfit",
+			description = "ahh, the last time Your_Uncle has taken much power and taking them down, ha! we got a cool outfit for him, Welcome Your_Uncle, you will lead the game entire, and everyone They will cower in fear and terror and will not resist you. And whoever disobeys, he will suffer a deadly punishment! . but there's a problem, Your_Uncle can't see normal colors as we see, because his eyes are colorblinded, only see red & white : (",
+			color = Color3.fromRGB(0, 0, 0),
+			fireColor = Color3.fromRGB(255, 0, 0),
+			material = Enum.Material.SmoothPlastic,
+			transparency = 0,
+			icon = "rbxassetid://5912420913",
+			iconColor = Color3.fromRGB(0, 0, 0),
+			soundSpeed = 0.7,
+			customSounds = {
+				["Nukem"] = 0.82, --0.7 -- 1
+				["Male Scream Short Yelling Bursts Death Cries (SFX)"] = 1,
+				["explosion2"] = 1,
+				["Gun1"] = 0.6,
+				["Gun2"] = 0.9,
+				["Yell"] = 1,
+				["Hit"] = 0.5,
+				["Implosion"] = 0.7,
+			},
+			enabled = false,
+			specialEffects = function(parts)
+				local meshesToRemove = {}
+				local rigParts = {}
+				local headPart = nil
+				local applyAnimation = false
+				for _, part in ipairs(parts) do
+					if part:IsA("BasePart") then
+						part.Color = Color3.fromRGB(0, 0, 0)
+						if part.Name == "Head" then
+							headPart = part
+						end
+						if part.Name == "Torso" or part.Name == "Left Leg" or part.Name == "Right Leg" or 
+							part.Name == "Left Arm" or part.Name == "Right Arm" or part.Name == "Head" then
+							table.insert(rigParts, part)
+						end
+						if part.Name == "Torso" or part.Name:find("Leg") or part.Name:find("Arm") then
+							for _, child in ipairs(part:GetChildren()) do
+								if child:IsA("SpecialMesh") then
+									table.insert(meshesToRemove, child)
+								end
+							end
+						end
+						if part:FindFirstChild("PointLight") then return end
+						local pointLight = Instance.new("PointLight")
+						pointLight.Color = Color3.fromRGB(255, 0, 0)
+						pointLight.Range = 8
+						pointLight.Brightness = 2.5
+						pointLight.Shadows = true
+						pointLight.Enabled = true
+						pointLight.Parent = part
+						if part.Name ~= "HumanoidRootPart" then
+							part.Transparency = 0
+							part.Material = Enum.Material.Neon
+						end
+					end
+				end
+				for _, mesh in ipairs(meshesToRemove) do
+					mesh:Destroy()
+				end
+				if #rigParts > 0 then
+					spawn(function()
+						for _, rigPart in ipairs(rigParts) do
+							rigPart.Color = Color3.fromRGB(0, 0, 0)
+							rigPart.Material = Enum.Material.Neon
+						end
+					end)
+				end
+				local function addTopHatToHead(head)
+					if not head then return end
+					if head.Parent:FindFirstChild("HatMeshPartAccessory") then return end
+					for _, child in ipairs(head.Parent:GetChildren()) do
+						if child.Name == "HatMeshPartAccessory" then
+							child:Destroy()
+						end
+					end
+					local hatAccessory = Instance.new("Accessory")
+					hatAccessory.Name = "HatMeshPartAccessory"
+					local attachment = Instance.new("Attachment")
+					attachment.Name = "AccessoryWeld"
+					attachment.Position = Vector3.new(0.003, -0.304, 0.009)
+					attachment.Orientation = Vector3.new(0, 0, 0)
+					attachment.Parent = hatAccessory
+					local handle = Instance.new("Part")
+					handle.Name = "Handle"
+					handle.Size = Vector3.new(1.5, 1.5, 1.5)
+					handle.CanCollide = false
+					handle.Transparency = 0
+					handle.Massless = true
+					handle.Parent = hatAccessory
+					local specialMesh = Instance.new("SpecialMesh")
+					specialMesh.MeshId = "rbxassetid://5029193842"
+					specialMesh.TextureId = "http://www.roblox.com/asset/?id=5029175990"
+					specialMesh.Scale = Vector3.new(1, 1, 1)
+					specialMesh.VertexColor = Vector3.new(1, 1, 1)
+					specialMesh.MeshType = Enum.MeshType.FileMesh
+					specialMesh.Parent = handle
+					local accessoryWeld = Instance.new("Weld")
+					accessoryWeld.Name = "AccessoryWeld"
+					accessoryWeld.Part0 = handle
+					accessoryWeld.Part1 = head
+					accessoryWeld.C0 = CFrame.new(0.003, -0.304, 0.009) * CFrame.Angles(0, 0, 0)
+					accessoryWeld.C1 = CFrame.new(0, 0.6, 0) * CFrame.Angles(0, 0, 0)
+					accessoryWeld.Enabled = true
+					accessoryWeld.Parent = handle
+					hatAccessory.Parent = head.Parent
+					if specialMesh then
+						handle.Color = Color3.fromRGB(0, 0, 0)
+					end
+					return hatAccessory
+				end
+				local function addRedEyeHandleToHead(head)
+					if not head then return end
+					if head.Parent:FindFirstChild("MeshPartAccessory") then return end
+					for _, child in ipairs(head.Parent:GetChildren()) do
+						if child.Name == "MeshPartAccessory" then
+							child:Destroy()
+						end
+					end
+					local hatAccessory = Instance.new("Accessory")
+					hatAccessory.Name = "MeshPartAccessory"
+					local attachment = Instance.new("Attachment")
+					attachment.Name = "AccessoryWeld"
+					attachment.Position = Vector3.new(-0, -0.34, -0)
+					attachment.Orientation = Vector3.new(0, 0, 0)
+					attachment.Parent = hatAccessory
+					local handle = Instance.new("Part")
+					handle.Name = "Handle"
+					handle.Size = Vector3.new(1, 1, 1)
+					handle.CanCollide = false
+					handle.Transparency = 0
+					handle.Massless = true
+					handle.Parent = hatAccessory
+					local specialMesh = Instance.new("SpecialMesh")
+					specialMesh.MeshId = "rbxassetid://6002625087"
+					specialMesh.TextureId = "rbxassetid://6002608052"
+					specialMesh.Scale = Vector3.new(1, 1, 1)
+					specialMesh.VertexColor = Vector3.new(1, 1, 1)
+					specialMesh.MeshType = Enum.MeshType.FileMesh
+					specialMesh.Parent = handle
+					local accessoryWeld = Instance.new("Weld")
+					accessoryWeld.Name = "AccessoryWeld"
+					accessoryWeld.Part0 = handle
+					accessoryWeld.Part1 = head
+					accessoryWeld.C0 = CFrame.new(-0, -0.34, -0) * CFrame.Angles(0, 0, 0)
+					accessoryWeld.C1 = CFrame.new(0, 0, 0) * CFrame.Angles(0, 0, 0)
+					accessoryWeld.Enabled = true
+					accessoryWeld.Parent = handle
+					hatAccessory.Parent = head.Parent
+					if specialMesh then
+						handle.Color = Color3.fromRGB(0, 0, 0)
+					end
+					return hatAccessory
+				end
+				
+				local function AddFakeHumanoidRigToStand(standModel)
+					if not standModel then return end
+					if standModel:FindFirstChild("FakeRig") then return end
+					local FakeRigModel = Instance.new("Model")
+					FakeRigModel.Name = "FakeRig"				
+					local humanoid = Instance.new("Humanoid")
+					humanoid.Name = "Humanoid"
+					humanoid.Parent = standModel
+					for _, child in ipairs(standModel:GetChildren()) do
+						if child:IsA("BasePart") then
+							local clonePart = child:Clone()
+							clonePart.Parent = FakeRigModel
+							clonePart.Massless = true
+							child.Transparency = 1;
+							if clonePart.Name ~= "HumanoidRootPart" then
+								clonePart.Transparency = 0;
+							end
+						end
+					end
+					local NewBodyColors = Instance.new("BodyColors")
+					NewBodyColors.Parent = FakeRigModel
+					NewBodyColors.HeadColor3 = Color3.fromRGB(234, 184, 146);
+					NewBodyColors.LeftArmColor3 = Color3.fromRGB(234, 184, 146);
+					NewBodyColors.RightArmColor3 = Color3.fromRGB(234, 184, 146);
+					NewBodyColors.LeftLegColor3 = Color3.fromRGB(255, 204, 153);
+					NewBodyColors.RightLegColor3 = Color3.fromRGB(255, 204, 153);
+					NewBodyColors.TorsoColor3 = Color3.fromRGB(234, 184, 146);
+					local NewHighlight = Instance.new("Highlight")
+					NewHighlight.Parent = FakeRigModel
+					NewHighlight.FillColor = Color3.fromRGB(0, 0, 0);
+					NewHighlight.FillTransparency = 1;
+					NewHighlight.OutlineColor = Color3.fromRGB(255, 0, 0);
+					NewHighlight.OutlineTransparency = 0;
+					NewHighlight.Enabled = true;
+					NewHighlight.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop;
+					local NewShirt = standModel:FindFirstChild("UncleShirt"):Clone()
+					NewShirt.Parent = FakeRigModel
+					local NewPants = standModel:FindFirstChild("UnclePants"):Clone()
+					NewPants.Parent = FakeRigModel
+					local fakeHrp = FakeRigModel:FindFirstChild("HumanoidRootPart")
+					if fakeHrp then
+					FakeRigModel.PrimaryPart = fakeHrp
+					end
+				end
+				local function AnimateFakeRig(standModel)
+					if not standModel then return end
+					local FakeRigModel = standModel:FindFirstChild("FakeRig")
+					if not FakeRigModel then AddFakeHumanoidRigToStand(standModel) end
+					for _, child in ipairs(standModel:GetChildren()) do
+							if child:IsA("BasePart") then
+								if not child:FindFirstChild("WeldConstraint") then
+								local NewHandledWeldConst = Instance.new("WeldConstraint")
+								NewHandledWeldConst.Part0 = child
+								NewHandledWeldConst.Part1 = FakeRigModel:FindFirstChild(child.Name)
+								NewHandledWeldConst.Parent = child
+							end
+						end
+					end
+				end
+				local function addClothingToStand(standModel)
+					if not standModel then return end
+					local torso = standModel:FindFirstChild("Torso")
+					if not torso then return end
+					if standModel:FindFirstChild("UncleShirt") then return end
+					local shirt = Instance.new("Shirt")
+					shirt.Name = "UncleShirt"
+					shirt.ShirtTemplate = "http://www.roblox.com/asset/?id=8450171902"
+					local pants = Instance.new("Pants")
+					pants.Name = "UnclePants"
+					pants.PantsTemplate = "http://www.roblox.com/asset/?id=8427781292"
+					shirt.Parent = standModel
+					pants.Parent = standModel
+				end
+				if parts[1] and parts[1].Parent then
+					if headPart then
+						addTopHatToHead(headPart);
+						addRedEyeHandleToHead(headPart);
+					end
+					addClothingToStand(parts[1].Parent)
+					AnimateFakeRig(parts[1].Parent);
+				end
+			end
+		},
 	}
 	local SelectedBeatdownModel = "evil_beatdown"
 	local ViewportCamera = nil
@@ -1300,10 +1535,6 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 		ActiveChecks = {} -- Track which players we're monitoring
 	};
 	local PlayedActionLIGHT = false;
-	local customCutsceneTable = {
-		[1] = {time = 1.81, target = "BeatdownHead"},
-		[2] = {time = 5.28, target = "VictimHead"},
-	}
 	local ColorCorrectionSystem = {
 		activeEffects = {},
 		globalColorCorrection = nil,
@@ -1821,13 +2052,12 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 		local UIStroke_Close = Instance.new("UIStroke", CloseButton)
 		UIStroke_Close.Color = Color3.fromRGB(113, 84, 255)
 		UIStroke_Close.Thickness = 2
-		local Se23 = CloseButton.MouseButton1Click:Connect(function()
+		CloseButton.MouseButton1Click:Connect(function()
 			if SettingsScript.SaveDataSettings then
 				saveAllExternalSettings()
 			end
 			ExternalSettingsUI.Visible = false
 		end)
-		TranslationApp.trackConnection(Se23);
 		CloseButton.MouseEnter:Connect(function()
 			CloseButton.BackgroundColor3 = Color3.fromRGB(85, 75, 110)
 		end)
@@ -1942,7 +2172,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 				toggleButton.BackgroundColor3 = Color3.fromRGB(70, 60, 95)
 				toggleButton.Text = "OFF"
 			end
-			local Se24 = toggleButton.MouseButton1Click:Connect(function()
+			toggleButton.MouseButton1Click:Connect(function()
 				isEnabled = not isEnabled
 				saveExternalSetting(setting.name, isEnabled)
 				if isEnabled then
@@ -1973,7 +2203,6 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 					print(setting.name .. ": " .. (isEnabled and "Enabled" or "Disabled"))
 				end
 			end)
-			TranslationApp.trackConnection(Se24);
 			toggleButton.MouseEnter:Connect(function()
 				if isEnabled then
 					toggleButton.BackgroundColor3 = Color3.fromRGB(100, 255, 130)
@@ -2311,7 +2540,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 		teleportBtn.MouseLeave:Connect(function()
 			teleportBtn.BackgroundColor3 = Color3.fromRGB(85, 93, 255)
 		end)
-		local Se27 = teleportBtn.MouseButton1Click:Connect(function()
+		teleportBtn.MouseButton1Click:Connect(function()
 			teleportBtn.BackgroundColor3 = Color3.fromRGB(113, 255, 84)
 			teleportBtn.Text = "✓"
 			local success = teleportToPlayerInstant(player)
@@ -2319,7 +2548,6 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 			teleportBtn.BackgroundColor3 = Color3.fromRGB(85, 93, 255)
 			teleportBtn.Text = "TP"
 		end)
-		TranslationApp.trackConnection(Se27);
 		return playerButton
 	end
 	local function updatePlayerList2()
@@ -4174,7 +4402,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 			selectLabel.TextSize = 11
 			selectLabel.Font = Enum.Font.Gotham
 			selectLabel.TextXAlignment = Enum.TextXAlignment.Right
-			local Se28 = button.MouseButton1Click:Connect(function()
+			button.MouseButton1Click:Connect(function()
 				SelectedBeatdownModel = modelData.id
 				ModelNameLabel.Text = modelData.name
 				ModelIdLabel.Text = "ID: " .. modelData.id
@@ -4208,7 +4436,6 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 					print("Selected beatdown model: " .. modelData.name .. " (" .. modelData.id .. ")")
 				end
 			end)
-			TranslationApp.trackConnection(Se28);
 			return button
 		end
 		for _, model in ipairs(CustomBeatdownModels) do
@@ -4371,11 +4598,6 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 				if LSB and LSB.Value == CurrentPlayer.Name then
 					local torso = p.Character:FindFirstChild("Torso")
 					local head = p.Character:FindFirstChild("Head");
-					
-					local victimHeadPart = head
-					local beatdownHeadPart = nil
-					local cutsceneRunning = false
-					
 					if torso and head then
 						for _, s in ipairs(torso:GetChildren()) do
 							if s:IsA("Sound") then
@@ -4657,125 +4879,14 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 										if CutsenseCamPos then
 											CutsenseCamPos:Destroy()
 										end
-										
 
-										
-										local function getBeatdownHead()
-											if CurrentPlayer and CurrentPlayer.Character then
-												local stand = StandModel or CurrentPlayer.Character:FindFirstChild("Stand")
-												if stand and stand:FindFirstChild("Head") then
-													local standHead = stand.Head
-													if standHead and standHead.Parent ~= nil then
-														return standHead
-													end
-												end
-											end
-											return nil
-										end
-										
-										beatdownHeadPart = getBeatdownHead()
-
-										local function playCutscene()
-											if cutsceneRunning then return end
-											cutsceneRunning = true
-
-											-- Refresh targets right before cutscene starts
-											beatdownHeadPart = getBeatdownHead()
-
-											-- Store beatdown head position as backup in case stand disappears
-											local beatdownHeadLastPosition = beatdownHeadPart and beatdownHeadPart.CFrame or nil
-
-											if not victimHeadPart then
-												print("Victim head not found for cutscene")
-												cutsceneRunning = false
-												return
-											end
-
-											-- Store original camera settings
-											local originalCameraCFrame = Camera.CFrame
-											local originalCameraFocus = Camera.Focus
-											local originalCameraType = Camera.CameraType
-											local originalCameraSubject = CurrentPlayer.Character and CurrentPlayer.Character:FindFirstChild("Humanoid")
-
-											Camera.CameraType = Enum.CameraType.Scriptable
-
-											-- Cutscene variables
-											local currentSegment = 1
-											local segmentStartTime = tick()
-											local cutsceneActive = true
-
-											-- Main smooth cutscene loop
-											while cutsceneActive and cutsceneRunning do
-												local currentTime = tick()
-												local currentSegmentData = customCutsceneTable[currentSegment]
-
-												if not currentSegmentData then
-													break
-												end
-
-												-- Calculate time elapsed in current segment
-												local elapsedTime = currentTime - segmentStartTime
-
-												-- Check if segment should end
-												if elapsedTime >= currentSegmentData.time then
-													currentSegment = currentSegment + 1
-													segmentStartTime = currentTime
-
-													if SettingsScript.DisplayLogs then
-														print("Moving to segment " .. currentSegment)
-													end
-
-													if not customCutsceneTable[currentSegment] then
-														cutsceneActive = false
-														break
-													end
-												end
-
-												-- Smooth camera update for current segment
-												if currentSegmentData.target == "VictimHead" then
-													if victimHeadPart and victimHeadPart.Parent then
-														Camera.CFrame = victimHeadPart.CFrame
-													end
-												elseif currentSegmentData.target == "BeatdownHead" then
-													-- Try to get current beatdown head first
-													local currentBeatdownHead = getBeatdownHead()
-													if currentBeatdownHead and currentBeatdownHead.Parent then
-														Camera.CFrame = currentBeatdownHead.CFrame
-														beatdownHeadLastPosition = currentBeatdownHead.CFrame
-													elseif beatdownHeadLastPosition then
-														-- Use last known position if stand disappeared
-														Camera.CFrame = beatdownHeadLastPosition
-													elseif victimHeadPart and victimHeadPart.Parent then
-														-- Fallback to victim head if beatdown head completely lost
-														Camera.CFrame = victimHeadPart.CFrame
-													end
-												end
-
-												game:GetService("RunService").RenderStepped:Wait()
-											end
-
-											cutsceneRunning = false
-
-											-- Restore camera type
-											task.wait(0.25)
-
-											Camera.CameraType = Enum.CameraType.Custom
-											Camera.CameraSubject = originalCameraSubject
-
-											if SettingsScript.DisplayLogs then
-												print("Custom cutscene finished")
-											end
-										end
-										
 										if CurrentPlayer == lpr then
 											-- handle it here !!
-											if not cutsceneRunning then
-												spawn(function()
-												playCutscene()
-												end)
+											if s.Parent.Parent:FindFirstChild("Head") then
+												Camera.CFrame = s.Parent.Parent.Head.CFrame
 											end
 										end
-										
+
 										if not s:FindFirstChildOfClass("ReverbSoundEffect") then
 											for _, child in ipairs(game.Lighting:GetChildren()) do
 												if not child.Name:find("CutsenseJoJo") then
@@ -5006,6 +5117,95 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 											s.PlaybackSpeed = modelData.soundSpeed
 										end
 									end 	
+								elseif modelData.id == "Uncle_beatdown3" then
+									if soundName == "Nukem" and s.IsPlaying then
+										local CutsenseCamPos = StandModel:FindFirstChild("CutsceneCameraPart")
+										if CutsenseCamPos then
+											CutsenseCamPos:Destroy()
+										end
+
+										if CurrentPlayer == lpr then
+											-- handle it here !!
+											if s.Parent.Parent:FindFirstChild("Head") then
+												Camera.CFrame = s.Parent.Parent.Head.CFrame
+											end
+										end
+
+										if not s:FindFirstChildOfClass("ReverbSoundEffect") then
+											for _, child in ipairs(game.Lighting:GetChildren()) do
+												if not child.Name:find("CutsenseJoJo") then
+												--[[
+												if CurrentPlayer == lpr then
+													initializeColorCorrectionSMT();
+												end
+												--]]
+													s.SoundId = "rbxassetid://120951886226574" -- Show me what you got :>
+													s.PlaybackSpeed = modelData.soundSpeed
+													if not s.IsLoaded then
+														if s.SoundId ~= "rbxassetid://6478272893" and s.SoundId == "rbxassetid://120951886226574" then
+															print("Fallback to Nukem")
+															s.SoundId = "rbxassetid://6478272893"
+															s.PlaybackSpeed = modelData.soundSpeed
+															local SoundReverb = Instance.new("ReverbSoundEffect", s)
+															SoundReverb.DryLevel = 0
+															SoundReverb.WetLevel = 0
+															SoundReverb.DecayTime = 0 
+															SoundReverb.Enabled = false
+														end
+													end
+													break
+												end
+											end
+										--[[
+										if CurrentPlayer == lpr then
+											startColorCorrectionEffectSMT();
+										end
+										--]]
+										end
+									end
+									if modelData.customSounds and modelData.customSounds[soundName] then
+										if s.Name == "Male Scream Short Yelling Bursts Death Cries (SFX)" then
+											s.SoundId = "rbxassetid://128298841397286"
+											s.PlaybackSpeed = modelData.soundSpeed
+										--[[
+										if CurrentPlayer == lpr then
+											spawn(function()
+												task.wait(1);
+												endColorCorrectionEffectSMT();
+											end)
+										end
+										--]]
+											--print("Send Signal | ColorCorrectionEffect FadeOut")
+										elseif s.Name == "Yell" then
+											s.SoundId = "rbxassetid://130301204112009"
+											s.PlaybackSpeed = modelData.soundSpeed
+										--[[
+										if CurrentPlayer == lpr then
+											spawn(function()
+												task.wait(1);
+												endColorCorrectionEffectSMT();
+											end)
+										end
+										--]]
+											--print("Send Signal | ColorCorrectionEffect FadeOut")
+										elseif s.Name == "Gun1" then
+											s.SoundId = "rbxassetid://140559622530872";
+											s.PlaybackSpeed = modelData.soundSpeed
+										elseif s.Name == "Gun2" then
+											s.SoundId = "rbxassetid://124883416643368"
+											s.PlaybackSpeed = modelData.soundSpeed
+										elseif s.Name == "explosion2" then
+											s.SoundId = "rbxassetid://7244661974"
+											s.PlaybackSpeed = modelData.soundSpeed
+										else
+											s.PlaybackSpeed = modelData.customSounds[soundName]
+										end
+									else
+										if s.Name ~= "explosion2" and s.Name ~= "Hit" and 
+											soundName ~= "Implosion" and soundName ~= "Male Scream Short Yelling Bursts Death Cries (SFX)" then
+											s.PlaybackSpeed = modelData.soundSpeed
+										end
+									end
 								elseif modelData.id == "mhe_beatdown" then
 									if soundName == "Nukem" and s.IsPlaying then
 										if not s:FindFirstChildOfClass("ReverbSoundEffect") then
@@ -5407,20 +5607,18 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 			if player.Character then
 				setupCharacterMonitoring(player.Character)
 			end
-			local Se25 = player.CharacterAdded:Connect(function(character)
+			player.CharacterAdded:Connect(function(character)
 				setupCharacterMonitoring(character)
 			end)
-			TranslationApp.trackConnection(Se25)
 		end
 		for _, player in ipairs(game.Players:GetPlayers()) do
 			monitorPlayer(player)
 		end
-		local Se26 = game.Players.PlayerAdded:Connect(function(player)
+		game.Players.PlayerAdded:Connect(function(player)
 			if ViewOtherCustomStands.Enabled then
 				monitorPlayer(player)
 			end
 		end)
-		TranslationApp.trackConnection(Se26)
 		if SettingsScript.DisplayLogs then
 			print("Started monitoring other players' stands")
 		end
@@ -5481,7 +5679,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 		Button_ViewStands.Active = true
 		Button_ViewStands.AutoButtonColor = true
 		Button_ViewStands.AnchorPoint = Vector2.new(0.5, 0.5)
-		Button_ViewStands.BackgroundColor3 = Color3.fromRGB(84, 255, 113)
+		Button_ViewStands.BackgroundColor3 = Color3.fromRGB(70, 60, 95)
 		Button_ViewStands.BackgroundTransparency = 0.55
 		Button_ViewStands.Position = UDim2.new(0.85, 0, 0.5, 0)
 		Button_ViewStands.Size = UDim2.new(0, 200, 0, 31)
@@ -5508,7 +5706,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 		UIStroke_ButtonViewStands.StrokeSizingMode = Enum.StrokeSizingMode.FixedSize
 		UIStroke_ButtonViewStands.LineJoinMode = Enum.LineJoinMode.Round
 		UIStroke_ButtonViewStands.Transparency = 0
-		local Se29 = Button_ViewStands.MouseButton1Click:Connect(function()
+		Button_ViewStands.MouseButton1Click:Connect(function()
 			ViewOtherCustomStands.Enabled = not ViewOtherCustomStands.Enabled
 			if ViewOtherCustomStands.Enabled then
 				Button_ViewStands.Text = "Enabled"
@@ -5526,7 +5724,6 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 				stopMonitoringOtherStands()
 			end
 		end)
-		TranslationApp.trackConnection(Se29)
 		return ViewStandsSetting, Button_ViewStands
 	end
 	local function modifyBeatdownAnimations(enable)
@@ -5778,7 +5975,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 			print("Character respawned - Fly system reinitialized")
 		end
 	end
-	print(tostring(lpr));
+	lpr.CharacterAdded:Connect(handleCharacterRespawn)
 	if lpr.Character then
 		handleCharacterRespawn(lpr.Character)
 	end
@@ -5807,8 +6004,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 		end
 	end
 	--// RUN SERVICES
-	
-	local tracked = u6.RenderStepped:Connect(function()
+	u6.RenderStepped:Connect(function()
 		if not BodyVelocity or not BodyVelocity.Parent or not v3 or not v3.Parent then
 			ensureBodyInstances()
 			if Flying then
@@ -5861,7 +6057,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 				end
 			end
 		end
-		local Se30 = Button_Slap4.MouseButton1Click:Connect(function()
+		Button_Slap4.MouseButton1Click:Connect(function()
 			SlapBattlesSettings.CustomAnimations = not SlapBattlesSettings.CustomAnimations
 			if SlapBattlesSettings.CustomAnimations then
 				Button_Slap4.Text = "Enabled"
@@ -5879,11 +6075,9 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 				modifyBeatdownAnimations(false)
 			end
 		end)
-		TranslationApp.trackConnection(Se30)
 	end)
-	TranslationApp.trackConnection(tracked)
 	--// BUTTONS
-	local Se11 = ButtonSettings.MouseButton1Click:Connect(function()
+	ButtonSettings.MouseButton1Click:Connect(function()
 		if Settings.Visible == false then
 			Settings.Visible = true
 		else
@@ -5899,8 +6093,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 			ExternalSettingsUI.Visible = false;
 		end;
 	end)
-	TranslationApp.trackConnection(Se11)
-	local Se12 = Button_Slider1.MouseButton1Click:Connect(function()
+	Button_Slider1.MouseButton1Click:Connect(function()
 		if Flying == false then
 			Flying = true
 			if l__HumanoidRootPart__9 and l__Humanoid__8 ~= nil then
@@ -5937,8 +6130,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 			end
 		end
 	end);
-	TranslationApp.trackConnection(Se12)
-	local Se13 = Button_Slider2.MouseButton1Click:Connect(function()
+	Button_Slider2.MouseButton1Click:Connect(function()
 		CurrentFlySpeed = CurrentFlySpeed + 1
 		if CurrentFlySpeed > #FlySpeeds then
 			CurrentFlySpeed = 1
@@ -5950,9 +6142,9 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 			TextColor3 = Color3.fromRGB(255, 255, 255)
 		}):Play()
 	end)
-	TranslationApp.trackConnection(Se13)
+
 	-- // DETECTORS
-	local Se14 = UIS.InputBegan:Connect(function(p6, p7)
+	UIS.InputBegan:Connect(function(p6, p7)
 		if p6.UserInputType == Enum.UserInputType.MouseButton1 or p6.UserInputType == Enum.UserInputType.Touch then
 			if p7 then
 				return;
@@ -6006,7 +6198,6 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 			end
 		end
 	end);
-	TranslationApp.trackConnection(Se14)
 	if RemoteEventBanSys and RemoteEventBanSys ~= nil then
 		if SettingsScript.DisplayLogs then
 			print("Hidden Features Activated")
@@ -6127,7 +6318,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 				end
 			end
 		end
-		local Se15 = Button_Slap1.MouseButton1Click:Connect(function()
+		Button_Slap1.MouseButton1Click:Connect(function()
 			SlapBattlesSettings.ForceOverwriteBeatdown = not SlapBattlesSettings.ForceOverwriteBeatdown
 			if SlapBattlesSettings.ForceOverwriteBeatdown then
 				Button_Slap1.Text = "Enabled"
@@ -6148,9 +6339,8 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 					print("Force Overwrite Beatdown Model: Disabled")
 				end
 			end
-		end);
-		TranslationApp.trackConnection(Se15)
-		local Se16 = Button_Slap2.MouseButton1Click:Connect(function()
+		end)
+		Button_Slap2.MouseButton1Click:Connect(function()
 			SlapBattlesSettings.BiggerHitbox = not SlapBattlesSettings.BiggerHitbox
 			if SlapBattlesSettings.BiggerHitbox then
 				Button_Slap2.Text = "Enabled"
@@ -6169,8 +6359,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 				modifyStandHitbox()
 			end
 		end)
-		TranslationApp.trackConnection(Se16)
-		local Se17 = Button_Slap3.MouseButton1Click:Connect(function()
+		Button_Slap3.MouseButton1Click:Connect(function()
 			SlapBattlesSettings.HomerunBiggerHitbox = not SlapBattlesSettings.HomerunBiggerHitbox
 			if SlapBattlesSettings.HomerunBiggerHitbox then
 				Button_Slap3.Text = "Enabled"
@@ -6186,10 +6375,9 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 				end
 			end
 		end)
-		TranslationApp.trackConnection(Se17);
 		addViewOtherStandsSetting();
 		spawn(function()
-			task.wait(3)
+			task.wait(0.25);
 			startMonitoringOtherStands()
 		end)
 		if SettingsScript.DisplayLogs then
@@ -6197,139 +6385,28 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 		end
 	end
 	--// CONSTANTS
-	local Se18 = ButtonTeleport.MouseButton1Click:Connect(toggleTeleportUI)
-	local Se19 = ButtonCustomBeatdown.MouseButton1Click:Connect(toggleCustomBeatdownUI)
-	local Se20 = ButtonExternalSettings.MouseButton1Click:Connect(toggleExternalSettingsUI)
-	
-	TranslationApp.trackConnection(Se18)
-	TranslationApp.trackConnection(Se19)
-	TranslationApp.trackConnection(Se20)
-	
-	local Se21 = game.Players.PlayerAdded:Connect(function(player)
+	ButtonTeleport.MouseButton1Click:Connect(toggleTeleportUI)
+	ButtonCustomBeatdown.MouseButton1Click:Connect(toggleCustomBeatdownUI)
+	ButtonExternalSettings.MouseButton1Click:Connect(toggleExternalSettingsUI)
+	game.Players.PlayerAdded:Connect(function(player)
 		task.wait(0.5)
 		if TeleportData.TeleportUI and TeleportData.TeleportUI.Visible then
 			updatePlayerList2()
 		end
 	end)
-	TranslationApp.trackConnection(Se21)
-	local Se22 = game.Players.PlayerRemoving:Connect(function(player)
+	game.Players.PlayerRemoving:Connect(function(player)
 		if TeleportData.TeleportUI and TeleportData.TeleportUI.Visible then
 			updatePlayerList2()
 		end
 	end)
-	TranslationApp.trackConnection(Se22)
 
-	-- Clean up the script when the app is destroyed
-	-- Function to safely cleanup everything
-	local function cleanupEverything()
-		if isCleanedUp then return end
-		isCleanedUp = true
-
-		if SettingsScript.DisplayLogs then
-			print("Cleaning up all resources...")
-		end
-
-		-- Disable flying if active
-		if Flying then
-			Flying = false
-			if l__Humanoid__8 then
-				pcall(function()
-					l__Humanoid__8:SetStateEnabled(Enum.HumanoidStateType.Running, true)
-					l__Humanoid__8:SetStateEnabled(Enum.HumanoidStateType.Climbing, true)
-					l__Humanoid__8:SetStateEnabled(Enum.HumanoidStateType.FallingDown, true)
-					l__Humanoid__8:SetStateEnabled(Enum.HumanoidStateType.Freefall, true)
-					l__Humanoid__8.PlatformStand = false
-				end)
-			end
-		end
-
-		-- Cleanup BodyVelocity and BodyGyro
-		cleanupBodyInstances()
-
-		-- Stop monitoring other stands
-		stopMonitoringOtherStands()
-
-		-- Disconnect all connections
-		for _, connection in ipairs(cleanupConnections) do
-			pcall(function()
-				if connection and connection.Disconnect then
-					connection:Disconnect()
-				end
-			end)
-		end
-		cleanupConnections = {}
-
-		-- Destroy all instances
-		for _, instance in ipairs(cleanupInstances) do
-			pcall(function()
-				if instance and instance.Destroy then
-					instance:Destroy()
-				end
-			end)
-		end
-		cleanupInstances = {}
-
-		-- Cleanup ColorCorrection effects
-		for _, child in ipairs(game.Lighting:GetChildren()) do
-			if child:IsA("ColorCorrectionEffect") and child.Name:find("CutsenseJoJo") then
-				pcall(function() child:Destroy() end)
-			end
-		end
-
-		-- Cleanup SoundService effects
-		pcall(function()
-			game:GetService("SoundService").AmbientReverb = Enum.ReverbType.NoReverb
-			local timestop = game:GetService("SoundService"):FindFirstChild("Timestop")
-			if timestop then timestop:Stop() end
-			local timeresume = game:GetService("SoundService"):FindFirstChild("Timeresume")
-			if timeresume then timeresume:Stop() end
-			local clock = game:GetService("SoundService"):FindFirstChild("Clock")
-			if clock then clock:Stop() end
-		end)
-
-		if SettingsScript.DisplayLogs then
-			print("Cleanup completed")
-		end
-	end
-	
-	-- Helper function to track connections and instances
-	function TranslationApp.trackConnection(connection)
-		if connection then
-			table.insert(cleanupConnections, connection)
-		end
-		return connection
-	end
-
-	function TranslationApp.trackInstance(instance)
-		if instance then
-			table.insert(cleanupInstances, instance)
-		end
-		return instance
-	end
 
 	--// INITIALIZE
 	startAutoUpdate()
 	createTeleportUI()
-	
-	spawn(function()
-		while true do
-			task.wait(0.5)
-			local TranslationUI = game.Players.LocalPlayer.PlayerGui:FindFirstChild("ZolinOS")
-			if TranslationUI and TranslationUI:FindFirstChild("__ScreenFrame") then
-				TranslationUI = TranslationUI.__ScreenFrame.Applications:FindFirstChild("TranslationUI")
-			end
 
-			if TranslationUI == nil then
-				print("App killed - cleaning up...")
-				cleanupEverything()
-				script:Destroy()
-				break
-			end
-		end
-	end)
-	
 	return TranslationApp;
-	
+
 end
 
 -- // AUTO INITIALIZE \\ --
