@@ -1295,14 +1295,10 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 		stand = nil,
 		ActiveChecks = {} -- Track which players we're monitoring
 	};
-	local PlayedActionLIGHT = false
-	local customCutsenceStarted = false -- Track if the custom cutscene is already playing | SMT STAND ONLY
+	local PlayedActionLIGHT = false;
 	local customCutsceneTable = {
-		[1] = {time = 2.01, target = "BeatdownHead"},
-		[2] = {time = 2.11, target = "VictimHead"},
-		[3] = {time = 1.43, target = "VictimHead"},
-		[4] = {time = 0.412, target = "VictimHead"},
-		[5] = {time = 1.11, target = "BeatdownHead"},
+		[1] = {time = 1.81, target = "BeatdownHead"},
+		[2] = {time = 5.28, target = "VictimHead"},
 	}
 	local ColorCorrectionSystem = {
 		activeEffects = {},
@@ -4875,9 +4871,6 @@ end
 										if s.Name ~= "explosion2" and s.Name ~= "Hit" and 
 											soundName ~= "Implosion" and soundName ~= "Male Scream Short Yelling Bursts Death Cries (SFX)" then
 											s.PlaybackSpeed = modelData.soundSpeed
-											--[ End Cutsence:
-												customCutsenceStarted = false
-											--]]
 										end
 									end
 								elseif modelData.id == "refraif_beatdown" then
