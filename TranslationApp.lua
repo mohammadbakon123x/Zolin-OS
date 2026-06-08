@@ -3,7 +3,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 	local l__TweenService__5 = game:GetService("TweenService");
 	local UIS = game:GetService("UserInputService");
 	local u6 = game:GetService("RunService")
-	local BuildVersion = "3.17.4"
+	local BuildVersion = "3.17.5"
 	local versionLabel = "v"..BuildVersion;
 	local SettingsScript = {
 		RequireAway = true,
@@ -1450,10 +1450,10 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 							local clonePart = child:Clone()
 							clonePart.Parent = FakeRigModel
 							clonePart.Massless = true
-							child.Transparency = 1;
 							if clonePart.Name ~= "HumanoidRootPart" then
 								clonePart.Transparency = 0;
 							end
+							child.Transparency = 1;
 						end
 					end
 					local NewBodyColors = Instance.new("BodyColors")
@@ -1480,23 +1480,24 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 					if fakeHrp then
 					FakeRigModel.PrimaryPart = fakeHrp
 					FakeRigModel.Parent = lpr.Character:FindFirstChild("Stand");
-						print(tostring("Fake Stand location: "..tostring(FakeRigModel:GetFullName()))) -- path location
-						print(tostring("Stand location: "..tostring(standModel:GetFullName()))) -- path location
-						print(tostring("Real Stand location: "..tostring(lpr.Character:FindFirstChild("Stand"):GetFullName()))) -- path location
-						return FakeRigModel
 					end
+					print(tostring("Fake Stand location: "..tostring(FakeRigModel:GetFullName()))) -- path location
+					print(tostring("Stand location: "..tostring(standModel:GetFullName()))) -- path location
+					print(tostring("Real Stand location: "..tostring(lpr.Character:FindFirstChild("Stand"):GetFullName()))) -- path location
+					return FakeRigModel
 				end
 				local function AnimateFakeRig(standModel)
 					if not standModel then return end
 					local standModelReal = lpr.Character:FindFirstChild("Stand");
 					if not standModelReal then return end
 					local FakeRigModel = standModelReal:FindFirstChild("FakeRig")
-					if not FakeRigModel then AddFakeHumanoidRigToStand(standModelReal) end
+					if not FakeRigModel then AddFakeHumanoidRigToStand(standModel) end
 					print("Attempting to animate fake rig...")
 					for _, child in ipairs(standModelReal:GetChildren()) do
 							if child:IsA("BasePart") then
 								if not child:FindFirstChild("WeldConstraint") then
 								local NewHandledWeldConst = Instance.new("WeldConstraint")
+								NewHandledWeldConst.Name = "FakeWeldConstraint"
 								NewHandledWeldConst.Part0 = child
 								NewHandledWeldConst.Part1 = FakeRigModel:FindFirstChild(child.Name)
 								NewHandledWeldConst.Parent = child
@@ -1506,7 +1507,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 									NewFakeWeld.Part1 = child
 									NewFakeWeld.Parent = FakeRigModel:FindFirstChild(child.Name)
 									NewFakeWeld.Name = "FakeWeld"
-									print("Added weld & weld constraint to"..tostring(child.Name))
+									print("Added weld & weld constraint to: "..tostring(child.Name))
 								end
 							end
 						end
@@ -1532,7 +1533,6 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 						addRedEyeHandleToHead(headPart);
 					end
 					addClothingToStand(parts[1].Parent)
-					AddFakeHumanoidRigToStand(parts[1].Parent);
 					AnimateFakeRig(parts[1].Parent);
 				end
 			end
