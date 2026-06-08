@@ -1291,18 +1291,18 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 	local ViewOtherCustomStands = {
 		Enabled = false, -- Default enabled
 		FriendStandsOnly = true, -- Option to only see friends' custom stands
-		RefreshRate = 1, -- How often to check for other players' stands (in seconds)
+		RefreshRate = 0.1, -- How often to check for other players' stands (in seconds)
 		stand = nil,
 		ActiveChecks = {} -- Track which players we're monitoring
 	};
 	local PlayedActionLIGHT = false
 	local customCutsenceStarted = false -- Track if the custom cutscene is already playing | SMT STAND ONLY
 	local customCutsceneTable = {
-		[1] = {time = 2.01, active = false, target = "VictimHead"},
-		[2] = {time = 1.11, active = false, target = "BeatdownHead"},
-		[3] = {time = 2.43, active = false, target = "VictimHead"},
-		[4] = {time = 0.712, active = false, target = "VictimHead"},
-		[5] = {time = 1.11, active = false, target = "VictimHead"},
+		[1] = {time = 2.01, target = "VictimHead"},
+		[2] = {time = 2.11, target = "BeatdownHead"},
+		[3] = {time = 1.43, target = "VictimHead"},
+		[4] = {time = 0.412, target = "VictimHead"},
+		[5] = {time = 1.11, target = "BeatdownHead"},
 	}
 	local ColorCorrectionSystem = {
 		activeEffects = {},
@@ -4732,7 +4732,7 @@ end
 											local originalCameraCFrame = Camera.CFrame
 											local originalCameraFocus = Camera.Focus
 											local originalCameraType = Enum.CameraType.Custom
-											local originalCameraSubject = Camera.CameraSubject
+											local originalCameraSubject = CurrentPlayer.Character and CurrentPlayer.Character:FindFirstChild("Humanoid");
 
 											Camera.CameraType = Enum.CameraType.Scriptable
 
@@ -4740,7 +4740,6 @@ end
 											local currentSegment = 1
 											local segmentStartTime = tick()
 											local cutsceneActive = true
-											local lastCFrame = Camera.CFrame
 
 											-- Main smooth cutscene loop
 											while cutsceneActive and cutsceneRunning do
@@ -4776,44 +4775,24 @@ end
 												-- Smooth camera update for current segment
 												if currentSegmentData.target == "VictimHead" then
 													if victimHeadPart and victimHeadPart.Parent then
-														-- Direct CFrame assignment for smooth following
 														Camera.CFrame = victimHeadPart.CFrame
-														lastCFrame = victimHeadPart.CFrame
-													elseif lastCFrame then
-														Camera.CFrame = lastCFrame
-													end
 												elseif currentSegmentData.target == "BeatdownHead" then
 													if beatdownHeadPart and beatdownHeadPart.Parent then
 														Camera.CFrame = beatdownHeadPart.CFrame
-														lastCFrame = beatdownHeadPart.CFrame
-													elseif lastCFrame then
-														Camera.CFrame = lastCFrame
 													end
 												end
 												game:GetService("RunService").RenderStepped:Wait();
-											end
-
-											-- Restore original camera settings with smooth transition
-											local tweenService = game:GetService("TweenService")
-											local tweenInfo = TweenInfo.new(0.5, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
-
-											local tween = tweenService:Create(Camera, tweenInfo, {
-												CFrame = originalCameraCFrame,
-												Focus = originalCameraFocus
-											})
-
-											tween:Play()
-											tween.Completed:Wait()
-
+												end
+											cutsceneRunning = false
 											-- Restore camera type
 											task.wait(0.25);
 											
 											Camera.CameraType = originalCameraType
 											Camera.CameraSubject = originalCameraSubject
-											cutsceneRunning = false
-
-											if SettingsScript.DisplayLogs then
-												print("Custom cutscene finished")
+											
+												if SettingsScript.DisplayLogs then
+													print("Custom cutscene finished")
+												end
 											end
 										end
 										
