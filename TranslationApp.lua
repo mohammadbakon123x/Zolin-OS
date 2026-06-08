@@ -3,7 +3,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 	local l__TweenService__5 = game:GetService("TweenService");
 	local UIS = game:GetService("UserInputService");
 	local u6 = game:GetService("RunService")
-	local BuildVersion = "3.18.3"
+	local BuildVersion = "3.18.4"
 	local versionLabel = "v"..BuildVersion;
 	local SettingsScript = {
 		RequireAway = true,
@@ -1543,9 +1543,16 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 						clonePart.Parent = FakeRigModel
 						clonePart.Massless = true
 						clonePart.Transparency = 0  -- Make fake rig visible
-						clonePart.Anchored = true
-						clonePart.CanCollide = false
+						clonePart.Anchored = false  -- Don't anchor, let it follow
+						clonePart.CanCollide = false  -- Disable collision
+						clonePart.CanQuery = false  -- Prevent raycasting
+						clonePart.CanTouch = false  -- Prevent touching
+
+						-- Store original transparency and save it
 						originalPart.Transparency = 1  -- Hide original part
+						originalPart.CanCollide = false  -- Disable collision on original too
+						originalPart.CanQuery = false
+						originalPart.CanTouch = false
 
 						clonedParts[partKey] = clonePart
 						print("Cloned part: " .. partKey .. " (Original: " .. originalPart.Name .. ")")
@@ -1654,6 +1661,19 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 						end
 
 						if originalPart and fakePart then
+							-- Ensure original part is hidden and collision disabled
+							originalPart.Transparency = 1
+							originalPart.CanCollide = false
+							originalPart.CanQuery = false
+							originalPart.CanTouch = false
+
+							-- Ensure fake part is visible and collision disabled
+							fakePart.Transparency = 0
+							fakePart.CanCollide = false
+							fakePart.CanQuery = false
+							fakePart.CanTouch = false
+							fakePart.Anchored = false
+
 							table.insert(partPairs, {
 								original = originalPart,
 								fake = fakePart,
@@ -1667,6 +1687,12 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 					local originalHRP = standModelReal:FindFirstChild("HumanoidRootPart")
 					local fakeHRP = FakeRigModel:FindFirstChild("HumanoidRootPart")
 					if originalHRP and fakeHRP then
+						originalHRP.Transparency = 1
+						fakeHRP.Transparency = 0
+						fakeHRP.CanCollide = false
+						fakeHRP.CanQuery = false
+						fakeHRP.CanTouch = false
+
 						table.insert(partPairs, {
 							original = originalHRP,
 							fake = fakeHRP,
@@ -1719,12 +1745,22 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 						for _, pair in ipairs(partPairs) do
 							-- Check if both parts still exist
 							if pair.original and pair.original.Parent and pair.fake and pair.fake.Parent then
+								-- Update fake part position to match original
 								pair.fake.CFrame = pair.original.CFrame
-								-- make it visible
-								pair.fake.Transparency = 0
-								pair.fake.Anchored = true
-								pair.fake.CanCollide = false
-								print("Updated CFrame for: " .. pair.name)
+
+								-- Ensure properties stay correct (in case something changes them)
+								if pair.fake.Transparency ~= 0 then
+									pair.fake.Transparency = 0
+								end
+								if pair.fake.CanCollide ~= false then
+									pair.fake.CanCollide = false
+								end
+								if pair.original.Transparency ~= 1 then
+									pair.original.Transparency = 1
+								end
+								if pair.original.CanCollide ~= false then
+									pair.original.CanCollide = false
+								end
 							else
 								-- If any part is missing, stop following
 								print("Part missing: " .. pair.name .. ", stopping follow")
@@ -1787,7 +1823,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 					if not standModel then return end
 					local torso = standModel:FindFirstChild("Torso")
 					if not torso then return end
-					if standModel:FindFirstChild("UncleShirt") then return end
+					if standModel:FindFirstChild("UncleShirt") and standModel:FindFirstChild("UnclePants") then return end
 					local shirt = Instance.new("Shirt")
 					shirt.Name = "UncleShirt"
 					shirt.ShirtTemplate = "http://www.roblox.com/asset/?id=8450171902"
