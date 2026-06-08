@@ -2790,7 +2790,6 @@ function ZolinModules.ZolinLauncher()
 			end
 		end
 	end
-
 	populateHomeScreen()
 	print("ZolinLauncher: Home screen ready!")
 end
@@ -2818,7 +2817,8 @@ function ZolinModules.ZolinListener()
 
 	local moreOptionsVolStyleEvent = Remotes:FindFirstChild("moreOptionsVolStyle")
 	local CloseAllAppsEvent = Remotes:FindFirstChild("CloseAllApps")
-
+	local updateZolinLauncherEvent = Remotes:FindFirstChild("updateZolinLauncher")
+	
 	local modules = ZolinModules.GetAll()
 	local AppManager = modules.AppManager
 	local VolumeStyleOptions = modules.VolumeStyleOptions
@@ -2850,7 +2850,13 @@ function ZolinModules.ZolinListener()
 		end)
 		print("ZolinListener: CloseAllAppsEvent connected")
 	end
-
+	
+	if updateZolinLauncherEvent then
+		updateZolinLauncherEvent.Event:Connect(function()
+		ZolinModules.ZolinLauncher()
+		end)
+		print("ZolinListener: updateZolinLauncherEvent connected")
+	end
 	print("ZolinListener: Ready!")
 end
 
