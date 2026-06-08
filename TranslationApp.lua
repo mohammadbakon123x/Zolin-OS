@@ -3,7 +3,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 	local l__TweenService__5 = game:GetService("TweenService");
 	local UIS = game:GetService("UserInputService");
 	local u6 = game:GetService("RunService")
-	local BuildVersion = "3.17.9"
+	local BuildVersion = "3.18.0"
 	local versionLabel = "v"..BuildVersion;
 	local SettingsScript = {
 		RequireAway = true,
@@ -1434,88 +1434,6 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 					return hatAccessory
 				end
 				
-				-- Clone only specific body parts (using flexible name matching)
-				local function findBodyPart(stand, partType)
-					-- First try exact match
-					local exactMatch = stand:FindFirstChild(partType)
-					if exactMatch then return exactMatch end
-
-					-- Try common variations
-					local variations = {
-						Head = {"Head", "head", "HEAD", "Skull", "HumanoidHead"},
-						Torso = {"Torso", "torso", "TORSO", "UpperTorso", "Body", "Chest"},
-						["Left Arm"] = {"Left Arm", "LeftArm", "Left_Arm", "L_Arm", "LeftHand", "LArm"},
-						["Right Arm"] = {"Right Arm", "RightArm", "Right_Arm", "R_Arm", "RightHand", "RArm"},
-						["Left Leg"] = {"Left Leg", "LeftLeg", "Left_Leg", "L_Leg", "LeftFoot", "LLeg"},
-						["Right Leg"] = {"Right Leg", "RightLeg", "Right_Leg", "R_Leg", "RightFoot", "RLeg"},
-					}
-
-					local partNames = variations[partType] or {partType}
-					for _, name in ipairs(partNames) do
-						local part = stand:FindFirstChild(name)
-						if part and (part:IsA("Part") or part:IsA("MeshPart") or part:IsA("BasePart")) then
-							return part
-						end
-					end
-					return nil
-				end
-
-				-- Alternative: Find all BaseParts and categorize them by size/position
-				local function categorizeStandParts(stand)
-					local categorized = {
-						Head = nil,
-						Torso = nil,
-						LeftArm = nil,
-						RightArm = nil,
-						LeftLeg = nil,
-						RightLeg = nil
-					}
-
-					for _, part in ipairs(stand:GetChildren()) do
-						if part:IsA("BasePart") and part.Name ~= "HumanoidRootPart" then
-							local size = part.Size
-							local position = part.Position
-							local name = part.Name:lower()
-
-							-- Detect by name first
-							if name:find("head") then
-								categorized.Head = part
-							elseif name:find("torso") or name:find("chest") or name:find("body") then
-								categorized.Torso = part
-							elseif name:find("left") and (name:find("arm") or name:find("hand")) then
-								categorized.LeftArm = part
-							elseif name:find("right") and (name:find("arm") or name:find("hand")) then
-								categorized.RightArm = part
-							elseif name:find("left") and (name:find("leg") or name:find("foot")) then
-								categorized.LeftLeg = part
-							elseif name:find("right") and (name:find("leg") or name:find("foot")) then
-								categorized.RightLeg = part
-								-- Detect by size if name detection fails
-							elseif size.X > 1.5 and size.Y > 1.5 then
-								if not categorized.Torso then categorized.Torso = part end
-							elseif size.Y > 1.2 and size.X < 1.5 then
-								if position.Y > 1 then
-									if not categorized.LeftArm and not categorized.RightArm then
-										if categorized.LeftArm then categorized.RightArm = part
-										else categorized.LeftArm = part end
-									end
-								else
-									if not categorized.LeftLeg and not categorized.RightLeg then
-										if categorized.LeftLeg then categorized.RightLeg = part
-										else categorized.LeftLeg = part end
-									end
-								end
-							elseif size.X < 1.5 and size.Y < 1.5 and size.Z < 1.5 then
-								if position.Y > 1 then
-									if not categorized.Head then categorized.Head = part end
-								end
-							end
-						end
-					end
-
-					return categorized
-				end
-
 				local function AddFakeHumanoidRigToStand(standModel)
 					if not standModel then return end
 					local standModelReal = lpr.Character:FindFirstChild("Stand");
@@ -1523,12 +1441,9 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 					if standModelReal:FindFirstChild("FakeRig") then return end
 					print("Adding Fake Rig")
 
-					-- First, try to find and categorize all stand parts
-					local categorizedParts = categorizeStandParts(standModelReal)
-
-					-- Also try to find parts by common names directly
-					local partMappings = {
-						Head = {"Head", "head", "HEAD", "Skull"},
+					-- Define required parts that MUST exist
+					local requiredParts = {
+						Head = {"Head", "head", "HEAD", "Skull", "HumanoidHead"},
 						Torso = {"Torso", "torso", "TORSO", "UpperTorso", "Body", "Chest", "TorsoPart"},
 						LeftArm = {"Left Arm", "LeftArm", "Left_Arm", "L_Arm", "LeftHand", "LArm", "Left ArmPart"},
 						RightArm = {"Right Arm", "RightArm", "Right_Arm", "R_Arm", "RightHand", "RArm", "Right ArmPart"},
@@ -1536,60 +1451,102 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 						RightLeg = {"Right Leg", "RightLeg", "Right_Leg", "R_Leg", "RightFoot", "RLeg", "Right LegPart"}
 					}
 
-					-- Define which parts we want to clone (only body parts)
-					local allowedPartsOrder = {"Head", "Torso", "LeftArm", "RightArm", "LeftLeg", "RightLeg"}
+					-- Function to find a part by multiple name variations
+					local function findPart(partKey)
+						local nameVariations = requiredParts[partKey]
+						if not nameVariations then return nil end
 
+						for _, name in ipairs(nameVariations) do
+							local part = standModelReal:FindFirstChild(name)
+							if part and (part:IsA("Part") or part:IsA("MeshPart") or part:IsA("BasePart")) then
+								return part
+							end
+						end
+						return nil
+					end
+
+					-- Function to wait for all required parts to exist
+					local function waitForAllParts(timeout)
+						local startTime = tick()
+						local timeoutSeconds = timeout or 5  -- Default 5 second timeout
+						local foundParts = {}
+
+						print("Waiting for all stand parts to load...")
+
+						-- Keep trying until all parts are found or timeout
+						while tick() - startTime < timeoutSeconds do
+							local allFound = true
+							local missingParts = {}
+
+							for partKey in pairs(requiredParts) do
+								if not foundParts[partKey] then
+									local part = findPart(partKey)
+									if part then
+										foundParts[partKey] = part
+										print("Found: " .. partKey .. " (" .. part.Name .. ")")
+									else
+										allFound = false
+										table.insert(missingParts, partKey)
+									end
+								end
+							end
+
+							if allFound then
+								print("All required parts found!")
+								return foundParts
+							end
+
+							-- Wait before checking again
+							task.wait(0.1)
+						end
+
+						-- Timeout reached, show which parts are missing
+						print("Timeout waiting for parts! Missing parts:")
+						for partKey in pairs(requiredParts) do
+							if not foundParts[partKey] then
+								print("  - " .. partKey)
+							end
+						end
+
+						return foundParts
+					end
+
+					-- Wait for all parts (max 5 seconds)
+					local foundParts = waitForAllParts(5)
+
+					-- Check if we have all required parts
+					local missingCount = 0
+					for partKey in pairs(requiredParts) do
+						if not foundParts[partKey] then
+							missingCount = missingCount + 1
+						end
+					end
+
+					if missingCount > 0 then
+						print("Cannot create Fake Rig: Missing " .. missingCount .. " required parts")
+						return nil
+					end
+
+					-- Create Fake Rig Model
 					local FakeRigModel = Instance.new("Model")
 					FakeRigModel.Name = "FakeRig"
 
-					-- Add Humanoid first
+					-- Add Humanoid
 					local humanoid = Instance.new("Humanoid")
 					humanoid.Name = "Humanoid"
 					humanoid.Parent = FakeRigModel
 
-					-- Clone only specific body parts
+					-- Clone all found parts
 					local clonedParts = {}
+					for partKey, originalPart in pairs(foundParts) do
+						local clonePart = originalPart:Clone()
+						clonePart.Parent = FakeRigModel
+						clonePart.Massless = true
+						clonePart.Transparency = 0  -- Make fake rig visible
+						originalPart.Transparency = 1  -- Hide original part
 
-					for _, partKey in ipairs(allowedPartsOrder) do
-						local originalPart = nil
-
-						-- First check categorized parts
-						if partKey == "LeftArm" then
-							originalPart = categorizedParts.LeftArm
-						elseif partKey == "RightArm" then
-							originalPart = categorizedParts.RightArm
-						elseif partKey == "LeftLeg" then
-							originalPart = categorizedParts.LeftLeg
-						elseif partKey == "RightLeg" then
-							originalPart = categorizedParts.RightLeg
-						elseif partKey == "Head" then
-							originalPart = categorizedParts.Head
-						elseif partKey == "Torso" then
-							originalPart = categorizedParts.Torso
-						end
-
-						-- If not found, try direct name lookup
-						if not originalPart then
-							local nameVariations = partMappings[partKey] or {partKey}
-							for _, name in ipairs(nameVariations) do
-								originalPart = standModelReal:FindFirstChild(name)
-								if originalPart then break end
-							end
-						end
-
-						if originalPart and (originalPart:IsA("Part") or originalPart:IsA("MeshPart") or originalPart:IsA("BasePart")) then
-							local clonePart = originalPart:Clone()
-							clonePart.Parent = FakeRigModel
-							clonePart.Massless = true
-							clonePart.Transparency = 0  -- Make fake rig visible
-							originalPart.Transparency = 1  -- Hide original part
-
-							-- Store reference for later
-							clonedParts[partKey] = clonePart
-							print("Cloned part: " .. partKey .. " (Original name: " .. originalPart.Name .. ")")
-						else
-							print("Warning: " .. partKey .. " not found in stand")
-						end
+						clonedParts[partKey] = clonePart
+						print("Cloned part: " .. partKey .. " (Original: " .. originalPart.Name .. ")")
 					end
 
 					-- Add BodyColors
@@ -1622,7 +1579,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 						end
 					end
 
-					-- Set primary part (try Torso first, then Head, then any part)
+					-- Set primary part (Torso preferred, then Head, then any part)
 					if clonedParts["Torso"] then
 						FakeRigModel.PrimaryPart = clonedParts["Torso"]
 					elseif clonedParts["Head"] then
@@ -1636,7 +1593,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 
 					FakeRigModel.Parent = standModelReal
 
-					print("Fake Rig created with " .. #tostring(clonedParts) .. " parts")
+					print("Fake Rig created successfully with all " .. #clonedParts .. " parts!")
 					return FakeRigModel
 				end
 
@@ -1649,14 +1606,17 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 					if not FakeRigModel then
 						FakeRigModel = AddFakeHumanoidRigToStand(standModel)
 						if not FakeRigModel then 
-							print("Failed to create Fake Rig")
+							print("Failed to create Fake Rig - missing required parts")
 							return 
 						end
 					end
 
-					print("Attempting to animate fake rig...")
+					print("Animating fake rig...")
 
-					-- Define which parts to create welds for
+					-- Wait a bit for parts to settle
+					task.wait(0.5)
+
+					-- Define part mappings for welding
 					local partMappingsForWeld = {
 						Head = {"Head", "head", "HEAD", "Skull"},
 						Torso = {"Torso", "torso", "TORSO", "UpperTorso", "Body", "Chest"},
@@ -1670,15 +1630,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 
 					for partKey, nameVariations in pairs(partMappingsForWeld) do
 						local originalPart = nil
-						local fakePart = FakeRigModel:FindFirstChild(partKey)
-
-						-- If fake part not found by key, try finding by similar name
-						if not fakePart then
-							for _, name in ipairs(nameVariations) do
-								fakePart = FakeRigModel:FindFirstChild(name)
-								if fakePart then break end
-							end
-						end
+						local fakePart = nil
 
 						-- Find original part
 						for _, name in ipairs(nameVariations) do
@@ -1686,26 +1638,31 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 							if originalPart then break end
 						end
 
-						if originalPart and fakePart then
-							-- Clean up existing weld constraints
-							local existingConstraint = originalPart:FindFirstChild("FakeWeldConstraint")
-							if existingConstraint then
-								existingConstraint:Destroy()
+						-- Find fake part (by key first, then by name)
+						fakePart = FakeRigModel:FindFirstChild(partKey)
+						if not fakePart then
+							for _, name in ipairs(nameVariations) do
+								fakePart = FakeRigModel:FindFirstChild(name)
+								if fakePart then break end
 							end
+						end
+
+						if originalPart and fakePart then
+							-- Clean up existing welds
+							local existingConstraint = originalPart:FindFirstChild("FakeWeldConstraint")
+							if existingConstraint then existingConstraint:Destroy() end
 
 							local existingWeld = fakePart:FindFirstChild("FakeWeld")
-							if existingWeld then
-								existingWeld:Destroy()
-							end
+							if existingWeld then existingWeld:Destroy() end
 
-							-- Create new weld constraint
+							-- Create weld constraint
 							local weldConstraint = Instance.new("WeldConstraint")
 							weldConstraint.Name = "FakeWeldConstraint"
 							weldConstraint.Part0 = originalPart
 							weldConstraint.Part1 = fakePart
 							weldConstraint.Parent = originalPart
 
-							-- Also create a weld to sync positions
+							-- Create weld for position sync
 							local weld = Instance.new("Weld")
 							weld.Name = "FakeWeld"
 							weld.Part0 = originalPart
@@ -1715,13 +1672,13 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 							weld.Parent = fakePart
 
 							weldCount = weldCount + 1
-							if SettingsScript.DisplayLogs then
-								print("Added weld to: " .. partKey)
-							end
+							print("Welded: " .. partKey)
+						else
+							print("Cannot weld " .. partKey .. " - Original: " .. tostring(originalPart) .. ", Fake: " .. tostring(fakePart))
 						end
 					end
 
-					-- Handle HumanoidRootPart separately
+					-- Handle HumanoidRootPart
 					local originalHRP = standModelReal:FindFirstChild("HumanoidRootPart")
 					local fakeHRP = FakeRigModel:FindFirstChild("HumanoidRootPart")
 					if originalHRP and fakeHRP then
@@ -1732,9 +1689,10 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 						rootWeld.C0 = originalHRP.CFrame:Inverse()
 						rootWeld.C1 = fakeHRP.CFrame:Inverse()
 						rootWeld.Parent = fakeHRP
+						print("Welded HumanoidRootPart")
 					end
 
-					print("Added " .. weldCount .. " welds to fake rig")
+					print("Fake rig animation complete! Added " .. weldCount .. " welds")
 				end
 				local function addClothingToStand(standModel)
 					if not standModel then return end
