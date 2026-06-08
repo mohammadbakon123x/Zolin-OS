@@ -1,8 +1,8 @@
 local TranslationApp = {}
-local cleanupConnections = {}  -- Store all connections for cleanup
-local cleanupInstances = {}    -- Store all instances for cleanup
-local isCleanedUp = false      -- Flag to prevent double cleanup
 function TranslationApp.Init(ui, launchArgs, appFolder)
+	local cleanupConnections = {}  -- Store all connections for cleanup
+	local cleanupInstances = {}    -- Store all instances for cleanup
+	local isCleanedUp = false      -- Flag to prevent double cleanup
 	local l__TweenService__5 = game:GetService("TweenService");
 	local UIS = game:GetService("UserInputService");
 	local u6 = game:GetService("RunService")
@@ -5771,7 +5771,6 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 			print("Character respawned - Fly system reinitialized")
 		end
 	end
-	lpr.CharacterAdded:Connect(handleCharacterRespawn)
 	if lpr.Character then
 		handleCharacterRespawn(lpr.Character)
 	end
