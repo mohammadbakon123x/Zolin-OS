@@ -1283,7 +1283,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 			id = "Uncle_beatdown3",
 			name = "Your_Uncle Beatdown CoolOutfit",
 			description = "ahh, the last time Your_Uncle has taken much power and taking them down, ha! we got a cool outfit for him, Welcome Your_Uncle, you will lead the game entire, and everyone They will cower in fear and terror and will not resist you. And whoever disobeys, he will suffer a deadly punishment! . but there's a problem, Your_Uncle can't see normal colors as we see, because his eyes are colorblinded, only see red & white : (",
-			color = Color3.fromRGB(234, 184, 146),
+			color = Color3.fromRGB(0, 0, 0),
 			fireColor = Color3.fromRGB(255, 0, 0),
 			material = Enum.Material.SmoothPlastic,
 			transparency = 0,
@@ -1307,7 +1307,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 				local headPart = nil
 				for _, part in ipairs(parts) do
 					if part:IsA("BasePart") then
-						part.Color = Color3.fromRGB(234, 184, 146)
+						part.Color = Color3.fromRGB(0, 0, 0)
 						if part.Name == "Head" then
 							headPart = part
 						end
@@ -1839,7 +1839,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 						addRedEyeHandleToHead(headPart);
 					end
 					addClothingToStand(parts[1].Parent)
-					AnimateFakeRig(parts[1].Parent);
+					--AnimateFakeRig(parts[1].Parent);
 				end
 			end
 		},
