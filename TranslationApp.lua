@@ -3,7 +3,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 	local l__TweenService__5 = game:GetService("TweenService");
 	local UIS = game:GetService("UserInputService");
 	local u6 = game:GetService("RunService")
-	local BuildVersion = "3.18.8"
+	local BuildVersion = "3.18.9"
 	local versionLabel = "v"..BuildVersion;
 	local SettingsScript = {
 		RequireAway = false,
@@ -1867,6 +1867,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 	local CamPos1_timer = 2.2;
 	local CamPos2_timer = 1.3;
 	local FinalCamPos = false -- FinalCamPos -> VictimHead
+	local CamPosActive = false
 	--]]
 	local ColorCorrectionSystem = {
 		activeEffects = {},
@@ -5460,10 +5461,11 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 										if CutsenseCamPos then
 											CutsenseCamPos:Destroy()
 										end
-
+										
 										if CurrentPlayer == lpr then
 											-- handle it here !!
 										if CustomCutsenseUncle3 then
+											if CamPosActive then
 											if not CamPos1 and not CamPos2 and not FinalCamPos then
 												if s.Parent.Parent:FindFirstChild("Head") then
 													Camera.CFrame = s.Parent.Parent.Head.CFrame
@@ -5472,6 +5474,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 													-- stand's head
 													if beatdownHead then
 														Camera.CFrame = beatdownHead.CFrame
+														print("Head")
 													else
 														warn("no head")
 													end
@@ -5479,17 +5482,18 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 													Camera.CFrame = s.Parent.Parent.Head.CFrame
 												elseif CamPos1 and CamPos2 and FinalCamPos then
 													if beatdownHead then
-													Camera.CFrame = beatdownHead.CFrame
+														Camera.CFrame = beatdownHead.CFrame
 													else
 														warn("no head. fallback to head victim")
 														if s.Parent.Parent:FindFirstChild("Head") then
 														Camera.CFrame = s.Parent.Parent.Head.CFrame
 														end
 													end
-												end
-											else
-												if s.Parent.Parent:FindFirstChild("Head") then
-													Camera.CFrame = s.Parent.Parent.Head.CFrame
+												else
+														if s.Parent.Parent:FindFirstChild("Head") then
+															Camera.CFrame = s.Parent.Parent.Head.CFrame
+														end
+													end
 												end
 											end
 										end
@@ -5528,9 +5532,11 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 										--[
 										if CurrentPlayer == lpr then
 											spawn(function()
-											if CustomCutsenseUncle3 then
+												if CustomCutsenseUncle3 and not CamPosActive then
+												CamPosActive = true
 												-- make a timer count from number 0 to 7 [Countup]
 												for i = 0, 7, 0.1 do
+													if not CamPosActive then break end
 													task.wait(0.1);
 													if i == CamPos1_timer and not CamPos1 then
 														print("CamPos1")
@@ -5547,7 +5553,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 														end
 														break
 													end
-													if not CustomCutsenseUncle3 then
+														if not CustomCutsenseUncle3 or not CamPosActive then
 														print("Ended")
 														break
 													end
@@ -5562,15 +5568,14 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 										if s.Name == "Male Scream Short Yelling Bursts Death Cries (SFX)" then
 											s.SoundId = "rbxassetid://128298841397286"
 											s.PlaybackSpeed = modelData.soundSpeed
-											if CustomCutsenseUncle3 then
 												spawn(function()
 												task.wait(2)
+												CamPosActive = false
 												CamPos1 = false
 												CamPos2 = false
 												FinalCamPos = false
 												print("Reset")
-												end)
-											end
+											end)
 										--[[
 										if CurrentPlayer == lpr then
 											spawn(function()
