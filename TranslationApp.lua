@@ -3,7 +3,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 	local l__TweenService__5 = game:GetService("TweenService");
 	local UIS = game:GetService("UserInputService");
 	local u6 = game:GetService("RunService")
-	local BuildVersion = "3.19.0"
+	local BuildVersion = "3.19.1"
 	local versionLabel = "v"..BuildVersion;
 	local SettingsScript = {
 		RequireAway = false,
@@ -5507,7 +5507,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 													-- Get target parts
 													local victimHead = s and s.Parent and s.Parent.Parent and s.Parent.Parent:FindFirstChild("Head")
 													local beatdownHeadPart = beatdownHead
-
+													local camOffset = Vector3.new(1.1, 0.2, 1.1) -- a little bit fornt
 													-- Camera positioning based on current flags
 													if not CamPos1 and not CamPos2 and not FinalCamPos then
 														-- Initial position: Victim Head
@@ -5517,7 +5517,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 													elseif CamPos1 and not CamPos2 and not FinalCamPos then
 														-- Position 1: Beatdown Stand Head
 														if beatdownHeadPart and beatdownHeadPart.Parent then
-															Camera.CFrame = beatdownHeadPart.CFrame
+															Camera.CFrame = beatdownHeadPart.CFrame * CFrame.new(camOffset)
 														elseif victimHead then
 															-- Fallback to victim head
 															Camera.CFrame = victimHead.CFrame
@@ -5530,7 +5530,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 													elseif CamPos1 and CamPos2 and FinalCamPos then
 														-- Final position: Beatdown Head
 														if beatdownHeadPart and beatdownHeadPart.Parent then
-															Camera.CFrame = beatdownHeadPart.CFrame
+															Camera.CFrame = beatdownHeadPart.CFrame * CFrame.new(camOffset)
 														elseif victimHead then
 															-- Fallback to victim head
 															Camera.CFrame = victimHead.CFrame
@@ -5544,9 +5544,6 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 
 													game:GetService("RunService").RenderStepped:Wait()
 												end
-
-												-- Restore camera
-												Camera.CameraType = originalCameraType
 												CamPosActive = false
 												print("Cutscene completed")
 											end
@@ -5590,14 +5587,6 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 										if s.Name == "Male Scream Short Yelling Bursts Death Cries (SFX)" then
 											s.SoundId = "rbxassetid://128298841397286"
 											s.PlaybackSpeed = modelData.soundSpeed
-												spawn(function()
-												task.wait(2)
-												CamPosActive = false
-												CamPos1 = false
-												CamPos2 = false
-												FinalCamPos = false
-												print("Reset")
-											end)
 										--[[
 										if CurrentPlayer == lpr then
 											spawn(function()
@@ -5610,16 +5599,6 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 										elseif s.Name == "Yell" then
 											s.SoundId = "rbxassetid://130301204112009"
 											s.PlaybackSpeed = modelData.soundSpeed
-											
-											if CustomCutsenseUncle3 then
-												spawn(function()
-													task.wait(2)
-													CamPos1 = false
-													CamPos2 = false
-													FinalCamPos = false
-													print("Reset")
-												end)
-											end
 										--[[
 										if CurrentPlayer == lpr then
 											spawn(function()
