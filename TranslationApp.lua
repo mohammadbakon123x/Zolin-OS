@@ -5467,7 +5467,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 													s.SoundId = "rbxassetid://120951886226574" -- Show me what you got :>
 													s.PlaybackSpeed = modelData.soundSpeed
 													if not s.IsLoaded then
-														if s.SoundId ~= "rbxassetid://6478272893" and s.SoundId == "rbxassetid://120951886226574" then
+														if s.SoundId ~= "rbxassetid://6478272893" and s.SoundId == "rbxassetid://112686550007032" then
 															print("Fallback to Nukem")
 															s.SoundId = "rbxassetid://6478272893"
 															s.PlaybackSpeed = modelData.soundSpeed
