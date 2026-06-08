@@ -3,10 +3,10 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 	local l__TweenService__5 = game:GetService("TweenService");
 	local UIS = game:GetService("UserInputService");
 	local u6 = game:GetService("RunService")
-	local BuildVersion = "3.18.7"
+	local BuildVersion = "3.18.8"
 	local versionLabel = "v"..BuildVersion;
 	local SettingsScript = {
-		RequireAway = true,
+		RequireAway = false,
 		DisplayLogs = true,
 		UIAnimation = false,
 		AntiExploit = false,
@@ -4834,9 +4834,11 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 	local function ApplyCustomBeatdownModel(StandModel, modelData, CurrentPlayer)
 		if not StandModel or not modelData then return end
 		for _, child in ipairs(StandModel:GetChildren()) do
+			--[[
 			if child:IsA("Shirt") or child:IsA("Pants") or child:IsA("ShirtGraphic") then
 				child:Destroy()
 			end
+			--]]
 			if child.Name == "ShirtVisual" or child.Name == "LeftPantsVisual" or child.Name == "RightPantsVisual" then
 				child:Destroy()
 			end
@@ -4931,6 +4933,8 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 				if LSB and LSB.Value == CurrentPlayer.Name then
 					local torso = p.Character:FindFirstChild("Torso")
 					local head = p.Character:FindFirstChild("Head");
+					local beatdownHead = StandModel:FindFirstChild("Head") or p.Character:FindFirstChild("Stand").Head;
+					
 					if torso and head then
 						for _, s in ipairs(torso:GetChildren()) do
 							if s:IsA("Sound") then
@@ -5466,15 +5470,22 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 												end
 												elseif CamPos1 and not CamPos2 and not FinalCamPos then
 													-- stand's head
-													local StandHead = StandModel:FindFirstChild("Head")
-													if StandHead then
-														Camera.CFrame = StandModel.CFrame
-														print("head")
+													if beatdownHead then
+														Camera.CFrame = beatdownHead.CFrame
 													else
 														warn("no head")
 													end
-												elseif CamPos1 and CamPos2 and FinalCamPos then
+												elseif CamPos1 and CamPos2 and not FinalCamPos then
 													Camera.CFrame = s.Parent.Parent.Head.CFrame
+												elseif CamPos1 and CamPos2 and FinalCamPos then
+													if beatdownHead then
+													Camera.CFrame = beatdownHead.CFrame
+													else
+														warn("no head. fallback to head victim")
+														if s.Parent.Parent:FindFirstChild("Head") then
+														Camera.CFrame = s.Parent.Parent.Head.CFrame
+														end
+													end
 												end
 											else
 												if s.Parent.Parent:FindFirstChild("Head") then
