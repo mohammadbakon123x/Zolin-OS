@@ -3,7 +3,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 	local l__TweenService__5 = game:GetService("TweenService");
 	local UIS = game:GetService("UserInputService");
 	local u6 = game:GetService("RunService")
-	local BuildVersion = "3.17.2"
+	local BuildVersion = "3.17.3"
 	local versionLabel = "v"..BuildVersion;
 	local SettingsScript = {
 		RequireAway = true,
@@ -1305,10 +1305,9 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 				local meshesToRemove = {}
 				local rigParts = {}
 				local headPart = nil
-				local applyAnimation = false
 				for _, part in ipairs(parts) do
 					if part:IsA("BasePart") then
-						part.Color = Color3.fromRGB(0, 0, 0)
+						part.Color = Color3.fromRGB(234, 184, 146)
 						if part.Name == "Head" then
 							headPart = part
 						end
@@ -1479,6 +1478,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 					if fakeHrp then
 					FakeRigModel.PrimaryPart = fakeHrp
 					FakeRigModel.Parent = standModel.Parent
+						print(tostring("Stand location: "..tostring(standModel:GetFullName()))) -- path location
 						return FakeRigModel
 					end
 				end
