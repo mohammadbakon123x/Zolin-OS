@@ -3,7 +3,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 	local l__TweenService__5 = game:GetService("TweenService");
 	local UIS = game:GetService("UserInputService");
 	local u6 = game:GetService("RunService")
-	local BuildVersion = "3.18.6"
+	local BuildVersion = "3.18.7"
 	local versionLabel = "v"..BuildVersion;
 	local SettingsScript = {
 		RequireAway = true,
@@ -5469,6 +5469,9 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 													local StandHead = StandModel:FindFirstChild("Head")
 													if StandHead then
 														Camera.CFrame = StandModel.CFrame
+														print("head")
+													else
+														warn("no head")
 													end
 												elseif CamPos1 and CamPos2 and FinalCamPos then
 													Camera.CFrame = s.Parent.Parent.Head.CFrame
@@ -5548,12 +5551,14 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 										if s.Name == "Male Scream Short Yelling Bursts Death Cries (SFX)" then
 											s.SoundId = "rbxassetid://128298841397286"
 											s.PlaybackSpeed = modelData.soundSpeed
-											
 											if CustomCutsenseUncle3 then
+												spawn(function()
+												task.wait(2)
 												CamPos1 = false
 												CamPos2 = false
 												FinalCamPos = false
 												print("Reset")
+												end)
 											end
 										--[[
 										if CurrentPlayer == lpr then
@@ -5569,10 +5574,13 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 											s.PlaybackSpeed = modelData.soundSpeed
 											
 											if CustomCutsenseUncle3 then
-												CamPos1 = false
-												CamPos2 = false
-												FinalCamPos = false
-												print("Reset")
+												spawn(function()
+													task.wait(2)
+													CamPos1 = false
+													CamPos2 = false
+													FinalCamPos = false
+													print("Reset")
+												end)
 											end
 										--[[
 										if CurrentPlayer == lpr then
