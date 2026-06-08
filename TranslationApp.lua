@@ -3,7 +3,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 	local l__TweenService__5 = game:GetService("TweenService");
 	local UIS = game:GetService("UserInputService");
 	local u6 = game:GetService("RunService")
-	local BuildVersion = "3.18.4"
+	local BuildVersion = "3.18.5"
 	local versionLabel = "v"..BuildVersion;
 	local SettingsScript = {
 		RequireAway = true,
@@ -1860,6 +1860,14 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 		ActiveChecks = {} -- Track which players we're monitoring
 	};
 	local PlayedActionLIGHT = false;
+	--[
+	local CustomCutsenseUncle3 = false;
+	local CamPos1 = false -- CamPos1 -> VictimHead
+	local CamPos2 = false -- CamPos2 -> AttackerHead
+	local CamPos1_timer = 2.2;
+	local CamPos2_timer = 1.3;
+	local FinalCamPos = false -- FinalCamPos -> VictimHead
+	--]]
 	local ColorCorrectionSystem = {
 		activeEffects = {},
 		globalColorCorrection = nil,
@@ -5451,8 +5459,24 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 
 										if CurrentPlayer == lpr then
 											-- handle it here !!
-											if s.Parent.Parent:FindFirstChild("Head") then
-												Camera.CFrame = s.Parent.Parent.Head.CFrame
+										if CustomCutsenseUncle3 then
+											if not CamPos1 and not CamPos2 and not FinalCamPos then
+												if s.Parent.Parent:FindFirstChild("Head") then
+													Camera.CFrame = s.Parent.Parent.Head.CFrame
+												end
+												elseif CamPos1 and not CamPos2 and not FinalCamPos then
+													-- stand's head
+													local StandHead = StandModel:FindFirstChild("Head")
+													if StandHead then
+														Camera.CFrame = StandModel.CFrame
+													end
+												elseif CamPos1 and CamPos2 and FinalCamPos then
+													Camera.CFrame = s.Parent.Parent.Head.CFrame
+												end
+											else
+												if s.Parent.Parent:FindFirstChild("Head") then
+													Camera.CFrame = s.Parent.Parent.Head.CFrame
+												end
 											end
 										end
 
@@ -5486,6 +5510,38 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 											startColorCorrectionEffectSMT();
 										end
 										--]]
+										
+										--[
+										if CurrentPlayer == lpr then
+											spawn(function()
+											if CustomCutsenseUncle3 then
+												-- make a timer count from number 0 to 7 [Countup]
+												for i = 0, 7, 0.1 do
+													task.wait(0.1);
+													if i == CamPos1_timer and not CamPos1 then
+														print("CamPos1")
+														CamPos1 = true
+													end
+													if i == CamPos2_timer and not CamPos2 then
+														print("CamPos2")
+														CamPos2 = true
+													end
+													if i == 7 then
+														print("FinalCamPos | Ended")
+														if not FinalCamPos then
+															FinalCamPos = true
+														end
+														break
+													end
+													if not CustomCutsenseUncle3 then
+														print("Ended")
+														break
+													end
+												end
+											end
+											end)
+										end
+										--]]
 										end
 									end
 									if modelData.customSounds and modelData.customSounds[soundName] then
@@ -5514,7 +5570,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 										--]]
 											--print("Send Signal | ColorCorrectionEffect FadeOut")
 										elseif s.Name == "Gun1" then
-											s.SoundId = "rbxassetid://140559622530872";
+											s.SoundId = "rbxassetid://122905623131328";
 											s.PlaybackSpeed = modelData.soundSpeed
 										elseif s.Name == "Gun2" then
 											s.SoundId = "rbxassetid://124883416643368"
@@ -5529,6 +5585,12 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 										if s.Name ~= "explosion2" and s.Name ~= "Hit" and 
 											soundName ~= "Implosion" and soundName ~= "Male Scream Short Yelling Bursts Death Cries (SFX)" then
 											s.PlaybackSpeed = modelData.soundSpeed
+											if CustomCutsenseUncle3 then
+											CamPos1 = false
+											CamPos2 = false
+											FinalCamPos = false
+											print("Reset")
+											end
 										end
 									end
 								elseif modelData.id == "mhe_beatdown" then
