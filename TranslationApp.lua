@@ -4721,6 +4721,7 @@ end
 											cutsceneRunning = true
 
 											beatdownHeadPart = getBeatdownHead()
+											-- victimHeadPart is already defined earlier, no need to call again
 
 											if not victimHeadPart and not beatdownHeadPart then
 												print("No targets found for cutscene")
@@ -4731,8 +4732,8 @@ end
 											-- Store original camera settings
 											local originalCameraCFrame = Camera.CFrame
 											local originalCameraFocus = Camera.Focus
-											local originalCameraType = Enum.CameraType.Custom
-											local originalCameraSubject = CurrentPlayer.Character and CurrentPlayer.Character:FindFirstChild("Humanoid");
+											local originalCameraType = Camera.CameraType
+											local originalCameraSubject = CurrentPlayer.Character and CurrentPlayer.Character:FindFirstChild("Humanoid")
 
 											Camera.CameraType = Enum.CameraType.Scriptable
 
@@ -4747,7 +4748,6 @@ end
 												local currentSegmentData = customCutsceneTable[currentSegment]
 
 												if not currentSegmentData then
-													-- No more segments, exit loop
 													break
 												end
 
@@ -4756,7 +4756,6 @@ end
 
 												-- Check if segment should end
 												if elapsedTime >= currentSegmentData.time then
-													-- Move to next segment
 													currentSegment = currentSegment + 1
 													segmentStartTime = currentTime
 
@@ -4764,37 +4763,38 @@ end
 														print("Moving to segment " .. currentSegment)
 													end
 
-													-- Check if we have more segments
 													if not customCutsceneTable[currentSegment] then
 														cutsceneActive = false
 														break
 													end
-													-- Continue to next iteration to update camera with new segment
 												end
 
 												-- Smooth camera update for current segment
 												if currentSegmentData.target == "VictimHead" then
 													if victimHeadPart and victimHeadPart.Parent then
 														Camera.CFrame = victimHeadPart.CFrame
+													end
 												elseif currentSegmentData.target == "BeatdownHead" then
 													if beatdownHeadPart and beatdownHeadPart.Parent then
 														Camera.CFrame = beatdownHeadPart.CFrame
 													end
 												end
-												game:GetService("RunService").RenderStepped:Wait();
-												end
+
+												game:GetService("RunService").RenderStepped:Wait()
 											end
+
 											cutsceneRunning = false
+
 											-- Restore camera type
-											task.wait(0.25);
-											
+											task.wait(0.25)
+
 											Camera.CameraType = originalCameraType
 											Camera.CameraSubject = originalCameraSubject
-											
-												if SettingsScript.DisplayLogs then
-													print("Custom cutscene finished")
-												end
+
+											if SettingsScript.DisplayLogs then
+												print("Custom cutscene finished")
 											end
+										end
 										
 										if CurrentPlayer == lpr then
 											-- handle it here !!
