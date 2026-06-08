@@ -3,8 +3,8 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 	local l__TweenService__5 = game:GetService("TweenService");
 	local UIS = game:GetService("UserInputService");
 	local u6 = game:GetService("RunService")
-	local versionLabel = "v3.16"
-	local BuildVersion = "3.16"
+	local BuildVersion = "3.17.1"
+	local versionLabel = "v"..BuildVersion;
 	local SettingsScript = {
 		RequireAway = true,
 		DisplayLogs = true,
@@ -6417,7 +6417,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 	--// INITIALIZE
 	startAutoUpdate()
 	createTeleportUI()
-
+	print("Running version:" ..tostring(BuildVersion));
 	return TranslationApp;
 
 end
