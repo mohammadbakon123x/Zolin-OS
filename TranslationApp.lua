@@ -1283,7 +1283,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 			id = "Uncle_beatdown3",
 			name = "Your_Uncle Beatdown CoolOutfit",
 			description = "ahh, the last time Your_Uncle has taken much power and taking them down, ha! we got a cool outfit for him, Welcome Your_Uncle, you will lead the game entire, and everyone They will cower in fear and terror and will not resist you. And whoever disobeys, he will suffer a deadly punishment! . but there's a problem, Your_Uncle can't see normal colors as we see, because his eyes are colorblinded, only see red & white : (",
-			color = Color3.fromRGB(0, 0, 0),
+			color = Color3.fromRGB(234, 184, 146),
 			fireColor = Color3.fromRGB(255, 0, 0),
 			material = Enum.Material.SmoothPlastic,
 			transparency = 0,
@@ -1478,13 +1478,13 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 					local fakeHrp = FakeRigModel:FindFirstChild("HumanoidRootPart")
 					if fakeHrp then
 					FakeRigModel.PrimaryPart = fakeHrp
-					FakeRigModel.Parent = standModel
+					FakeRigModel.Parent = standModel.Parent
 						return FakeRigModel
 					end
 				end
 				local function AnimateFakeRig(standModel)
 					if not standModel then return end
-					local FakeRigModel = standModel:FindFirstChild("FakeRig")
+					local FakeRigModel = standModel.Parent:FindFirstChild("FakeRig")
 					if not FakeRigModel then AddFakeHumanoidRigToStand(standModel) end
 					print("Attempting to animate fake rig...")
 					for _, child in ipairs(standModel:GetChildren()) do
