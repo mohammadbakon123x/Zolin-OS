@@ -3,7 +3,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 	local l__TweenService__5 = game:GetService("TweenService");
 	local UIS = game:GetService("UserInputService");
 	local u6 = game:GetService("RunService")
-	local BuildVersion = "3.17.6"
+	local BuildVersion = "3.17.7"
 	local versionLabel = "v"..BuildVersion;
 	local SettingsScript = {
 		RequireAway = true,
@@ -1446,7 +1446,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 					humanoid.Name = "Humanoid"
 					humanoid.Parent = FakeRigModel;
 					for _, child in ipairs(standModelReal:GetChildren()) do
-						if child:IsA("BasePart") then
+						if child:IsA("Part") or child:IsA("MeshPart") or child:IsA("BasePart") then
 							local clonePart = child:Clone()
 							clonePart.Parent = FakeRigModel
 							clonePart.Massless = true
@@ -1494,7 +1494,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 					if not FakeRigModel then AddFakeHumanoidRigToStand(standModel) end
 					print("Attempting to animate fake rig...")
 					for _, child in ipairs(standModelReal:GetChildren()) do
-							if child:IsA("BasePart") then
+						if child:IsA("Part") or child:IsA("MeshPart") or child:IsA("BasePart") then
 								if not child:FindFirstChild("WeldConstraint") then
 								local NewHandledWeldConst = Instance.new("WeldConstraint")
 								NewHandledWeldConst.Name = "FakeWeldConstraint"
