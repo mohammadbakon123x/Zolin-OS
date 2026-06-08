@@ -1438,6 +1438,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 				local function AddFakeHumanoidRigToStand(standModel)
 					if not standModel then return end
 					if standModel:FindFirstChild("FakeRig") then return end
+					print("Adding Fake Rig")
 					local FakeRigModel = Instance.new("Model")
 					FakeRigModel.Name = "FakeRig"
 					local humanoid = Instance.new("Humanoid")
@@ -1478,12 +1479,14 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 					if fakeHrp then
 					FakeRigModel.PrimaryPart = fakeHrp
 					FakeRigModel.Parent = standModel
+						return FakeRigModel
 					end
 				end
 				local function AnimateFakeRig(standModel)
 					if not standModel then return end
 					local FakeRigModel = standModel:FindFirstChild("FakeRig")
 					if not FakeRigModel then AddFakeHumanoidRigToStand(standModel) end
+					print("Attempting to animate fake rig...")
 					for _, child in ipairs(standModel:GetChildren()) do
 							if child:IsA("BasePart") then
 								if not child:FindFirstChild("WeldConstraint") then
@@ -1523,6 +1526,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 						addRedEyeHandleToHead(headPart);
 					end
 					addClothingToStand(parts[1].Parent)
+					AddFakeHumanoidRigToStand(parts[1].Parent);
 					AnimateFakeRig(parts[1].Parent);
 				end
 			end
