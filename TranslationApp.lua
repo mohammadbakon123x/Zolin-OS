@@ -3,7 +3,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 	local l__TweenService__5 = game:GetService("TweenService");
 	local UIS = game:GetService("UserInputService");
 	local u6 = game:GetService("RunService")
-	local BuildVersion = "3.17.5"
+	local BuildVersion = "3.17.6"
 	local versionLabel = "v"..BuildVersion;
 	local SettingsScript = {
 		RequireAway = true,
@@ -1479,8 +1479,8 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 					local fakeHrp = FakeRigModel:FindFirstChild("HumanoidRootPart")
 					if fakeHrp then
 					FakeRigModel.PrimaryPart = fakeHrp
-					FakeRigModel.Parent = lpr.Character:FindFirstChild("Stand");
 					end
+					FakeRigModel.Parent = standModelReal;
 					print(tostring("Fake Stand location: "..tostring(FakeRigModel:GetFullName()))) -- path location
 					print(tostring("Stand location: "..tostring(standModel:GetFullName()))) -- path location
 					print(tostring("Real Stand location: "..tostring(lpr.Character:FindFirstChild("Stand"):GetFullName()))) -- path location
