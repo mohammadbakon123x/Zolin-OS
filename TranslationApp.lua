@@ -6,7 +6,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 	local versionLabel = "v3.16"
 	local BuildVersion = "3.16"
 	local SettingsScript = {
-		RequireAway = false,
+		RequireAway = true,
 		DisplayLogs = true,
 		UIAnimation = false,
 		AntiExploit = false,
@@ -35,7 +35,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 	local CustomHomerunHitbox = Vector3.new(0.8,0.8,0.8) * 16;
 	local Flying = false;
 	local TeleportUI = nil;
-	local CurrentFlySpeed = 1;
+	local CurrentFlySpeed = 4;
 	local FlySpeeds = {
 		{name = "Slowest", speed = 40, color = Color3.fromRGB(58, 61, 126)},     -- 1
 		{name = "Very Slow", speed = 78, color = Color3.fromRGB(100, 100, 255)},   -- 2
@@ -4399,7 +4399,8 @@ end
 				local LSB = p.Character:FindFirstChild("LastSlappedBy")
 				if LSB and LSB.Value == CurrentPlayer.Name then
 					local torso = p.Character:FindFirstChild("Torso")
-					if torso then
+					local head = p.Character:FindFirstChild("Head");
+					if torso and head then
 						for _, s in ipairs(torso:GetChildren()) do
 							if s:IsA("Sound") then
 								local soundName = s.Name
@@ -4681,32 +4682,16 @@ end
 											CutsenseCamPos:Destroy()
 										end
 										
-										local victimHeadPart = nil
+										local victimHeadPart = head
 										local beatdownHeadPart = nil
 										local cutsceneRunning = false
-										
-										-- Pre-fetch targets once before cutscene starts
-										local function getVictimHead()
-											for _, p in ipairs(game.Players:GetPlayers()) do
-												if p ~= lpr and p.Character then
-													local LSB = p.Character:FindFirstChild("LastSlappedBy")
-													if LSB and LSB.Value == CurrentPlayer.Name then
-														local head = p.Character:FindFirstChild("Head")
-														if head and head.Parent then
-															return head
-														end
-													end
-												end
-											end
-											return nil
-										end
 										
 										local function getBeatdownHead()
 											if CurrentPlayer and CurrentPlayer.Character then
 												local stand = StandModel or CurrentPlayer.Character:FindFirstChild("Stand")
-												if stand and stand.Parent then
-													local standHead = stand:FindFirstChild("Head")
-													if standHead and standHead.Parent then
+												if stand and stand:FindFirstChild("Head") then
+													local standHead = stand.Head
+													if standHead and standHead.Parent ~= nil then
 														return standHead
 													end
 												end
@@ -4714,8 +4699,6 @@ end
 											return nil
 										end
 										
-										-- Store targets before cutscene starts
-										victimHeadPart = getVictimHead()
 										beatdownHeadPart = getBeatdownHead()
 										
 										local function setCameraToTarget(targetType)
@@ -4737,8 +4720,6 @@ end
 											if cutsceneRunning then return end
 											cutsceneRunning = true
 
-											-- Re-fetch targets to ensure they're valid
-											victimHeadPart = getVictimHead()
 											beatdownHeadPart = getBeatdownHead()
 
 											if not victimHeadPart and not beatdownHeadPart then
@@ -4750,65 +4731,90 @@ end
 											-- Store original camera settings
 											local originalCameraCFrame = Camera.CFrame
 											local originalCameraFocus = Camera.Focus
-											local originalCameraType = Camera.CameraType
+											local originalCameraType = Enum.CameraType.Custom
 											local originalCameraSubject = Camera.CameraSubject
 
 											Camera.CameraType = Enum.CameraType.Scriptable
 
-											if SettingsScript.DisplayLogs then
-												print("Starting custom cutscene for SMT Beatdown")
-											end
+											-- Cutscene variables
+											local currentSegment = 1
+											local segmentStartTime = tick()
+											local cutsceneActive = true
+											local lastCFrame = Camera.CFrame
 
-											for index, cutsceneData in ipairs(customCutsceneTable) do
-												if not cutsceneRunning then break end
+											-- Main smooth cutscene loop
+											while cutsceneActive and cutsceneRunning do
+												local currentTime = tick()
+												local currentSegmentData = customCutsceneTable[currentSegment]
 
-												cutsceneData.active = true
-
-												if SettingsScript.DisplayLogs then
-													print("Cutscene segment " .. index .. " - Target: " .. cutsceneData.target .. " - Duration: " .. cutsceneData.time .. "s")
+												if not currentSegmentData then
+													-- No more segments, exit loop
+													break
 												end
 
-												local segmentFinished = false
+												-- Calculate time elapsed in current segment
+												local elapsedTime = currentTime - segmentStartTime
 
-												spawn(function()
-													local startTime = tick()
-													while tick() - startTime < cutsceneData.time and cutsceneRunning and segmentFinished == false do
-														if cutsceneData.target == "VictimHead" then
-															if victimHeadPart and victimHeadPart.Parent then
-																Camera.CFrame = victimHeadPart.CFrame
-															end
-														elseif cutsceneData.target == "BeatdownHead" then
-															if beatdownHeadPart and beatdownHeadPart.Parent then
-																Camera.CFrame = beatdownHeadPart.CFrame
-															end
-														end
-														task.wait()
+												-- Check if segment should end
+												if elapsedTime >= currentSegmentData.time then
+													-- Move to next segment
+													currentSegment = currentSegment + 1
+													segmentStartTime = currentTime
+
+													if SettingsScript.DisplayLogs then
+														print("Moving to segment " .. currentSegment)
 													end
-													segmentFinished = true
-												end)
 
-												-- Wait for segment to complete
-												while not segmentFinished and cutsceneRunning do
-													task.wait()
+													-- Check if we have more segments
+													if not customCutsceneTable[currentSegment] then
+														cutsceneActive = false
+														break
+													end
+													-- Continue to next iteration to update camera with new segment
 												end
 
-												cutsceneData.active = false
+												-- Smooth camera update for current segment
+												if currentSegmentData.target == "VictimHead" then
+													if victimHeadPart and victimHeadPart.Parent then
+														-- Direct CFrame assignment for smooth following
+														Camera.CFrame = victimHeadPart.CFrame
+														lastCFrame = victimHeadPart.CFrame
+													elseif lastCFrame then
+														Camera.CFrame = lastCFrame
+													end
+												elseif currentSegmentData.target == "BeatdownHead" then
+													if beatdownHeadPart and beatdownHeadPart.Parent then
+														Camera.CFrame = beatdownHeadPart.CFrame
+														lastCFrame = beatdownHeadPart.CFrame
+													elseif lastCFrame then
+														Camera.CFrame = lastCFrame
+													end
+												end
+												game:GetService("RunService").RenderStepped:Wait();
 											end
 
-											-- Restore original camera settings
-											Camera.CameraType = originalCameraType
-											Camera.CameraSubject = originalCameraSubject
-
-											-- Smooth transition back to original position
+											-- Restore original camera settings with smooth transition
 											local tweenService = game:GetService("TweenService")
-											local tween = tweenService:Create(Camera, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+											local tweenInfo = TweenInfo.new(0.5, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
+
+											local tween = tweenService:Create(Camera, tweenInfo, {
 												CFrame = originalCameraCFrame,
 												Focus = originalCameraFocus
 											})
+
 											tween:Play()
 											tween.Completed:Wait()
 
+											-- Restore camera type
+											task.wait(0.25);
+											
+											Camera.CameraType = originalCameraType
+											Camera.CameraSubject = originalCameraSubject
 											cutsceneRunning = false
+
+											if SettingsScript.DisplayLogs then
+												print("Custom cutscene finished")
+											end
 										end
 										
 										if CurrentPlayer == lpr then
@@ -6251,6 +6257,18 @@ end
 	--// INITIALIZE
 	startAutoUpdate()
 	createTeleportUI()
+	
+	-- kill script when app is closed
+	spawn(function()
+		while true do
+			task.wait(0.5);
+			if TranslationUI == nil then
+				print("App killed")
+				script:Destroy();
+				break;
+			end
+		end
+	end)
 	
 	return TranslationApp;
 	
