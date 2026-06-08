@@ -1439,7 +1439,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 					if not standModel then return end
 					if standModel:FindFirstChild("FakeRig") then return end
 					local FakeRigModel = Instance.new("Model")
-					FakeRigModel.Name = "FakeRig"				
+					FakeRigModel.Name = "FakeRig"
 					local humanoid = Instance.new("Humanoid")
 					humanoid.Name = "Humanoid"
 					humanoid.Parent = FakeRigModel;
@@ -1477,6 +1477,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 					local fakeHrp = FakeRigModel:FindFirstChild("HumanoidRootPart")
 					if fakeHrp then
 					FakeRigModel.PrimaryPart = fakeHrp
+					FakeRigModel.Parent = standModel
 					end
 				end
 				local function AnimateFakeRig(standModel)
@@ -1496,6 +1497,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 									NewFakeWeld.Part1 = child
 									NewFakeWeld.Parent = FakeRigModel:FindFirstChild(child.Name)
 									NewFakeWeld.Name = "FakeWeld"
+									print("Added weld & weld constraint to"..tostring(child.Name))
 								end
 							end
 						end
