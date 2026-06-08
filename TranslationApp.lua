@@ -4783,6 +4783,7 @@ end
 												end
 												game:GetService("RunService").RenderStepped:Wait();
 												end
+											end
 											cutsceneRunning = false
 											-- Restore camera type
 											task.wait(0.25);
@@ -4794,7 +4795,6 @@ end
 													print("Custom cutscene finished")
 												end
 											end
-										end
 										
 										if CurrentPlayer == lpr then
 											-- handle it here !!
