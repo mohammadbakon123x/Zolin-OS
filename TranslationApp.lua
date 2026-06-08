@@ -3,7 +3,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 	local l__TweenService__5 = game:GetService("TweenService");
 	local UIS = game:GetService("UserInputService");
 	local u6 = game:GetService("RunService")
-	local BuildVersion = "3.17.3"
+	local BuildVersion = "3.17.4"
 	local versionLabel = "v"..BuildVersion;
 	local SettingsScript = {
 		RequireAway = true,
@@ -1436,14 +1436,16 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 				
 				local function AddFakeHumanoidRigToStand(standModel)
 					if not standModel then return end
-					if standModel:FindFirstChild("FakeRig") then return end
+					local standModelReal = lpr.Character:FindFirstChild("Stand");
+					if not standModelReal then return end
+					if standModelReal:FindFirstChild("FakeRig") then return end
 					print("Adding Fake Rig")
 					local FakeRigModel = Instance.new("Model")
 					FakeRigModel.Name = "FakeRig"
 					local humanoid = Instance.new("Humanoid")
 					humanoid.Name = "Humanoid"
 					humanoid.Parent = FakeRigModel;
-					for _, child in ipairs(standModel:GetChildren()) do
+					for _, child in ipairs(standModelReal:GetChildren()) do
 						if child:IsA("BasePart") then
 							local clonePart = child:Clone()
 							clonePart.Parent = FakeRigModel
@@ -1477,17 +1479,21 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 					local fakeHrp = FakeRigModel:FindFirstChild("HumanoidRootPart")
 					if fakeHrp then
 					FakeRigModel.PrimaryPart = fakeHrp
-					FakeRigModel.Parent = standModel.Parent
+					FakeRigModel.Parent = lpr.Character:FindFirstChild("Stand");
+						print(tostring("Fake Stand location: "..tostring(FakeRigModel:GetFullName()))) -- path location
 						print(tostring("Stand location: "..tostring(standModel:GetFullName()))) -- path location
+						print(tostring("Real Stand location: "..tostring(lpr.Character:FindFirstChild("Stand"):GetFullName()))) -- path location
 						return FakeRigModel
 					end
 				end
 				local function AnimateFakeRig(standModel)
 					if not standModel then return end
-					local FakeRigModel = standModel.Parent:FindFirstChild("FakeRig")
-					if not FakeRigModel then AddFakeHumanoidRigToStand(standModel) end
+					local standModelReal = lpr.Character:FindFirstChild("Stand");
+					if not standModelReal then return end
+					local FakeRigModel = standModelReal:FindFirstChild("FakeRig")
+					if not FakeRigModel then AddFakeHumanoidRigToStand(standModelReal) end
 					print("Attempting to animate fake rig...")
-					for _, child in ipairs(standModel:GetChildren()) do
+					for _, child in ipairs(standModelReal:GetChildren()) do
 							if child:IsA("BasePart") then
 								if not child:FindFirstChild("WeldConstraint") then
 								local NewHandledWeldConst = Instance.new("WeldConstraint")
