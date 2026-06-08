@@ -5771,7 +5771,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 			print("Character respawned - Fly system reinitialized")
 		end
 	end
-	TranslationApp.trackConnection(lpr.CharacterAdded:Connect(handleCharacterRespawn))
+	lpr.CharacterAdded:Connect(handleCharacterRespawn)
 	if lpr.Character then
 		handleCharacterRespawn(lpr.Character)
 	end
