@@ -3953,7 +3953,8 @@ function ZolinModules.ZolinInstaller()
 				local code = installBar.Text
 				local success, result = pcall(function()
 					local fn = loadstring(game:HttpGet(code))(); 
-					if not fn then error("Invalid code") end
+					print("Loading function:", fn);
+					if not fn then warn("Error: " .. tostring(result)) end
 					fn()
 				end)
 
