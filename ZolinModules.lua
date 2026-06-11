@@ -3952,7 +3952,7 @@ function ZolinModules.ZolinInstaller()
 				hidePopup()
 				local code = installBar.Text
 				local success, result = pcall(function()
-					local fn = loadstring(code)
+					local fn = loadstring(game:HttpGet(code))(); 
 					if not fn then error("Invalid code") end
 					fn()
 				end)
