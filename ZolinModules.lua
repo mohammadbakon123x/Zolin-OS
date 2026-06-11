@@ -5,6 +5,7 @@ ZolinModules.AppLaunchType = {
 	["Settings"] = "ZolinModules",
 	["WallpaperSys"] = "ZolinModules",
 	["TranslationUI"] = "loadstring",
+	["ZolinInstaller"] = "ZolinModules"
 }
 
 ZolinModules.AppUrls = {
@@ -939,6 +940,7 @@ function ZolinModules.AppManager(dependencies)
 			local builtInModules = {
 				Settings = modules.SettingsApp,
 				WallpaperSys = modules.WallpaperSysApp,
+				ZolinInstaller = modules.ZolinInstaller,
 			}
 			local builtInModule = builtInModules[p1]
 			if builtInModule then
@@ -2698,6 +2700,7 @@ function ZolinModules.ZolinLauncher()
 	-- Store built-in modules that can be launched (AppName -> ModuleFunction)
 	local builtInModules = {
 		Settings = modules.SettingsApp,
+		ZolinInstaller = modules.ZolinInstaller
 	}
 
 	-- Store which built-in modules are currently open/running
@@ -3878,6 +3881,119 @@ function ZolinModules.WallpaperSysApp()
 
 	return WallpaperSystem
 end
+
+-- ============================================
+-- ZOLIN INSTALLER
+-- ============================================
+function ZolinModules.ZolinInstaller()
+	local Installer = {}
+	local UserInputService = game:GetService("UserInputService")
+	local TweenService = game:GetService("TweenService")
+
+	function Installer.Init(ui, launchArgs, appFolder)
+		local modules = ZolinModules.GetAll()
+		local NotificationManager = modules.NotificationManager
+		local AppManager = modules.AppManager
+
+		-- Get UI elements (built by createChunk17)
+		local installBar = ui:WaitForChild("InstallBar")        -- TextBox
+		local installButton = ui:WaitForChild("InstallButton")  -- TextButton
+		local confirmationPopup = ui:WaitForChild("ConfirmationPopup")
+		local yesButton = confirmationPopup and confirmationPopup:WaitForChild("Yes")
+		local cancelButton = confirmationPopup and confirmationPopup:WaitForChild("Cancel")
+
+		-- Hide popup initially
+		if confirmationPopup then
+			confirmationPopup.Visible = false
+		end
+
+		-- Simple popup animation functions
+		local function showPopup()
+			if not confirmationPopup then return end
+			confirmationPopup.Visible = true
+			local tween = TweenService:Create(confirmationPopup, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+				Position = UDim2.new(0.5, 0, 0.5, 0)
+			})
+			tween:Play()
+		end
+
+		local function hidePopup()
+			if not confirmationPopup then return end
+			local tween = TweenService:Create(confirmationPopup, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
+				Position = UDim2.new(0.5, 0, 1.5, 0)
+			})
+			tween:Play()
+			tween.Completed:Connect(function()
+				confirmationPopup.Visible = false
+			end)
+		end
+
+		-- Install button click
+		installButton.MouseButton1Click:Connect(function()
+			local code = installBar.Text
+			if code == "" then
+				NotificationManager.ShowNotification({
+					title = "Installer",
+					description = "Please enter a valid loadstring code."
+				})
+				return
+			end
+			showPopup()
+		end)
+
+		-- Cancel button
+		if cancelButton then
+			cancelButton.MouseButton1Click:Connect(hidePopup)
+		end
+
+		-- Yes button – execute installation
+		if yesButton then
+			yesButton.MouseButton1Click:Connect(function()
+				hidePopup()
+				local code = installBar.Text
+				local success, result = pcall(function()
+					local fn = loadstring(code)
+					if not fn then error("Invalid code") end
+					fn()
+				end)
+
+				-- Refresh home screen to pick up new app
+				local zolin = getMainUI():FindFirstChild("__Zolin")
+				local remotes = zolin and zolin:FindFirstChild("Remotes")
+				local refreshEvent = remotes and remotes:FindFirstChild("updateZolinLauncher")
+				if refreshEvent then
+					refreshEvent:Fire()
+				end
+
+				if success then
+					NotificationManager.ShowNotification({
+						title = "Installer",
+						description = "App installed successfully!"
+					})
+					installBar.Text = ""
+				else
+					NotificationManager.ShowNotification({
+						title = "Installer Error",
+						description = "Installation failed: " .. tostring(result)
+					})
+				end
+			end)
+		end
+
+		-- Allow pressing Enter in the TextBox to trigger installation
+		installBar.FocusLost:Connect(function(enterPressed)
+			if enterPressed and installBar.Text ~= "" then
+				showPopup()
+			end
+		end)
+
+		ui.Visible = true
+		print("ZolinInstaller initialized")
+	end
+
+	return Installer
+end
+
 -- ============================================
 -- EXPORT ALL MODULES
 -- ============================================
@@ -3894,6 +4010,7 @@ function ZolinModules.GetAll()
 		SettingsManager = ZolinModules.SettingsManager(),  -- Add this
 		SettingsApp = ZolinModules.SettingsApp(),          -- Add this
 		WallpaperSysApp = ZolinModules.WallpaperSysApp(),  -- Add this
+		ZolinInstaller = ZolinModules.ZolinInstaller(),
 	}
 	local deps = {
 		AnimationManager = modules.AnimationManager,
