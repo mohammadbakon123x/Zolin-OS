@@ -1075,7 +1075,7 @@ local function createChunk10()
 
 	local ZolinVersion = Instance.new("StringValue")
 	ZolinVersion.Name = "ZolinVersion"
-	ZolinVersion.Value = "1.1"
+	ZolinVersion.Value = "1.2"
 	ZolinVersion.Parent = DeviceTree
 
 	local AnimationUI = Instance.new("BoolValue")
@@ -1095,6 +1095,10 @@ local function createChunk10()
 	local moreOptionsVolStyle = Instance.new("BindableEvent")
 	moreOptionsVolStyle.Name = "moreOptionsVolStyle"
 	moreOptionsVolStyle.Parent = Remotes
+	
+	local updateZolinLauncher = Instance.new("BindableEvent")
+	updateZolinLauncher.Name = "updateZolinLauncher"
+	updateZolinLauncher.Parent = Remotes
 end
 
 -- ============================================
@@ -1840,6 +1844,194 @@ local function createChunk16()
 end
 
 -- ============================================
+-- ============================================
+-- CHUNK 17: ZolinInstaller App | BETA
+-- ============================================
+local function createChunk17()
+	local ReplicatedWindow_Sys = MainUI:FindFirstChild("ReplicatedWindow")
+
+	local ZolinInstaller = Instance.new("Frame")
+	ZolinInstaller.Name = "ZolinInstaller"
+	ZolinInstaller.AnchorPoint = Vector2.new(0.5, 0.5)
+	ZolinInstaller.BackgroundTransparency = 0
+	ZolinInstaller.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+	ZolinInstaller.Size = UDim2.new(1, 0, 1, 0)
+	ZolinInstaller.Position = UDim2.new(0.5, 0, 0.5, 0)
+	ZolinInstaller.ZIndex = 6
+	ZolinInstaller.Visible = false
+	ZolinInstaller.Parent = ReplicatedWindow_Sys
+
+	local Data_ZolinInstaller = Instance.new("Folder")
+	Data_ZolinInstaller.Name = "Data"
+	Data_ZolinInstaller.Parent = ZolinInstaller
+
+	local Desc_ZolinInstaller = Instance.new("StringValue")
+	Desc_ZolinInstaller.Name = "Description"
+	Desc_ZolinInstaller.Value = "Install new apps via loadstring"
+	Desc_ZolinInstaller.Parent = Data_ZolinInstaller
+
+	local Version_ZolinInstaller = Instance.new("StringValue")
+	Version_ZolinInstaller.Name = "Version"
+	Version_ZolinInstaller.Value = "1.0"
+	Version_ZolinInstaller.Parent = Data_ZolinInstaller
+
+	createUICorner(ZolinInstaller, "UICorner_ZolinInstaller", UDim.new(0, 10))
+
+	local UIScale_ZolinInstaller = Instance.new("UIScale")
+	UIScale_ZolinInstaller.Parent = ZolinInstaller
+	UIScale_ZolinInstaller.Scale = 0
+
+	local PreviewAppInfoZL_ZolinInstaller = Instance.new("Frame")
+	PreviewAppInfoZL_ZolinInstaller.Name = "PreviewAppInfoZL"
+	PreviewAppInfoZL_ZolinInstaller.AnchorPoint = Vector2.new(0.5, 0.5)
+	PreviewAppInfoZL_ZolinInstaller.AutomaticSize = Enum.AutomaticSize.XY
+	PreviewAppInfoZL_ZolinInstaller.BackgroundColor3 = Color3.fromRGB(59, 232, 189)
+	PreviewAppInfoZL_ZolinInstaller.BackgroundTransparency = 0.35
+	PreviewAppInfoZL_ZolinInstaller.Position = UDim2.new(0.082, 0, 0.031, 0)
+	PreviewAppInfoZL_ZolinInstaller.Size = UDim2.new(0.165, 0, 0.061, 0)
+	PreviewAppInfoZL_ZolinInstaller.ZIndex = 8
+	PreviewAppInfoZL_ZolinInstaller.Visible = false
+	PreviewAppInfoZL_ZolinInstaller.Parent = ZolinInstaller
+
+	createUICorner(PreviewAppInfoZL_ZolinInstaller, "UICorner_PreviewAppInfoZL_ZolinInstaller", UDim.new(0.5, 0))
+
+	local TextLabel_PreviewAppInfoZL_ZolinInstaller = Instance.new("TextLabel")
+	TextLabel_PreviewAppInfoZL_ZolinInstaller.Name = "AppNameLabel"
+	TextLabel_PreviewAppInfoZL_ZolinInstaller.AnchorPoint = Vector2.new(0.5, 0.5)
+	TextLabel_PreviewAppInfoZL_ZolinInstaller.Position = UDim2.new(0.409, 0, 0.5, 0)
+	TextLabel_PreviewAppInfoZL_ZolinInstaller.Size = UDim2.new(0, 150, 0, 25)
+	TextLabel_PreviewAppInfoZL_ZolinInstaller.BackgroundTransparency = 1
+	TextLabel_PreviewAppInfoZL_ZolinInstaller.TextScaled = true
+	TextLabel_PreviewAppInfoZL_ZolinInstaller.Font = Enum.Font.Oswald
+	TextLabel_PreviewAppInfoZL_ZolinInstaller.RichText = true
+	TextLabel_PreviewAppInfoZL_ZolinInstaller.TextXAlignment = Enum.TextXAlignment.Left
+	TextLabel_PreviewAppInfoZL_ZolinInstaller.ZIndex = PreviewAppInfoZL_ZolinInstaller.ZIndex
+
+	local ImageLabel_PreviewAppInfoZL_ZolinInstaller = Instance.new("ImageLabel")
+	ImageLabel_PreviewAppInfoZL_ZolinInstaller.AnchorPoint = Vector2.new(0.5, 0.5)
+	ImageLabel_PreviewAppInfoZL_ZolinInstaller.AutomaticSize = Enum.AutomaticSize.XY
+	ImageLabel_PreviewAppInfoZL_ZolinInstaller.BackgroundTransparency = 1
+	ImageLabel_PreviewAppInfoZL_ZolinInstaller.Position = UDim2.new(0.9, 0, 0.5, 0)
+	ImageLabel_PreviewAppInfoZL_ZolinInstaller.Size = UDim2.new(0, 39, 0, 39)
+	ImageLabel_PreviewAppInfoZL_ZolinInstaller.ZIndex = PreviewAppInfoZL_ZolinInstaller.ZIndex
+	ImageLabel_PreviewAppInfoZL_ZolinInstaller.Image = "rbxassetid://128691285053548"  -- your icon
+	ImageLabel_PreviewAppInfoZL_ZolinInstaller.ScaleType = Enum.ScaleType.Fit
+	ImageLabel_PreviewAppInfoZL_ZolinInstaller.Parent = PreviewAppInfoZL_ZolinInstaller
+
+	createUICorner(ImageLabel_PreviewAppInfoZL_ZolinInstaller, "UICorner_ImageLabel_ZolinInstaller", UDim.new(0.5, 0))
+
+	local ZolinInstaller_UI = Instance.new("Frame")
+	ZolinInstaller_UI.Name = "UI"
+	ZolinInstaller_UI.AnchorPoint = Vector2.new(0.5, 0.5)
+	ZolinInstaller_UI.Position = UDim2.new(0.5, 0, 0.495, 0)
+	ZolinInstaller_UI.Size = UDim2.new(1, 0, 0.89, 0)
+	ZolinInstaller_UI.ZIndex = ZolinInstaller.ZIndex - 1
+	ZolinInstaller_UI.BackgroundColor3 = Color3.fromRGB(106, 106, 106)
+	ZolinInstaller_UI.BackgroundTransparency = 0.65
+	ZolinInstaller_UI.Visible = true
+	ZolinInstaller_UI.Parent = ZolinInstaller
+
+	createUICorner(ZolinInstaller_UI, "ZolinInstaller_UI_UICorner", UDim.new(0, 10))
+
+	-- InstallBar (TextBox)
+	local InstallBar = Instance.new("TextBox")
+	InstallBar.Name = "InstallBar"
+	InstallBar.AnchorPoint = Vector2.new(0.5, 0.5)
+	InstallBar.Position = UDim2.new(0.5, 0, 0.3, 0)
+	InstallBar.Size = UDim2.new(0.8, 0, 0.1, 0)
+	InstallBar.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
+	InstallBar.BackgroundTransparency = 0
+	InstallBar.TextColor3 = Color3.new(1, 1, 1)
+	InstallBar.PlaceholderText = "Paste loadstring code here..."
+	InstallBar.Font = Enum.Font.Gotham
+	InstallBar.TextSize = 14
+	InstallBar.TextXAlignment = Enum.TextXAlignment.Left
+	InstallBar.ZIndex = ZolinInstaller_UI.ZIndex + 1
+	InstallBar.Parent = ZolinInstaller_UI
+
+	createUICorner(InstallBar, "InstallBar_Corner", UDim.new(0, 8))
+
+	-- Install Button
+	local InstallButton = Instance.new("TextButton")
+	InstallButton.Name = "InstallButton"
+	InstallButton.AnchorPoint = Vector2.new(0.5, 0.5)
+	InstallButton.Position = UDim2.new(0.5, 0, 0.45, 0)
+	InstallButton.Size = UDim2.new(0.4, 0, 0.08, 0)
+	InstallButton.BackgroundColor3 = Color3.fromRGB(34, 255, 255)
+	InstallButton.BackgroundTransparency = 0.2
+	InstallButton.Text = "Install"
+	InstallButton.TextColor3 = Color3.new(1, 1, 1)
+	InstallButton.Font = Enum.Font.GothamBold
+	InstallButton.TextSize = 18
+	InstallButton.ZIndex = ZolinInstaller_UI.ZIndex + 1
+	InstallButton.Parent = ZolinInstaller_UI
+
+	createUICorner(InstallButton, "InstallButton_Corner", UDim.new(0, 8))
+
+	-- Confirmation Popup (hidden)
+	local ConfirmationPopup = Instance.new("Frame")
+	ConfirmationPopup.Name = "ConfirmationPopup"
+	ConfirmationPopup.AnchorPoint = Vector2.new(0.5, 0.5)
+	ConfirmationPopup.Position = UDim2.new(0.5, 0, 1.5, 0)   -- off-screen
+	ConfirmationPopup.Size = UDim2.new(0.6, 0, 0.25, 0)
+	ConfirmationPopup.BackgroundColor3 = Color3.fromRGB(25, 25, 35)
+	ConfirmationPopup.BackgroundTransparency = 0
+	ConfirmationPopup.ZIndex = ZolinInstaller_UI.ZIndex + 2
+	ConfirmationPopup.Visible = false
+	ConfirmationPopup.Parent = ZolinInstaller_UI
+
+	createUICorner(ConfirmationPopup, "ConfirmationPopup_Corner", UDim.new(0, 12))
+
+	-- Popup text
+	local ConfirmText = Instance.new("TextLabel")
+	ConfirmText.Name = "ConfirmText"
+	ConfirmText.AnchorPoint = Vector2.new(0.5, 0.5)
+	ConfirmText.Position = UDim2.new(0.5, 0, 0.25, 0)
+	ConfirmText.Size = UDim2.new(0.9, 0, 0.3, 0)
+	ConfirmText.BackgroundTransparency = 1
+	ConfirmText.Text = "Are you sure you want to install this app?"
+	ConfirmText.TextColor3 = Color3.new(1, 1, 1)
+	ConfirmText.Font = Enum.Font.GothamBold
+	ConfirmText.TextSize = 16
+	ConfirmText.TextWrapped = true
+	ConfirmText.TextXAlignment = Enum.TextXAlignment.Center
+	ConfirmText.ZIndex = ConfirmationPopup.ZIndex + 1
+	ConfirmText.Parent = ConfirmationPopup
+
+	-- Yes Button
+	local YesButton = Instance.new("TextButton")
+	YesButton.Name = "Yes"
+	YesButton.AnchorPoint = Vector2.new(0.5, 0.5)
+	YesButton.Position = UDim2.new(0.35, 0, 0.65, 0)
+	YesButton.Size = UDim2.new(0.25, 0, 0.15, 0)
+	YesButton.BackgroundColor3 = Color3.fromRGB(0, 200, 0)
+	YesButton.Text = "Yes"
+	YesButton.TextColor3 = Color3.new(1, 1, 1)
+	YesButton.Font = Enum.Font.GothamBold
+	YesButton.TextSize = 14
+	YesButton.ZIndex = ConfirmationPopup.ZIndex + 1
+	YesButton.Parent = ConfirmationPopup
+
+	createUICorner(YesButton, "YesButton_Corner", UDim.new(0, 6))
+
+	-- Cancel Button
+	local CancelButton = Instance.new("TextButton")
+	CancelButton.Name = "Cancel"
+	CancelButton.AnchorPoint = Vector2.new(0.5, 0.5)
+	CancelButton.Position = UDim2.new(0.65, 0, 0.65, 0)
+	CancelButton.Size = UDim2.new(0.25, 0, 0.15, 0)
+	CancelButton.BackgroundColor3 = Color3.fromRGB(200, 0, 0)
+	CancelButton.Text = "Cancel"
+	CancelButton.TextColor3 = Color3.new(1, 1, 1)
+	CancelButton.Font = Enum.Font.GothamBold
+	CancelButton.TextSize = 14
+	CancelButton.ZIndex = ConfirmationPopup.ZIndex + 1
+	CancelButton.Parent = ConfirmationPopup
+
+	createUICorner(CancelButton, "CancelButton_Corner", UDim.new(0, 6))
+end
+
+-- ============================================
 -- MAIN INIT FUNCTION
 -- ============================================
 function v1.Init()
@@ -1903,6 +2095,8 @@ function v1.Init()
 		task.spawn(function() createChunk15() end)
 		task.wait()
 		task.spawn(function() createChunk16() end)
+		task.wait()
+		task.spawn(function() createChunk17() end)
 
 		print("ZolinOS UI initialized")
 	end
