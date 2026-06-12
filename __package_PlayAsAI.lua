@@ -17,7 +17,7 @@ function __AppPackage.Install()
 		__AppsLaunchArgFolder.Name = "__AppsLaunchArgFolder"
 		__AppsLaunchArgFolder.Parent = __Zolin
 	end
-	if __AppsLaunchArgFolder:FindFirstChild("PlayAsAI") then
+	if __AppsLaunchArgFolder:FindFirstChild("PlayAsAI") and replicatedWindow:FindFirstChild("PlayAsAI") then
 		warn("PlayAsAI already installed")
 		return
 	end
@@ -199,7 +199,7 @@ function __AppPackage.Install()
 	addSettingRow("Difficulty:", {"Easy", "Normal", "Hard", "Insane"}).Name = "DifficultyBtn"
 
 	-- ======== REGISTER THE APP ========
-	local appEntry = Instance.new("StringValue")
+	local appEntry = __AppsLaunchArgFolder:FindFirstChild("PlayAsAI") or Instance.new("StringValue")
 	appEntry.Name = "PlayAsAI"
 	appEntry.Value = "https://raw.githubusercontent.com/mohammadbakon123x/Zolin-OS/refs/heads/main/PlayAsAI.lua"
 	appEntry.Parent = __AppsLaunchArgFolder
