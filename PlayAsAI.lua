@@ -1,199 +1,39 @@
-local ZolinApp = {};
-
-function ZolinApp.Init()
 -- ============================================================
--- Install "Play as AI" App for ZolinOS (Enhanced Version)
+-- PlayAsAI – AI Logic (returned as a module for AppManager)
+-- Enhanced with Beatdown Combo
 -- ============================================================
-local Players = game:GetService("Players")
-local UIS = game:GetService("UserInputService")
-local RunService = game:GetService("RunService")
-local PathfindingService = game:GetService("PathfindingService")
-local Workspace = game:GetService("Workspace")
-local VIM = game:GetService("VirtualInputManager")
+local ZolinApp = {}
 
-local player = Players.LocalPlayer
-local playerGui = player:WaitForChild("PlayerGui")
-local mainUI = playerGui:WaitForChild("ZolinOS")
-local replicatedWindow = mainUI:WaitForChild("ReplicatedWindow")
+function ZolinApp.Init(ui, launchArgs, appFolder)
+	local Players = game:GetService("Players")
+	local UIS = game:GetService("UserInputService")
+	local RunService = game:GetService("RunService")
+	local Workspace = game:GetService("Workspace")
+	local VIM = game:GetService("VirtualInputManager")
 
-if not replicatedWindow:FindFirstChild("PlayAsAI") then
-	-- ======== BUILD APP FRAME (unchanged) ========
-	local app = Instance.new("Frame")
-	app.Name = "PlayAsAI"
-	app.AnchorPoint = Vector2.new(0.5, 0.5)
-	app.BackgroundTransparency = 0
-	app.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-	app.Size = UDim2.new(1, 0, 1, 0)
-	app.Position = UDim2.new(0.5, 0, 0.5, 0)
-	app.ZIndex = 6
-	app.Parent = replicatedWindow
+	local player = Players.LocalPlayer
 
-	local dataFolder = Instance.new("Folder")
-	dataFolder.Name = "Data"
-	dataFolder.Parent = app
+	local toggleBtn = ui:WaitForChild("ToggleButton")
+	local settingsFrame = ui:WaitForChild("SettingsFrame")
+	local friendlyBtn = settingsFrame:WaitForChild("FriendlyBtn")
+	local wanderBtn = settingsFrame:WaitForChild("WanderBtn")
+	local escapeBtn = settingsFrame:WaitForChild("EscapeBtn")
+	local diffBtn = settingsFrame:WaitForChild("DifficultyBtn")
 
-	local desc = Instance.new("StringValue", dataFolder)
-	desc.Name = "Description"
-	desc.Value = "Play as AI – intelligent bot controller"
-
-	local ver = Instance.new("StringValue", dataFolder)
-	ver.Name = "Version"
-	ver.Value = "2.0"
-
-	local ui = Instance.new("Frame")
-	ui.Name = "UI"
-	ui.AnchorPoint = Vector2.new(0.5, 0.5)
-	ui.Position = UDim2.new(0.5, 0, 0.495, 0)
-	ui.Size = UDim2.new(1, 0, 0.89, 0)
-	ui.BackgroundColor3 = Color3.fromRGB(106, 106, 106)
-	ui.BackgroundTransparency = 0.65
-	ui.ZIndex = app.ZIndex - 1
-	ui.Parent = app
-
-	local preview = Instance.new("Frame")
-	preview.Name = "PreviewAppInfoZL"
-	preview.AnchorPoint = Vector2.new(0.5, 0.5)
-	preview.AutomaticSize = Enum.AutomaticSize.XY
-	preview.BackgroundColor3 = Color3.fromRGB(59, 232, 189)
-	preview.BackgroundTransparency = 0.35
-	preview.Position = UDim2.new(0.082, 0, 0.031, 0)
-	preview.Size = UDim2.new(0.165, 0, 0.061, 0)
-	preview.ZIndex = 8
-	preview.Visible = false
-	preview.Parent = app
-
-	local previewLabel = Instance.new("TextLabel")
-	previewLabel.Name = "AppNameLabel"
-	previewLabel.AnchorPoint = Vector2.new(0.5, 0.5)
-	previewLabel.Position = UDim2.new(0.409, 0, 0.5, 0)
-	previewLabel.Size = UDim2.new(0, 150, 0, 25)
-	previewLabel.BackgroundTransparency = 1
-	previewLabel.TextScaled = true
-	previewLabel.Font = Enum.Font.Oswald
-	previewLabel.Text = "Play as AI"
-	previewLabel.Parent = preview
-
-	local previewIcon = Instance.new("ImageLabel")
-	previewIcon.AnchorPoint = Vector2.new(0.5, 0.5)
-	previewIcon.AutomaticSize = Enum.AutomaticSize.XY
-	previewIcon.BackgroundTransparency = 1
-	previewIcon.Position = UDim2.new(0.9, 0, 0.5, 0)
-	previewIcon.Size = UDim2.new(0, 39, 0, 39)
-	previewIcon.Image = "rbxassetid://13458988525"
-	previewIcon.ScaleType = Enum.ScaleType.Fit
-	previewIcon.Parent = preview
-
-	local title = Instance.new("TextLabel")
-	title.Size = UDim2.new(1, 0, 0.08, 0)
-	title.Position = UDim2.new(0, 0, 0.02, 0)
-	title.BackgroundTransparency = 1
-	title.Text = "Play as AI"
-	title.TextColor3 = Color3.new(1, 1, 1)
-	title.TextScaled = true
-	title.Font = Enum.Font.GothamBold
-	title.Parent = ui
-
-	local toggleBtn = Instance.new("TextButton")
-	toggleBtn.Size = UDim2.new(0.5, 0, 0.1, 0)
-	toggleBtn.Position = UDim2.new(0.25, 0, 0.12, 0)
-	toggleBtn.BackgroundColor3 = Color3.fromRGB(34, 255, 255)
-	toggleBtn.Text = "Enable AI"
-	toggleBtn.TextColor3 = Color3.new(0, 0, 0)
-	toggleBtn.Font = Enum.Font.GothamBold
-	toggleBtn.TextSize = 14
-	toggleBtn.Parent = ui
-
-	local settingsFrame = Instance.new("ScrollingFrame")
-	settingsFrame.Size = UDim2.new(1, -10, 0.65, 0)
-	settingsFrame.Position = UDim2.new(0, 5, 0.25, 0)
-	settingsFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
-	settingsFrame.BackgroundTransparency = 0.5
-	settingsFrame.CanvasSize = UDim2.new(0, 0, 0, 500)
-	settingsFrame.ScrollBarThickness = 5
-	settingsFrame.Parent = ui
-
-	local layout = Instance.new("UIListLayout")
-	layout.Padding = UDim.new(0, 5)
-	layout.SortOrder = Enum.SortOrder.LayoutOrder
-	layout.Parent = settingsFrame
-
-	local function addSettingRow(text, options)
-		local row = Instance.new("Frame")
-		row.Size = UDim2.new(1, -10, 0, 40)
-		row.BackgroundTransparency = 1
-		row.Parent = settingsFrame
-
-		local label = Instance.new("TextLabel")
-		label.Size = UDim2.new(0.5, 0, 1, 0)
-		label.Position = UDim2.new(0, 5, 0, 0)
-		label.BackgroundTransparency = 1
-		label.Text = text
-		label.TextColor3 = Color3.new(1, 1, 1)
-		label.Font = Enum.Font.Gotham
-		label.TextSize = 14
-		label.TextXAlignment = Enum.TextXAlignment.Left
-		label.Parent = row
-
-		local cycleBtn = Instance.new("TextButton")
-		cycleBtn.Size = UDim2.new(0.5, 0, 1, 0)
-		cycleBtn.Position = UDim2.new(0.5, 0, 0, 0)
-		cycleBtn.BackgroundColor3 = Color3.fromRGB(50, 50, 60)
-		cycleBtn.Text = options[1]
-		cycleBtn.TextColor3 = Color3.new(1, 1, 1)
-		cycleBtn.Font = Enum.Font.Gotham
-		cycleBtn.TextSize = 14
-		cycleBtn.Parent = row
-
-		local idx = 1
-		cycleBtn.MouseButton1Click:Connect(function()
-			idx = idx % #options + 1
-			cycleBtn.Text = options[idx]
-		end)
-		return cycleBtn
+	if not (toggleBtn and friendlyBtn and wanderBtn and escapeBtn and diffBtn) then
+		warn("PlayAsAI: UI elements missing.")
+		return
 	end
 
-	local friendlyBtn = addSettingRow("Friendly:", {"All", "Friends Only", "None"})
-	local wanderBtn = addSettingRow("Wander:", {"Off", "Sometimes", "Always"})
-	local escapeBtn = addSettingRow("Escaping:", {"None", "Run from enemy", "When low health"})
-
-	local controlsRow = Instance.new("Frame")
-	controlsRow.Size = UDim2.new(1, -10, 0, 40)
-	controlsRow.BackgroundTransparency = 1
-	controlsRow.Parent = settingsFrame
-
-	local controlsLabel = Instance.new("TextLabel")
-	controlsLabel.Size = UDim2.new(0.5, 0, 1, 0)
-	controlsLabel.Position = UDim2.new(0, 5, 0, 0)
-	controlsLabel.BackgroundTransparency = 1
-	controlsLabel.Text = "Player Controls:"
-	controlsLabel.TextColor3 = Color3.new(1, 1, 1)
-	controlsLabel.Font = Enum.Font.Gotham
-	controlsLabel.TextSize = 14
-	controlsLabel.TextXAlignment = Enum.TextXAlignment.Left
-	controlsLabel.Parent = controlsRow
-
-	local controlsDisabled = Instance.new("TextLabel")
-	controlsDisabled.Size = UDim2.new(0.5, 0, 1, 0)
-	controlsDisabled.Position = UDim2.new(0.5, 0, 0, 0)
-	controlsDisabled.BackgroundColor3 = Color3.fromRGB(50, 50, 60)
-	controlsDisabled.Text = "Disabled (AI Active)"
-	controlsDisabled.TextColor3 = Color3.fromRGB(150, 150, 150)
-	controlsDisabled.Font = Enum.Font.Gotham
-	controlsDisabled.TextSize = 14
-	controlsDisabled.Parent = controlsRow
-
-	local diffBtn = addSettingRow("Difficulty:", {"Easy", "Normal", "Hard", "Insane"})
-
-	-- ======== AI LOGIC (ENHANCED) ========
 	local aiActive = false
 	local aiConnection = nil
 	local aiThread = nil
 
 	local diffParams = {
-		Easy   = {detectRange = 30, fightChance = 0.2, abilityChance = 0.1, runHealth = 0.3, fakeMoveChance = 0.1, spinChance = 0.1, behindChance = 0.1, jumpAttackChance = 0.1},
-		Normal = {detectRange = 60, fightChance = 0.5, abilityChance = 0.3, runHealth = 0.4, fakeMoveChance = 0.3, spinChance = 0.3, behindChance = 0.3, jumpAttackChance = 0.3},
-		Hard   = {detectRange = 100, fightChance = 0.8, abilityChance = 0.6, runHealth = 0.5, fakeMoveChance = 0.6, spinChance = 0.6, behindChance = 0.6, jumpAttackChance = 0.6},
-		Insane = {detectRange = 200, fightChance = 1.0, abilityChance = 0.9, runHealth = 0.7, fakeMoveChance = 0.9, spinChance = 0.9, behindChance = 0.9, jumpAttackChance = 0.9},
+		Easy   = {detectRange = 30, fightChance = 0.2, abilityChance = 0.1, runHealth = 0.3, fakeMoveChance = 0.1, spinChance = 0.1, behindChance = 0.1, jumpAttackChance = 0.1, beatdownChance = 0.1},
+		Normal = {detectRange = 60, fightChance = 0.5, abilityChance = 0.3, runHealth = 0.4, fakeMoveChance = 0.3, spinChance = 0.3, behindChance = 0.3, jumpAttackChance = 0.3, beatdownChance = 0.4},
+		Hard   = {detectRange = 100, fightChance = 0.8, abilityChance = 0.6, runHealth = 0.5, fakeMoveChance = 0.6, spinChance = 0.6, behindChance = 0.6, jumpAttackChance = 0.6, beatdownChance = 0.7},
+		Insane = {detectRange = 200, fightChance = 1.0, abilityChance = 0.9, runHealth = 0.7, fakeMoveChance = 0.9, spinChance = 0.9, behindChance = 0.9, jumpAttackChance = 0.9, beatdownChance = 0.9},
 	}
 
 	local function getParams()
@@ -240,14 +80,13 @@ if not replicatedWindow:FindFirstChild("PlayAsAI") then
 		return nearest, nearestDist
 	end
 
-	-- Improved edge detection with ground check
 	local function nearEdge(character, direction)
 		local root = character:FindFirstChild("HumanoidRootPart")
 		if not root then return false end
 		local rayOrigin = root.Position + Vector3.new(0, 2, 0) + direction * 10
 		local ray = Ray.new(rayOrigin, Vector3.new(0, -20, 0))
 		local hit = Workspace:Raycast(ray, {character})
-		return hit == nil  -- no ground 20 studs below
+		return hit == nil
 	end
 
 	local function safePosition(character, targetPos)
@@ -263,9 +102,7 @@ if not replicatedWindow:FindFirstChild("PlayAsAI") then
 		local root = character:FindFirstChild("HumanoidRootPart")
 		if not root then return end
 		local hum = character:FindFirstChild("Humanoid")
-		if hum then
-			hum.AutoRotate = false  -- we take control
-		end
+		if hum then hum.AutoRotate = false end
 		local startTime = tick()
 		local duration = 0.5 / speed
 		local startCF = root.CFrame
@@ -275,26 +112,21 @@ if not replicatedWindow:FindFirstChild("PlayAsAI") then
 			RunService.Heartbeat:Wait()
 		end
 		root.CFrame = endCF
-		if hum then
-			hum.AutoRotate = true
-		end
+		if hum then hum.AutoRotate = true end
 	end
 
 	local function jumpIfSafe(character)
 		local root = character:FindFirstChild("HumanoidRootPart")
 		local hum = character:FindFirstChild("Humanoid")
 		if not root or not hum then return false end
-		if nearEdge(character, root.CFrame.LookVector) then
-			return false  -- don't jump into void
-		end
+		if nearEdge(character, root.CFrame.LookVector) then return false end
 		hum.Jump = true
 		return true
 	end
 
 	local function getBehindPosition(enemyRoot, offset)
-		local behind = enemyRoot.CFrame * CFrame.new(0, 0, offset) -- behind = negative Z in local space? Actually, lookVector is forward, so behind is -lookVector.
 		local pos = enemyRoot.Position - enemyRoot.CFrame.LookVector * offset
-		pos = Vector3.new(pos.X, enemyRoot.Position.Y, pos.Z)  -- keep same Y
+		pos = Vector3.new(pos.X, enemyRoot.Position.Y, pos.Z)
 		return pos
 	end
 
@@ -324,6 +156,53 @@ if not replicatedWindow:FindFirstChild("PlayAsAI") then
 			wait(0.05)
 			VIM:SendKeyEvent(false, Enum.KeyCode.E, false, game)
 		end)
+	end
+
+	local function performFakeMove(character)
+		local hum = character:FindFirstChild("Humanoid")
+		local root = character:FindFirstChild("HumanoidRootPart")
+		if not hum or not root then return end
+		local right = root.CFrame.RightVector * 15
+		local left = -right
+		local targetPos = root.Position + (math.random() < 0.5 and right or left)
+		if safePosition(character, targetPos) then
+			hum:MoveTo(targetPos)
+			wait(0.2)
+		end
+	end
+
+	-- ===== NEW: Beatdown Combo =====
+	local function isBeatdownGlove()
+		local char = getCharacter()
+		if not char then return false end
+		local tools = char:FindChildrenOfClass("Tool")
+		for _, tool in ipairs(tools) do
+			if tool.Name:lower():find("beatdown") then
+				return tool
+			end
+		end
+		return nil
+	end
+
+	local function performBeatdownCombo(character, enemyRoot)
+		local hum = character:FindFirstChild("Humanoid")
+		local root = character:FindFirstChild("HumanoidRootPart")
+		if not hum or not root then return end
+
+		useAbilityE()
+		wait(0.1)
+
+		local targetPos = enemyRoot.Position
+		hum:MoveTo(targetPos)
+		local startTime = tick()
+		while tick() - startTime < 0.7 and aiActive do
+			if (root.Position - targetPos).Magnitude > 1 then
+				hum:MoveTo(targetPos)
+			end
+			RunService.Heartbeat:Wait()
+		end
+
+		equipAndAttack()
 	end
 
 	local function aiLoop()
@@ -371,7 +250,7 @@ if not replicatedWindow:FindFirstChild("PlayAsAI") then
 				end
 			end
 
-			-- Combat / Escape movement with enhancements
+			-- Combat / Escape
 			if shouldRun then
 				local awayDir = (root.Position - enemy.Position).Unit * 50
 				local runPoint = root.Position + awayDir
@@ -379,38 +258,40 @@ if not replicatedWindow:FindFirstChild("PlayAsAI") then
 					hum:MoveTo(runPoint)
 				end
 			elseif shouldFight then
-				-- Normal approach
-				hum:MoveTo(enemy.Position)
-				equipAndAttack()
-				if math.random() < params.abilityChance then useAbilityE() end
+				local beatdownGlove = isBeatdownGlove()
+				-- Try Beatdown combo if close and glove detected
+				if beatdownGlove and enemyDist < 6 and math.random() < params.beatdownChance then
+					performBeatdownCombo(character, enemy)
+				else
+					-- Normal fight routine
+					hum:MoveTo(enemy.Position)
+					equipAndAttack()
+					if math.random() < params.abilityChance then useAbilityE() end
 
-				-- Jump attack
-				if math.random() < params.jumpAttackChance then
-					if jumpIfSafe(character) then
-						wait(0.1)  -- brief delay
-						equipAndAttack()  -- attack mid-air
+					if math.random() < params.jumpAttackChance then
+						if jumpIfSafe(character) then
+							wait(0.1)
+							equipAndAttack()
+						end
 					end
-				end
 
-				-- 180/360 spin (shift-lock style)
-				if math.random() < params.spinChance then
-					local angle = math.random() < 0.5 and 180 or 360
-					rotateCharacter(character, angle, 0.5)
-				end
-
-				-- Move behind enemy
-				if math.random() < params.behindChance then
-					local behindPos = getBehindPosition(enemy, 8) -- 8 studs behind
-					if safePosition(character, behindPos) then
-						hum:MoveTo(behindPos)
-						wait(0.2)
-						equipAndAttack()
+					if math.random() < params.spinChance then
+						local angle = math.random() < 0.5 and 180 or 360
+						rotateCharacter(character, angle, 0.5)
 					end
-				end
 
-				-- Fake moves near edges (already present)
-				if math.random() < params.fakeMoveChance and nearEdge(character, root.CFrame.LookVector) then
-					ZolinApp.performFakeMove(character)
+					if math.random() < params.behindChance then
+						local behindPos = getBehindPosition(enemy, 8)
+						if safePosition(character, behindPos) then
+							hum:MoveTo(behindPos)
+							wait(0.2)
+							equipAndAttack()
+						end
+					end
+
+					if math.random() < params.fakeMoveChance and nearEdge(character, root.CFrame.LookVector) then
+						performFakeMove(character)
+					end
 				end
 			else
 				hum:MoveTo(root.Position)
@@ -420,33 +301,12 @@ if not replicatedWindow:FindFirstChild("PlayAsAI") then
 		end
 	end
 
-	-- performFakeMove kept as is but we'll reuse it
-	function ZolinApp.performFakeMove(character)
-		local hum = character:FindFirstChild("Humanoid")
-		local root = character:FindFirstChild("HumanoidRootPart")
-		if not hum or not root then return end
-		local right = root.CFrame.RightVector * 15
-		local left = -right
-		local targetPos = root.Position + (math.random() < 0.5 and right or left)
-		if safePosition(character, targetPos) then
-			hum:MoveTo(targetPos)
-			wait(0.2)
-		end
-	end
-
 	local function stopAI()
 		aiActive = false
 		toggleBtn.Text = "Enable AI"
 		toggleBtn.BackgroundColor3 = Color3.fromRGB(34, 255, 255)
-		if aiConnection then
-			aiConnection:Disconnect()
-			aiConnection = nil
-		end
-		if aiThread then
-			task.cancel(aiThread)
-			aiThread = nil
-		end
-		-- Restore character control if any
+		if aiConnection then aiConnection:Disconnect(); aiConnection = nil end
+		if aiThread then task.cancel(aiThread); aiThread = nil end
 		local char = getCharacter()
 		if char then
 			local hum = char:FindFirstChild("Humanoid")
@@ -474,18 +334,6 @@ if not replicatedWindow:FindFirstChild("PlayAsAI") then
 	toggleBtn.MouseButton1Click:Connect(function()
 		if aiActive then stopAI() else startAI() end
 	end)
-
-	print("Play as AI enhanced installed successfully.")
 end
 
--- Refresh home screen
-local zolin = mainUI:FindFirstChild("__Zolin")
-local remotes = zolin and zolin:FindFirstChild("Remotes")
-local refreshEvent = remotes and remotes:FindFirstChild("updateZolinLauncher")
-if refreshEvent then
-	refreshEvent:Fire()
-end
-	return ZolinApp
-end
-
-ZolinApp.Init();
+return ZolinApp
