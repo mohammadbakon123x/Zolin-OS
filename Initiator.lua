@@ -1011,6 +1011,7 @@ local function createChunk9()
 	Description__NotificationReplicaWindow_2.Name = "Description"
 	Description__NotificationReplicaWindow_2.Parent = __NotificationReplicaWindow_2
 	Description__NotificationReplicaWindow_2.Position = UDim2.new(0.502, 0, 0.567, 0)
+	Description__NotificationReplicaWindow_2.AnchorPoint = Vector2.new(0.5, 0.5)
 	Description__NotificationReplicaWindow_2.Size = UDim2.new(0.742, 0, 0.568, 0)
 	Description__NotificationReplicaWindow_2.BackgroundTransparency = 1
 	Description__NotificationReplicaWindow_2.ZIndex = 9997
@@ -1844,8 +1845,7 @@ local function createChunk16()
 end
 
 -- ============================================
--- ============================================
--- CHUNK 17: ZolinInstaller App | BETA
+-- CHUNK 17: ZolinInstaller App | BETA (Updated)
 -- ============================================
 local function createChunk17()
 	local ReplicatedWindow_Sys = MainUI:FindFirstChild("ReplicatedWindow")
@@ -1933,29 +1933,43 @@ local function createChunk17()
 
 	createUICorner(ZolinInstaller_UI, "ZolinInstaller_UI_UICorner", UDim.new(0, 10))
 
-	-- InstallBar (TextBox)
-	local InstallBar = Instance.new("TextBox")
-	InstallBar.Name = "InstallBar"
-	InstallBar.AnchorPoint = Vector2.new(0.5, 0.5)
-	InstallBar.Position = UDim2.new(0.5, 0, 0.3, 0)
-	InstallBar.Size = UDim2.new(0.8, 0, 0.1, 0)
-	InstallBar.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
-	InstallBar.BackgroundTransparency = 0
-	InstallBar.TextColor3 = Color3.new(1, 1, 1)
-	InstallBar.PlaceholderText = "Paste loadstring code here..."
-	InstallBar.Font = Enum.Font.Gotham
-	InstallBar.TextSize = 14
-	InstallBar.TextXAlignment = Enum.TextXAlignment.Left
-	InstallBar.ZIndex = ZolinInstaller_UI.ZIndex + 1
-	InstallBar.Parent = ZolinInstaller_UI
+	-- APP NAME TEXTBOX
+	local appNameBar = Instance.new("TextBox")
+	appNameBar.Name = "AppNameBar"
+	appNameBar.AnchorPoint = Vector2.new(0.5, 0.5)
+	appNameBar.Position = UDim2.new(0.5, 0, 0.25, 0)
+	appNameBar.Size = UDim2.new(0.8, 0, 0.08, 0)
+	appNameBar.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
+	appNameBar.TextColor3 = Color3.new(1, 1, 1)
+	appNameBar.PlaceholderText = "App Name"
+	appNameBar.Font = Enum.Font.Gotham
+	appNameBar.TextSize = 14
+	appNameBar.TextXAlignment = Enum.TextXAlignment.Left
+	appNameBar.ZIndex = ZolinInstaller_UI.ZIndex + 1
+	appNameBar.Parent = ZolinInstaller_UI
+	createUICorner(appNameBar, "AppNameBar_Corner", UDim.new(0, 8))
 
-	createUICorner(InstallBar, "InstallBar_Corner", UDim.new(0, 8))
+	-- URL TEXTBOX
+	local urlBar = Instance.new("TextBox")
+	urlBar.Name = "URLBar"
+	urlBar.AnchorPoint = Vector2.new(0.5, 0.5)
+	urlBar.Position = UDim2.new(0.5, 0, 0.38, 0)
+	urlBar.Size = UDim2.new(0.8, 0, 0.08, 0)
+	urlBar.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
+	urlBar.TextColor3 = Color3.new(1, 1, 1)
+	urlBar.PlaceholderText = "Loadstring URL"
+	urlBar.Font = Enum.Font.Gotham
+	urlBar.TextSize = 14
+	urlBar.TextXAlignment = Enum.TextXAlignment.Left
+	urlBar.ZIndex = ZolinInstaller_UI.ZIndex + 1
+	urlBar.Parent = ZolinInstaller_UI
+	createUICorner(urlBar, "URLBar_Corner", UDim.new(0, 8))
 
-	-- Install Button
+	-- Install Button (moved a bit down to make space)
 	local InstallButton = Instance.new("TextButton")
 	InstallButton.Name = "InstallButton"
 	InstallButton.AnchorPoint = Vector2.new(0.5, 0.5)
-	InstallButton.Position = UDim2.new(0.5, 0, 0.45, 0)
+	InstallButton.Position = UDim2.new(0.5, 0, 0.52, 0)
 	InstallButton.Size = UDim2.new(0.4, 0, 0.08, 0)
 	InstallButton.BackgroundColor3 = Color3.fromRGB(34, 255, 255)
 	InstallButton.BackgroundTransparency = 0.2
