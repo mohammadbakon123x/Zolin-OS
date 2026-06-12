@@ -109,6 +109,7 @@ function __AppPackage.Install()
 	toggleBtn.Font = Enum.Font.GothamBold
 	toggleBtn.TextSize = 14
 	toggleBtn.Parent = ui
+	toggleBtn.ZIndex = ui.ZIndex + 1
 
 	-- Settings ScrollingFrame
 	local settingsFrame = Instance.new("ScrollingFrame")
@@ -120,6 +121,7 @@ function __AppPackage.Install()
 	settingsFrame.CanvasSize = UDim2.new(0, 0, 0, 500)
 	settingsFrame.ScrollBarThickness = 5
 	settingsFrame.Parent = ui
+	settingsFrame.ZIndex = ui.ZIndex + 2
 
 	local layout = Instance.new("UIListLayout")
 	layout.Padding = UDim.new(0, 5)
@@ -132,7 +134,7 @@ function __AppPackage.Install()
 		row.Size = UDim2.new(1, -10, 0, 40)
 		row.BackgroundTransparency = 1
 		row.Parent = settingsFrame
-
+		row.ZIndex = settingsFrame.ZIndex + 1
 		local label = Instance.new("TextLabel")
 		label.Size = UDim2.new(0.5, 0, 1, 0)
 		label.Position = UDim2.new(0, 5, 0, 0)
@@ -143,6 +145,8 @@ function __AppPackage.Install()
 		label.TextSize = 14
 		label.TextXAlignment = Enum.TextXAlignment.Left
 		label.Parent = row
+		label.ZIndex = row.ZIndex + 1
+		
 
 		local cycleBtn = Instance.new("TextButton")
 		cycleBtn.Size = UDim2.new(0.5, 0, 1, 0)
@@ -153,7 +157,7 @@ function __AppPackage.Install()
 		cycleBtn.Font = Enum.Font.Gotham
 		cycleBtn.TextSize = 14
 		cycleBtn.Parent = row
-
+		cycleBtn.ZIndex = row.ZIndex + 1
 		local idx = 1
 		cycleBtn.MouseButton1Click:Connect(function()
 			idx = idx % #options + 1
@@ -183,7 +187,8 @@ function __AppPackage.Install()
 	controlsLabel.TextSize = 14
 	controlsLabel.TextXAlignment = Enum.TextXAlignment.Left
 	controlsLabel.Parent = controlsRow
-
+	controlsLabel.ZIndex = controlsRow.ZIndex + 1
+	
 	local controlsDisabled = Instance.new("TextLabel")
 	controlsDisabled.Size = UDim2.new(0.5, 0, 1, 0)
 	controlsDisabled.Position = UDim2.new(0.5, 0, 0, 0)
@@ -193,6 +198,7 @@ function __AppPackage.Install()
 	controlsDisabled.Font = Enum.Font.Gotham
 	controlsDisabled.TextSize = 14
 	controlsDisabled.Parent = controlsRow
+	controlsDisabled.ZIndex = controlsRow.ZIndex + 1
 
 	addSettingRow("Difficulty:", {"Easy", "Normal", "Hard", "Insane"}).Name = "DifficultyBtn"
 
