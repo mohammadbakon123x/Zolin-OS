@@ -1076,7 +1076,7 @@ local function createChunk10()
 
 	local ZolinVersion = Instance.new("StringValue")
 	ZolinVersion.Name = "ZolinVersion"
-	ZolinVersion.Value = "1.2"
+	ZolinVersion.Value = "1.3"
 	ZolinVersion.Parent = DeviceTree
 
 	local AnimationUI = Instance.new("BoolValue")
