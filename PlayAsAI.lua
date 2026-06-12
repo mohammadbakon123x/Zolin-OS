@@ -17,7 +17,7 @@ function ZolinApp.Init(ui, launchArgs, appFolder)
 	local settingsFrame = ui:WaitForChild("SettingsFrame")
 	local friendlyBtn = settingsFrame:FindFirstChild("Friendly:"):FindFirstChild("FriendlyBtn")
 	local wanderBtn = settingsFrame:FindFirstChild("Wander:"):FindFirstChild("WanderBtn")
-	local escapeBtn = settingsFrame:FindFirstChild("Escape:"):FindFirstChild("EscapingBtn")
+	local escapeBtn = settingsFrame:FindFirstChild("Escaping:"):FindFirstChild("EscapeBtn")
 	local diffBtn = settingsFrame:FindFirstChild("Difficulty:"):FindFirstChild("DifficultyBtn")
 
 	if not (toggleBtn and friendlyBtn and wanderBtn and escapeBtn and diffBtn) then
