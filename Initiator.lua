@@ -1933,22 +1933,6 @@ local function createChunk17()
 
 	createUICorner(ZolinInstaller_UI, "ZolinInstaller_UI_UICorner", UDim.new(0, 10))
 
-	-- APP NAME TEXTBOX
-	local appNameBar = Instance.new("TextBox")
-	appNameBar.Name = "AppNameBar"
-	appNameBar.AnchorPoint = Vector2.new(0.5, 0.5)
-	appNameBar.Position = UDim2.new(0.5, 0, 0.25, 0)
-	appNameBar.Size = UDim2.new(0.8, 0, 0.08, 0)
-	appNameBar.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
-	appNameBar.TextColor3 = Color3.new(1, 1, 1)
-	appNameBar.PlaceholderText = "App Name"
-	appNameBar.Font = Enum.Font.Gotham
-	appNameBar.TextSize = 14
-	appNameBar.TextXAlignment = Enum.TextXAlignment.Left
-	appNameBar.ZIndex = ZolinInstaller_UI.ZIndex + 1
-	appNameBar.Parent = ZolinInstaller_UI
-	createUICorner(appNameBar, "AppNameBar_Corner", UDim.new(0, 8))
-
 	-- URL TEXTBOX
 	local urlBar = Instance.new("TextBox")
 	urlBar.Name = "URLBar"
