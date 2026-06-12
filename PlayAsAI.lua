@@ -15,13 +15,13 @@ function ZolinApp.Init(ui, launchArgs, appFolder)
 
 	local toggleBtn = ui:WaitForChild("ToggleButton")
 	local settingsFrame = ui:WaitForChild("SettingsFrame")
-	local friendlyBtn = settingsFrame:WaitForChild("Friendly:"):FindFirstChild("FriendlyBtn")
-	local wanderBtn = settingsFrame:WaitForChild("Wander:"):FindFirstChild("WanderBtn")
-	local escapeBtn = settingsFrame:WaitForChild("Escape:"):FindFirstChild("EscapingBtn")
-	local diffBtn = settingsFrame:WaitForChild("Difficulty:"):FindFirstChild("DifficultyBtn")
+	local friendlyBtn = settingsFrame:FindFirstChild("Friendly:"):FindFirstChild("FriendlyBtn")
+	local wanderBtn = settingsFrame:FindFirstChild("Wander:"):FindFirstChild("WanderBtn")
+	local escapeBtn = settingsFrame:FindFirstChild("Escape:"):FindFirstChild("EscapingBtn")
+	local diffBtn = settingsFrame:FindFirstChild("Difficulty:"):FindFirstChild("DifficultyBtn")
 
 	if not (toggleBtn and friendlyBtn and wanderBtn and escapeBtn and diffBtn) then
-		warn("PlayAsAI: UI elements missing.")
+		warn("PlayAsAI: UI elements missing. | "..script.Name.." | "..script:GetFullName())
 		return
 	end
 
