@@ -954,8 +954,21 @@ function ZolinModules.AppManager(dependencies)
 				openBuiltInModules[p1] = clonedApp
 				print("Launched built-in module:", p1)
 			end
-		elseif launchType == "loadstring" then
-			local appUrl = ZolinModules.AppUrls and ZolinModules.AppUrls[p1]
+			-- Inside AppManager.LaunchApplication, after the existing ZolinModules check:
+		else
+			-- First, try the new folder-based registry
+			local appUrl = nil
+			local appsFolder = MainUI.__Zolin:FindFirstChild("__AppsLaunchArgFolder")
+			if appsFolder then
+				local entry = appsFolder:FindFirstChild(p1)
+				if entry and entry:IsA("StringValue") then
+					appUrl = entry.Value
+				end
+			end
+			-- Fallback to the old table
+			if not appUrl then
+				appUrl = ZolinModules.AppUrls and ZolinModules.AppUrls[p1]
+			end
 			if appUrl then
 				print("Fetching app from URL:", appUrl);
 				local success, result = pcall(function()
@@ -968,28 +981,28 @@ function ZolinModules.AppManager(dependencies)
 						if execSuccess then
 							if type(moduleReturn) == "function" then
 								local ui = clonedApp:FindFirstChild("UI")
-								moduleReturn(ui, {}, clonedApp)
+									moduleReturn(ui, {}, clonedApp)
 							elseif type(moduleReturn) == "table" and moduleReturn.Init then
 								local ui = clonedApp:FindFirstChild("UI")
-								moduleReturn.Init(ui, {}, clonedApp)
+									moduleReturn.Init(ui, {}, clonedApp)
+								end
+								table.insert(RunningApps, p1)
+								ActiveApp = p1
+								clonedApp.Visible = true
+								openBuiltInModules[p1] = clonedApp
+								print("Launched loadstring app:", p1)
+							else
+								warn("Failed to execute loadstring app:", p1, moduleReturn)
 							end
-
-							table.insert(RunningApps, p1)
-							ActiveApp = p1
-							clonedApp.Visible = true
-							openBuiltInModules[p1] = clonedApp
-							print("Launched loadstring app:", p1)
 						else
-							warn("Failed to execute loadstring app:", p1, moduleReturn)
+							warn("Failed to compile loadstring app:", p1, compileError)
 						end
 					else
-						warn("Failed to compile loadstring app:", p1, compileError)
+						warn("Failed to fetch loadstring app:", p1, appUrl)
 					end
 				else
-					warn("Failed to fetch loadstring app:", p1, appUrl)
-				end
-			else
-				warn("No URL found for loadstring app:", p1)
+					warn("No URL found for loadstring app:", p1)
+				return false
 			end
 		end
 		clonedApp.Visible = true
@@ -3887,38 +3900,37 @@ end
 -- ============================================
 function ZolinModules.ZolinInstaller()
 	local Installer = {}
-	local UserInputService = game:GetService("UserInputService")
 	local TweenService = game:GetService("TweenService")
 
 	function Installer.Init(ui, launchArgs, appFolder)
 		local modules = ZolinModules.GetAll()
 		local NotificationManager = modules.NotificationManager
-		local AppManager = modules.AppManager
 
-		-- Get UI elements (built by createChunk17)
-		local installBar = ui:WaitForChild("InstallBar")        -- TextBox
-		local installButton = ui:WaitForChild("InstallButton")  -- TextButton
+		-- Updated UI elements (matching the new Chunk 17)
+		local appNameBar = ui:WaitForChild("AppNameBar")
+		local urlBar = ui:WaitForChild("URLBar")
+		local installButton = ui:WaitForChild("InstallButton")
 		local confirmationPopup = ui:WaitForChild("ConfirmationPopup")
 		local yesButton = confirmationPopup and confirmationPopup:WaitForChild("Yes")
 		local cancelButton = confirmationPopup and confirmationPopup:WaitForChild("Cancel")
 
-		-- Hide popup initially
-		if confirmationPopup then
-			confirmationPopup.Visible = false
+		if not (appNameBar and urlBar and installButton and confirmationPopup and yesButton and cancelButton) then
+			warn("ZolinInstaller: Missing UI elements.")
+			return
 		end
 
-		-- Simple popup animation functions
+		-- Hide popup initially
+		confirmationPopup.Visible = false
+
+		-- Popup animation helpers
 		local function showPopup()
-			if not confirmationPopup then return end
 			confirmationPopup.Visible = true
-			local tween = TweenService:Create(confirmationPopup, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+			TweenService:Create(confirmationPopup, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
 				Position = UDim2.new(0.5, 0, 0.5, 0)
-			})
-			tween:Play()
+			}):Play()
 		end
 
 		local function hidePopup()
-			if not confirmationPopup then return end
 			local tween = TweenService:Create(confirmationPopup, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
 				Position = UDim2.new(0.5, 0, 1.5, 0)
 			})
@@ -3928,13 +3940,14 @@ function ZolinModules.ZolinInstaller()
 			end)
 		end
 
-		-- Install button click
+		-- Install button → show confirmation
 		installButton.MouseButton1Click:Connect(function()
-			local code = installBar.Text
-			if code == "" then
+			local appName = appNameBar.Text
+			local url = urlBar.Text
+			if appName == "" or url == "" then
 				NotificationManager.ShowNotification({
 					title = "Installer",
-					description = "Please enter a valid loadstring code."
+					description = "Please enter both an app name and a loadstring URL."
 				})
 				return
 			end
@@ -3942,48 +3955,74 @@ function ZolinModules.ZolinInstaller()
 		end)
 
 		-- Cancel button
-		if cancelButton then
-			cancelButton.MouseButton1Click:Connect(hidePopup)
-		end
+		cancelButton.MouseButton1Click:Connect(hidePopup)
 
-		-- Yes button – execute installation
-		if yesButton then
-			yesButton.MouseButton1Click:Connect(function()
-				hidePopup()
-				local code = installBar.Text
-				local success, result = pcall(function()
-					local fn = loadstring(game:HttpGet(code))(); 
-					print("Loading function:", fn);
-					if not fn then warn("Error: " .. tostring(result)) end
-					fn()
-				end)
+		-- Yes button → execute installation
+		yesButton.MouseButton1Click:Connect(function()
+			hidePopup()
+			local appName = appNameBar.Text
+			local url = urlBar.Text
 
-				-- Refresh home screen to pick up new app
-				local zolin = getMainUI():FindFirstChild("__Zolin")
-				local remotes = zolin and zolin:FindFirstChild("Remotes")
+			local mainUI = getMainUI()
+			local zolin = mainUI:FindFirstChild("__Zolin")
+			if not zolin then
+				warn("__Zolin not found")
+				return
+			end
+
+			-- Ensure __AppsLaunchArgFolder exists
+			local appsFolder = zolin:FindFirstChild("__AppsLaunchArgFolder")
+			if not appsFolder then
+				appsFolder = Instance.new("Folder")
+				appsFolder.Name = "__AppsLaunchArgFolder"
+				appsFolder.Parent = zolin
+			end
+
+			-- Store the app entry
+			local appEntry = appsFolder:FindFirstChild(appName)
+			if not appEntry then
+				appEntry = Instance.new("StringValue")
+				appEntry.Name = appName
+				appEntry.Parent = appsFolder
+			end
+			appEntry.Value = url
+
+			-- Fetch and execute the loadstring
+			local success, result = pcall(function()
+				local code = game:HttpGet(url)
+				local fn, compileError = loadstring(code)
+				if not fn then
+					error("Compilation error: " .. tostring(compileError))
+				end
+				fn()
+			end)
+
+			if success then
+				-- Refresh home screen
+				local remotes = zolin:FindFirstChild("Remotes")
 				local refreshEvent = remotes and remotes:FindFirstChild("updateZolinLauncher")
 				if refreshEvent then
 					refreshEvent:Fire()
 				end
+				NotificationManager.ShowNotification({
+					title = "Installer",
+					description = appName .. " installed successfully!"
+				})
+				appNameBar.Text = ""
+				urlBar.Text = ""
+			else
+				-- Remove entry if installation failed
+				if appEntry then appEntry:Destroy() end
+				NotificationManager.ShowNotification({
+					title = "Installer Error",
+					description = "Installation failed: " .. tostring(result)
+				})
+			end
+		end)
 
-				if success then
-					NotificationManager.ShowNotification({
-						title = "Installer",
-						description = "App installed successfully!"
-					})
-					installBar.Text = ""
-				else
-					NotificationManager.ShowNotification({
-						title = "Installer Error",
-						description = "Installation failed: " .. tostring(result)
-					})
-				end
-			end)
-		end
-
-		-- Allow pressing Enter in the TextBox to trigger installation
-		installBar.FocusLost:Connect(function(enterPressed)
-			if enterPressed and installBar.Text ~= "" then
+		-- Allow Enter key in URL bar to trigger confirmation
+		urlBar.FocusLost:Connect(function(enterPressed)
+			if enterPressed and urlBar.Text ~= "" and appNameBar.Text ~= "" then
 				showPopup()
 			end
 		end)
