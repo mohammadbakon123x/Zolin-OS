@@ -3906,7 +3906,7 @@ function ZolinModules.ZolinInstaller()
 		local modules = ZolinModules.GetAll()
 		local NotificationManager = modules.NotificationManager
 
-		-- Updated UI elements (matching the new Chunk 17)
+		-- Install UI elements
 		local appNameBar = ui:WaitForChild("AppNameBar")
 		local urlBar = ui:WaitForChild("URLBar")
 		local installButton = ui:WaitForChild("InstallButton")
@@ -3914,16 +3914,323 @@ function ZolinModules.ZolinInstaller()
 		local yesButton = confirmationPopup and confirmationPopup:WaitForChild("Yes")
 		local cancelButton = confirmationPopup and confirmationPopup:WaitForChild("Cancel")
 
-		if not (appNameBar and urlBar and installButton and confirmationPopup and yesButton and cancelButton) then
-			warn("ZolinInstaller: Missing UI elements.")
-			return
+		-- ===== NEW: Uninstall UI =====
+		local uninstallButton = ui:FindFirstChild("UninstallButton")
+		if not uninstallButton then
+			-- Create the uninstall button dynamically
+			uninstallButton = Instance.new("TextButton")
+			uninstallButton.Name = "UninstallButton"
+			uninstallButton.AnchorPoint = Vector2.new(0.5, 0.5)
+			uninstallButton.Position = UDim2.new(0.5, 0, 0.63, 0)
+			uninstallButton.Size = UDim2.new(0.4, 0, 0.08, 0)
+			uninstallButton.BackgroundColor3 = Color3.fromRGB(255, 80, 80)
+			uninstallButton.BackgroundTransparency = 0.2
+			uninstallButton.Text = "Uninstall App"
+			uninstallButton.TextColor3 = Color3.new(1, 1, 1)
+			uninstallButton.Font = Enum.Font.GothamBold
+			uninstallButton.TextSize = 16
+			uninstallButton.ZIndex = ui.ZIndex + 1
+			uninstallButton.Parent = ui
+
+			local corner = Instance.new("UICorner")
+			corner.CornerRadius = UDim.new(0, 8)
+			corner.Parent = uninstallButton
 		end
 
-		-- Hide popup initially
-		confirmationPopup.Visible = false
+		-- Uninstall overlay (full screen app list)
+		local uninstallOverlay = Instance.new("Frame")
+		uninstallOverlay.Name = "UninstallOverlay"
+		uninstallOverlay.Size = UDim2.new(1, 0, 1, 0)
+		uninstallOverlay.Position = UDim2.new(0, 0, 0, 0)
+		uninstallOverlay.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+		uninstallOverlay.BackgroundTransparency = 1
+		uninstallOverlay.ZIndex = ui.ZIndex + 10
+		uninstallOverlay.Visible = false
+		uninstallOverlay.Parent = ui
 
-		-- Popup animation helpers
+		local overlayBackground = Instance.new("Frame")
+		overlayBackground.Name = "Background"
+		overlayBackground.Size = UDim2.new(1, 0, 1, 0)
+		overlayBackground.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+		overlayBackground.BackgroundTransparency = 0.5
+		overlayBackground.ZIndex = uninstallOverlay.ZIndex
+		overlayBackground.Parent = uninstallOverlay
+
+		-- Title bar
+		local titleBar = Instance.new("Frame")
+		titleBar.Name = "TitleBar"
+		titleBar.Size = UDim2.new(1, -20, 0, 40)
+		titleBar.Position = UDim2.new(0, 10, 0, 10)
+		titleBar.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
+		titleBar.BackgroundTransparency = 0
+		titleBar.ZIndex = uninstallOverlay.ZIndex + 1
+		titleBar.Parent = uninstallOverlay
+
+		local titleCorner = Instance.new("UICorner")
+		titleCorner.CornerRadius = UDim.new(0, 10)
+		titleCorner.Parent = titleBar
+
+		local titleLabel = Instance.new("TextLabel")
+		titleLabel.Size = UDim2.new(1, -50, 1, 0)
+		titleLabel.Position = UDim2.new(0, 15, 0, 0)
+		titleLabel.BackgroundTransparency = 1
+		titleLabel.Text = "Installed Apps"
+		titleLabel.TextColor3 = Color3.new(1, 1, 1)
+		titleLabel.Font = Enum.Font.GothamBold
+		titleLabel.TextSize = 20
+		titleLabel.TextXAlignment = Enum.TextXAlignment.Left
+		titleLabel.ZIndex = uninstallOverlay.ZIndex + 1
+		titleLabel.Parent = titleBar
+
+		-- Close button for overlay
+		local closeOverlayBtn = Instance.new("ImageButton")
+		closeOverlayBtn.Name = "CloseButton"
+		closeOverlayBtn.Size = UDim2.new(0, 30, 0, 30)
+		closeOverlayBtn.Position = UDim2.new(1, -40, 0.5, -15)
+		closeOverlayBtn.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
+		closeOverlayBtn.Image = "rbxassetid://4458805208"
+		closeOverlayBtn.ZIndex = uninstallOverlay.ZIndex + 1
+		closeOverlayBtn.Parent = titleBar
+
+		local closeCorner = Instance.new("UICorner")
+		closeCorner.CornerRadius = UDim.new(1, 0)
+		closeCorner.Parent = closeOverlayBtn
+
+		-- ScrollingFrame for app list
+		local appList = Instance.new("ScrollingFrame")
+		appList.Name = "AppList"
+		appList.Size = UDim2.new(1, -20, 1, -70)
+		appList.Position = UDim2.new(0, 10, 0, 60)
+		appList.BackgroundTransparency = 1
+		appList.CanvasSize = UDim2.new(0, 0, 0, 0)
+		appList.ScrollBarThickness = 6
+		appList.ScrollBarImageColor3 = Color3.fromRGB(100, 100, 110)
+		appList.ZIndex = uninstallOverlay.ZIndex + 1
+		appList.AutomaticCanvasSize = Enum.AutomaticSize.Y
+		appList.Parent = uninstallOverlay
+
+		local listLayout = Instance.new("UIListLayout")
+		listLayout.Padding = UDim.new(0, 8)
+		listLayout.SortOrder = Enum.SortOrder.Name
+		listLayout.Parent = appList
+
+		-- ===== FUNCTION: Populate the uninstall list =====
+		local function refreshUninstallList()
+			-- Clear existing list
+			for _, child in ipairs(appList:GetChildren()) do
+				if child:IsA("Frame") then
+					child:Destroy()
+				end
+			end
+
+			local mainUI = getMainUI()
+			local zolin = mainUI and mainUI:FindFirstChild("__Zolin")
+			local appsFolder = zolin and zolin:FindFirstChild("__AppsLaunchArgFolder")
+			local replicatedWindow = mainUI and mainUI:FindFirstChild("ReplicatedWindow")
+			local appData = mainUI and mainUI:FindFirstChild("AppData")
+
+			if not appsFolder then
+				local noApps = Instance.new("TextLabel")
+				noApps.Size = UDim2.new(1, 0, 0, 40)
+				noApps.BackgroundTransparency = 1
+				noApps.Text = "No installed apps found."
+				noApps.TextColor3 = Color3.new(0.7, 0.7, 0.7)
+				noApps.Font = Enum.Font.Gotham
+				noApps.TextSize = 16
+				noApps.Parent = appList
+				return
+			end
+
+			local hasApps = false
+			for _, entry in ipairs(appsFolder:GetChildren()) do
+				if entry:IsA("StringValue") and entry.Value ~= "" then
+					local appName = entry.Name
+					local appUrl = entry.Value
+
+					-- Check if app exists in ReplicatedWindow or AppData
+					local appFrame = replicatedWindow and replicatedWindow:FindFirstChild(appName)
+					local appDataEntry = appData and appData:FindFirstChild(appName)
+
+					if appFrame or appDataEntry then
+						hasApps = true
+						-- Create row for this app
+						local row = Instance.new("Frame")
+						row.Size = UDim2.new(1, -10, 0, 70)
+						row.BackgroundColor3 = Color3.fromRGB(35, 35, 45)
+						row.BorderSizePixel = 0
+						row.Parent = appList
+						row.ZIndex = uninstallOverlay.ZIndex + 1
+
+						local rowCorner = Instance.new("UICorner")
+						rowCorner.CornerRadius = UDim.new(0, 10)
+						rowCorner.Parent = row
+
+						-- App icon (from PreviewAppInfoZL)
+						local appIcon = Instance.new("ImageLabel")
+						appIcon.Size = UDim2.new(0, 40, 0, 40)
+						appIcon.Position = UDim2.new(0, 10, 0.5, -20)
+						appIcon.BackgroundTransparency = 1
+						appIcon.ZIndex = uninstallOverlay.ZIndex + 2
+						appIcon.Parent = row
+
+						-- Try to get icon from the app's PreviewAppInfoZL
+						if appFrame then
+							local preview = appFrame:FindFirstChild("PreviewAppInfoZL")
+							if preview then
+								local icon = preview:FindFirstChildOfClass("ImageLabel")
+								if icon then
+									appIcon.Image = icon.Image
+								end
+							end
+						end
+
+						-- App name
+						local nameLabel = Instance.new("TextLabel")
+						nameLabel.Size = UDim2.new(0.4, -60, 0, 25)
+						nameLabel.Position = UDim2.new(0, 60, 0, 8)
+						nameLabel.BackgroundTransparency = 1
+						nameLabel.Text = appName
+						nameLabel.TextColor3 = Color3.new(1, 1, 1)
+						nameLabel.Font = Enum.Font.GothamBold
+						nameLabel.TextSize = 16
+						nameLabel.TextXAlignment = Enum.TextXAlignment.Left
+						nameLabel.ZIndex = uninstallOverlay.ZIndex + 2
+						nameLabel.Parent = row
+
+						-- Version
+						local version = "Unknown"
+						if appFrame then
+							local data = appFrame:FindFirstChild("Data")
+							if data then
+								local verVal = data:FindFirstChild("Version")
+								if verVal then version = verVal.Value end
+							end
+						end
+
+						local versionLabel = Instance.new("TextLabel")
+						versionLabel.Size = UDim2.new(0.4, -60, 0, 20)
+						versionLabel.Position = UDim2.new(0, 60, 0, 35)
+						versionLabel.BackgroundTransparency = 1
+						versionLabel.Text = "v" .. version
+						versionLabel.TextColor3 = Color3.fromRGB(150, 150, 150)
+						versionLabel.Font = Enum.Font.Gotham
+						versionLabel.TextSize = 12
+						versionLabel.TextXAlignment = Enum.TextXAlignment.Left
+						versionLabel.ZIndex = uninstallOverlay.ZIndex + 2
+						versionLabel.Parent = row
+
+						-- URL (truncated)
+						local urlDisplay = #appUrl > 50 and string.sub(appUrl, 1, 47) .. "..." or appUrl
+						local urlLabel = Instance.new("TextLabel")
+						urlLabel.Size = UDim2.new(0.6, -10, 0, 15)
+						urlLabel.Position = UDim2.new(0, 60, 0, 55)
+						urlLabel.BackgroundTransparency = 1
+						urlLabel.Text = urlDisplay
+						urlLabel.TextColor3 = Color3.fromRGB(100, 100, 120)
+						urlLabel.Font = Enum.Font.Gotham
+						urlLabel.TextSize = 10
+						urlLabel.TextXAlignment = Enum.TextXAlignment.Left
+						urlLabel.ZIndex = uninstallOverlay.ZIndex + 2
+						urlLabel.Parent = row
+
+						-- Uninstall button for this app
+						local uninstallAppBtn = Instance.new("TextButton")
+						uninstallAppBtn.Size = UDim2.new(0, 80, 0, 30)
+						uninstallAppBtn.Position = UDim2.new(1, -90, 0.5, -15)
+						uninstallAppBtn.BackgroundColor3 = Color3.fromRGB(220, 50, 50)
+						uninstallAppBtn.Text = "Uninstall"
+						uninstallAppBtn.TextColor3 = Color3.new(1, 1, 1)
+						uninstallAppBtn.Font = Enum.Font.GothamBold
+						uninstallAppBtn.TextSize = 14
+						uninstallAppBtn.ZIndex = uninstallOverlay.ZIndex + 2
+						uninstallAppBtn.Parent = row
+
+						local btnCorner = Instance.new("UICorner")
+						btnCorner.CornerRadius = UDim.new(0, 6)
+						btnCorner.Parent = uninstallAppBtn
+
+						-- Uninstall action
+						uninstallAppBtn.MouseButton1Click:Connect(function()
+							-- Remove from __AppsLaunchArgFolder
+							if entry then entry:Destroy() end
+							-- Remove from ReplicatedWindow
+							if appFrame then appFrame:Destroy() end
+							-- Remove from AppData
+							if appDataEntry then appDataEntry:Destroy() end
+
+							-- Remove from Applications (if currently running)
+							local applications = mainUI.__ScreenFrame and mainUI.__ScreenFrame:FindFirstChild("Applications")
+							if applications then
+								local runningApp = applications:FindFirstChild(appName)
+								if runningApp then runningApp:Destroy() end
+							end
+
+							-- Refresh home screen
+							local remotes = zolin:FindFirstChild("Remotes")
+							local refreshEvent = remotes and remotes:FindFirstChild("updateZolinLauncher")
+							if refreshEvent then
+								refreshEvent:Fire()
+							end
+
+							NotificationManager.ShowNotification({
+								title = "Uninstaller",
+								description = appName .. " has been uninstalled."
+							})
+
+							-- Refresh the uninstall list
+							refreshUninstallList()
+						end)
+					end
+				end
+			end
+
+			if not hasApps then
+				local noApps = Instance.new("TextLabel")
+				noApps.Size = UDim2.new(1, 0, 0, 40)
+				noApps.BackgroundTransparency = 1
+				noApps.Text = "No installed apps found."
+				noApps.TextColor3 = Color3.new(0.7, 0.7, 0.7)
+				noApps.Font = Enum.Font.Gotham
+				noApps.TextSize = 16
+				noApps.Parent = appList
+			end
+		end
+
+		-- ===== Show/Hide overlay =====
+		local function showUninstallOverlay()
+			refreshUninstallList()
+			uninstallOverlay.Visible = true
+			TweenService:Create(uninstallOverlay, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+				BackgroundTransparency = 0.5
+			}):Play()
+		end
+
+		local function hideUninstallOverlay()
+			local tween = TweenService:Create(uninstallOverlay, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
+				BackgroundTransparency = 1
+			})
+			tween:Play()
+			tween.Completed:Connect(function()
+				uninstallOverlay.Visible = false
+			end)
+		end
+
+		-- ===== Button handlers =====
+		uninstallButton.MouseButton1Click:Connect(showUninstallOverlay)
+		closeOverlayBtn.MouseButton1Click:Connect(hideUninstallOverlay)
+		overlayBackground.InputBegan:Connect(function(input)
+			if input.UserInputType == Enum.UserInputType.MouseButton1 then
+				hideUninstallOverlay()
+			end
+		end)
+
+		-- ===== INSTALL LOGIC (unchanged) =====
+		if confirmationPopup then
+			confirmationPopup.Visible = false
+		end
+
 		local function showPopup()
+			if not confirmationPopup then return end
 			confirmationPopup.Visible = true
 			TweenService:Create(confirmationPopup, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
 				Position = UDim2.new(0.5, 0, 0.5, 0)
@@ -3931,6 +4238,7 @@ function ZolinModules.ZolinInstaller()
 		end
 
 		local function hidePopup()
+			if not confirmationPopup then return end
 			local tween = TweenService:Create(confirmationPopup, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
 				Position = UDim2.new(0.5, 0, 1.5, 0)
 			})
@@ -3940,7 +4248,6 @@ function ZolinModules.ZolinInstaller()
 			end)
 		end
 
-		-- Install button → show confirmation
 		installButton.MouseButton1Click:Connect(function()
 			local appName = appNameBar.Text
 			local url = urlBar.Text
@@ -3954,73 +4261,62 @@ function ZolinModules.ZolinInstaller()
 			showPopup()
 		end)
 
-		-- Cancel button
-		cancelButton.MouseButton1Click:Connect(hidePopup)
+		if cancelButton then
+			cancelButton.MouseButton1Click:Connect(hidePopup)
+		end
 
-		-- Yes button → execute installation
-		yesButton.MouseButton1Click:Connect(function()
-			hidePopup()
-			local appName = appNameBar.Text
-			local url = urlBar.Text
+		if yesButton then
+			yesButton.MouseButton1Click:Connect(function()
+				hidePopup()
+				local appName = appNameBar.Text
+				local url = urlBar.Text
 
-			local mainUI = getMainUI()
-			local zolin = mainUI:FindFirstChild("__Zolin")
-			if not zolin then
-				warn("__Zolin not found")
-				return
-			end
+				local mainUI = getMainUI()
+				local zolin = mainUI:FindFirstChild("__Zolin")
+				if not zolin then warn("__Zolin not found"); return end
 
-			-- Ensure __AppsLaunchArgFolder exists
-			local appsFolder = zolin:FindFirstChild("__AppsLaunchArgFolder")
-			if not appsFolder then
-				appsFolder = Instance.new("Folder")
-				appsFolder.Name = "__AppsLaunchArgFolder"
-				appsFolder.Parent = zolin
-			end
-
-			-- Store the app entry
-			local appEntry = appsFolder:FindFirstChild(appName)
-			if not appEntry then
-				appEntry = Instance.new("StringValue")
-				appEntry.Name = appName
-				appEntry.Parent = appsFolder
-			end
-			appEntry.Value = url
-
-			-- Fetch and execute the loadstring
-			local success, result = pcall(function()
-				local code = game:HttpGet(url)
-				local fn, compileError = loadstring(code)
-				if not fn then
-					error("Compilation error: " .. tostring(compileError))
+				local appsFolder = zolin:FindFirstChild("__AppsLaunchArgFolder")
+				if not appsFolder then
+					appsFolder = Instance.new("Folder")
+					appsFolder.Name = "__AppsLaunchArgFolder"
+					appsFolder.Parent = zolin
 				end
-				fn()
+
+				local appEntry = appsFolder:FindFirstChild(appName)
+				if not appEntry then
+					appEntry = Instance.new("StringValue")
+					appEntry.Name = appName
+					appEntry.Parent = appsFolder
+				end
+				appEntry.Value = url
+
+				local success, result = pcall(function()
+					local code = game:HttpGet(url)
+					local fn, compileError = loadstring(code)
+					if not fn then error("Compilation error: " .. tostring(compileError)) end
+					fn()
+				end)
+
+				if success then
+					local remotes = zolin:FindFirstChild("Remotes")
+					local refreshEvent = remotes and remotes:FindFirstChild("updateZolinLauncher")
+					if refreshEvent then refreshEvent:Fire() end
+					NotificationManager.ShowNotification({
+						title = "Installer",
+						description = appName .. " installed successfully!"
+					})
+					appNameBar.Text = ""
+					urlBar.Text = ""
+				else
+					if appEntry then appEntry:Destroy() end
+					NotificationManager.ShowNotification({
+						title = "Installer Error",
+						description = "Installation failed: " .. tostring(result)
+					})
+				end
 			end)
+		end
 
-			if success then
-				-- Refresh home screen
-				local remotes = zolin:FindFirstChild("Remotes")
-				local refreshEvent = remotes and remotes:FindFirstChild("updateZolinLauncher")
-				if refreshEvent then
-					refreshEvent:Fire()
-				end
-				NotificationManager.ShowNotification({
-					title = "Installer",
-					description = appName .. " installed successfully!"
-				})
-				appNameBar.Text = ""
-				urlBar.Text = ""
-			else
-				-- Remove entry if installation failed
-				if appEntry then appEntry:Destroy() end
-				NotificationManager.ShowNotification({
-					title = "Installer Error",
-					description = "Installation failed: " .. tostring(result)
-				})
-			end
-		end)
-
-		-- Allow Enter key in URL bar to trigger confirmation
 		urlBar.FocusLost:Connect(function(enterPressed)
 			if enterPressed and urlBar.Text ~= "" and appNameBar.Text ~= "" then
 				showPopup()
@@ -4028,7 +4324,7 @@ function ZolinModules.ZolinInstaller()
 		end)
 
 		ui.Visible = true
-		print("ZolinInstaller initialized")
+		print("ZolinInstaller initialized (with Uninstall)")
 	end
 
 	return Installer
