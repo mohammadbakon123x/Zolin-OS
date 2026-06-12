@@ -1,7 +1,5 @@
 -- ============================================================
--- PlayAsAI Package Installer
--- Paste this entire block into the ZolinInstaller "URL" box,
--- give the app the name "PlayAsAI", then click Install.
+-- PlayAsAI Package Installer (FIXED)
 -- ============================================================
 local __AppPackage = {}
 function __AppPackage.Install()
@@ -100,7 +98,7 @@ function __AppPackage.Install()
 	title.Font = Enum.Font.GothamBold
 	title.Parent = ui
 
-	-- Toggle Button (placeholder – AI logic will replace its functionality)
+	-- Toggle Button
 	local toggleBtn = Instance.new("TextButton")
 	toggleBtn.Name = "ToggleButton"
 	toggleBtn.Size = UDim2.new(0.5, 0, 0.1, 0)
@@ -128,13 +126,12 @@ function __AppPackage.Install()
 	layout.SortOrder = Enum.SortOrder.LayoutOrder
 	layout.Parent = settingsFrame
 
-	-- Helper to create setting rows (will be reused in AI logic)
+	-- Helper to create setting rows
 	local function addSettingRow(text, options)
 		local row = Instance.new("Frame")
 		row.Size = UDim2.new(1, -10, 0, 40)
 		row.BackgroundTransparency = 1
 		row.Parent = settingsFrame
-		row.Name = text
 
 		local label = Instance.new("TextLabel")
 		label.Size = UDim2.new(0.5, 0, 1, 0)
@@ -165,7 +162,7 @@ function __AppPackage.Install()
 		return cycleBtn
 	end
 
-	-- Create setting rows (they will be named so AI logic can find them)
+	-- Create setting rows with proper names
 	addSettingRow("Friendly:", {"All", "Friends Only", "None"}).Name = "FriendlyBtn"
 	addSettingRow("Wander:", {"Off", "Sometimes", "Always"}).Name = "WanderBtn"
 	addSettingRow("Escaping:", {"None", "Run from enemy", "When low health"}).Name = "EscapeBtn"
@@ -200,10 +197,13 @@ function __AppPackage.Install()
 	addSettingRow("Difficulty:", {"Easy", "Normal", "Hard", "Insane"}).Name = "DifficultyBtn"
 
 	-- ======== REGISTER THE APP ========
-	local appEntry = __AppsLaunchArgFolder:FindFirstChild("PlayAsAI") or Instance.new("StringValue")
-	appEntry.Name = "PlayAsAI"
+	local appEntry = __AppsLaunchArgFolder:FindFirstChild("PlayAsAI")
+	if not appEntry then
+		appEntry = Instance.new("StringValue")
+		appEntry.Name = "PlayAsAI"
+		appEntry.Parent = __AppsLaunchArgFolder
+	end
 	appEntry.Value = "https://raw.githubusercontent.com/mohammadbakon123x/Zolin-OS/refs/heads/main/PlayAsAI.lua"
-	appEntry.Parent = __AppsLaunchArgFolder
 
 	print("PlayAsAI package installed successfully!")
 end
