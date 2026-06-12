@@ -134,6 +134,7 @@ function __AppPackage.Install()
 		row.Size = UDim2.new(1, -10, 0, 40)
 		row.BackgroundTransparency = 1
 		row.Parent = settingsFrame
+		row.Name = text
 
 		local label = Instance.new("TextLabel")
 		label.Size = UDim2.new(0.5, 0, 1, 0)
