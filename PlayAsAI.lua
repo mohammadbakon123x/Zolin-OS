@@ -1,6 +1,6 @@
 -- ============================================================
 -- PlayAsAI – AI Logic (returned as a module for AppManager)
--- Enhanced with Beatdown Combo
+-- FIXED: Properly finds UI elements
 -- ============================================================
 local ZolinApp = {}
 
@@ -13,18 +13,31 @@ function ZolinApp.Init(ui, launchArgs, appFolder)
 
 	local player = Players.LocalPlayer
 
-	local toggleBtn = ui:WaitForChild("ToggleButton")
-	local settingsFrame = ui:WaitForChild("SettingsFrame")
-	local friendlyBtn = settingsFrame:FindFirstChild("Friendly:"):FindFirstChild("FriendlyBtn")
-	local wanderBtn = settingsFrame:FindFirstChild("Wander:"):FindFirstChild("WanderBtn")
-	local escapeBtn = settingsFrame:FindFirstChild("Escaping:"):FindFirstChild("EscapeBtn")
-	local diffBtn = settingsFrame:FindFirstChild("Difficulty:"):FindFirstChild("DifficultyBtn")
+	-- Locate UI elements
+	local toggleBtn = ui:FindFirstChild("ToggleButton", true)  -- recursive search
+	local settingsFrame = ui:FindFirstChild("SettingsFrame", true)
 
-	if not (toggleBtn and friendlyBtn and wanderBtn and escapeBtn and diffBtn) then
-		warn("PlayAsAI: UI elements missing. | "..script.Name.." | "..script:GetFullName())
+	if not toggleBtn then warn("PlayAsAI: ToggleButton not found"); return end
+	if not settingsFrame then warn("PlayAsAI: SettingsFrame not found"); return end
+
+	-- Find buttons by name (they are direct children of the settingsFrame's rows)
+	local friendlyBtn = settingsFrame:FindFirstChild("FriendlyBtn", true)
+	local wanderBtn = settingsFrame:FindFirstChild("WanderBtn", true)
+	local escapeBtn = settingsFrame:FindFirstChild("EscapeBtn", true)
+	local diffBtn = settingsFrame:FindFirstChild("DifficultyBtn", true)
+
+	if not (friendlyBtn and wanderBtn and escapeBtn and diffBtn) then
+		warn("PlayAsAI: UI elements missing.")
+		warn("FriendlyBtn:", friendlyBtn)
+		warn("WanderBtn:", wanderBtn)
+		warn("EscapeBtn:", escapeBtn)
+		warn("DifficultyBtn:", diffBtn)
 		return
 	end
 
+	print("PlayAsAI: All UI elements found successfully!")
+
+	-- ===== AI LOGIC (unchanged below) ===== --
 	local aiActive = false
 	local aiConnection = nil
 	local aiThread = nil
@@ -171,7 +184,6 @@ function ZolinApp.Init(ui, launchArgs, appFolder)
 		end
 	end
 
-	-- ===== NEW: Beatdown Combo =====
 	local function isBeatdownGlove()
 		local char = getCharacter()
 		if not char then return false end
@@ -259,11 +271,9 @@ function ZolinApp.Init(ui, launchArgs, appFolder)
 				end
 			elseif shouldFight then
 				local beatdownGlove = isBeatdownGlove()
-				-- Try Beatdown combo if close and glove detected
 				if beatdownGlove and enemyDist < 6 and math.random() < params.beatdownChance then
 					performBeatdownCombo(character, enemy)
 				else
-					-- Normal fight routine
 					hum:MoveTo(enemy.Position)
 					equipAndAttack()
 					if math.random() < params.abilityChance then useAbilityE() end
@@ -334,6 +344,8 @@ function ZolinApp.Init(ui, launchArgs, appFolder)
 	toggleBtn.MouseButton1Click:Connect(function()
 		if aiActive then stopAI() else startAI() end
 	end)
+
+	print("PlayAsAI: AI Logic initialized successfully!")
 end
 
 return ZolinApp
