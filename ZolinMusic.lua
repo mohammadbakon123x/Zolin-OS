@@ -26,7 +26,14 @@ function ZolinApp.Init(ui, launchArgs, appFolder)
 	local playlist = ui:FindFirstChild("Playlist", true)
 	local volumeBarBg = ui:FindFirstChild("VolumeBarBg", true)
 	local volumeBarFill = volumeBarBg and volumeBarBg:FindFirstChild("VolumeBarFill")
-
+	local MainUI = ui:FindFirstAncestorWhichIsA("ScreenGui");
+	if not MainUI then
+		return error("ZolinMusic: MainUI not found")		
+	end
+	local CurrentSoundGroup = MainUI and MainUI:FindFirstChild("MediaSoundUI");
+	if not CurrentSoundGroup then
+		return error("ZolinMusic: CurrentSoundGroup <-> MediaSoundUI not found")	
+	end
 	if not playBtn or not playlist then
 		warn("ZolinMusic: UI elements missing")
 		return
@@ -131,11 +138,12 @@ function ZolinApp.Init(ui, launchArgs, appFolder)
 		currentIndex = index
 
 		local sound = Instance.new("Sound")
+		sound.Name = "CurrentSoundPlaying"
 		sound.SoundId = "rbxassetid://" .. track.id
 		sound.Volume = currentVolume
 		sound.Looped = isLooping
-		sound.Parent = ui -- Parent to UI so it gets destroyed when app closes
-
+		sound.Parent = ui.Parent -- Parent to UI so it gets destroyed when app closes
+		sound.SoundGroup = CurrentSoundGroup;
 		sound.Loaded:Connect(function()
 			nowPlayingLabel.Text = "Now Playing: " .. track.name
 			sound:Play()
@@ -303,7 +311,7 @@ function ZolinApp.Init(ui, launchArgs, appFolder)
 
 		-- Get asset info
 		local success, info = pcall(function()
-			return MarketplaceService:GetProductInfo(tonumber(assetId))
+			return MarketplaceService:GetProductInfoAsync(tonumber(assetId))
 		end)
 
 		local trackName = "Unknown Track"
