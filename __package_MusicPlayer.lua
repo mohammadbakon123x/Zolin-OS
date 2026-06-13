@@ -41,7 +41,10 @@ function __AppPackage.Install()
 	dataFolder.Description.Value = "Music Player with upload, search, loop, and seek"
 
 	Instance.new("StringValue", dataFolder).Name = "Version"
-	dataFolder.Version.Value = "1.0"
+	dataFolder.Version.Value = "1.1"
+	
+	Instance.new("StringValue", dataFolder).Name = "Author"
+	dataFolder.Author.Value = "Sky_Attacker"
 
 	local ui = Instance.new("Frame")
 	ui.Name = "UI"
