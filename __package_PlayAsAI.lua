@@ -3,6 +3,7 @@
 -- ============================================================
 local __AppPackage = {}
 function __AppPackage.Install()
+	local AppName = "PlayAsAI"
 	local ZolinOS = game.Players.LocalPlayer.PlayerGui:FindFirstChild("ZolinOS")
 	if not ZolinOS then warn("ZolinOS not found"); return end
 	local replicatedWindow = ZolinOS:FindFirstChild("ReplicatedWindow")
@@ -15,14 +16,13 @@ function __AppPackage.Install()
 		__AppsLaunchArgFolder.Name = "__AppsLaunchArgFolder"
 		__AppsLaunchArgFolder.Parent = __Zolin
 	end
-	if __AppsLaunchArgFolder:FindFirstChild("PlayAsAI") and replicatedWindow:FindFirstChild("PlayAsAI") then
+	if __AppsLaunchArgFolder:FindFirstChild(AppName) and replicatedWindow:FindFirstChild(AppName) then
 		warn("PlayAsAI already installed")
 		return
 	end
-
 	-- ======== BUILD APP FRAME (static UI skeleton) ========
 	local app = Instance.new("Frame")
-	app.Name = "PlayAsAI"
+	app.Name = AppName
 	app.AnchorPoint = Vector2.new(0.5, 0.5)
 	app.BackgroundTransparency = 0
 	app.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
@@ -203,15 +203,15 @@ function __AppPackage.Install()
 	addSettingRow("Difficulty:", {"Easy", "Normal", "Hard", "Insane"}).Name = "DifficultyBtn"
 
 	-- ======== REGISTER THE APP ========
-	local appEntry = __AppsLaunchArgFolder:FindFirstChild("PlayAsAI")
+	local appEntry = __AppsLaunchArgFolder:FindFirstChild(AppName)
 	if not appEntry then
 		appEntry = Instance.new("StringValue")
-		appEntry.Name = "PlayAsAI"
+		appEntry.Name = AppName
 		appEntry.Parent = __AppsLaunchArgFolder
 	end
 	appEntry.Value = "https://raw.githubusercontent.com/mohammadbakon123x/Zolin-OS/refs/heads/main/PlayAsAI.lua"
 
-	print("PlayAsAI package installed successfully!")
+	print(""..tostring(AppName).." App registered with ID: "..tostring(appEntry:GetFullName())" package installed successfully!")
 end
 
 __AppPackage.Install()
