@@ -74,7 +74,7 @@ function __AppPackage.Install()
 	previewLabel.BackgroundTransparency = 1
 	previewLabel.TextScaled = true
 	previewLabel.Font = Enum.Font.Oswald
-	previewLabel.Text = "Play as AI"
+	previewLabel.Text = "PlayAsAI"
 	previewLabel.Parent = preview
 
 	local previewIcon = Instance.new("ImageLabel")
@@ -83,7 +83,7 @@ function __AppPackage.Install()
 	previewIcon.BackgroundTransparency = 1
 	previewIcon.Position = UDim2.new(0.9, 0, 0.5, 0)
 	previewIcon.Size = UDim2.new(0, 39, 0, 39)
-	previewIcon.Image = "rbxassetid://13458988525"
+	previewIcon.Image = "rbxassetid://6790427862"
 	previewIcon.ScaleType = Enum.ScaleType.Fit
 	previewIcon.Parent = preview
 
