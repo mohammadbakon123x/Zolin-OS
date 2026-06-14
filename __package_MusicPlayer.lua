@@ -85,7 +85,7 @@ function __AppPackage.Install()
 	previewIcon.BackgroundTransparency = 1
 	previewIcon.Position = UDim2.new(0.9, 0, 0.5, 0)
 	previewIcon.Size = UDim2.new(0, 39, 0, 39)
-	previewIcon.Image = "rbxassetid://13458988525"
+	previewIcon.Image = "rbxassetid://16737376245"
 	previewIcon.ScaleType = Enum.ScaleType.Fit
 
 	-- ===== UI ELEMENTS =====
@@ -95,7 +95,7 @@ function __AppPackage.Install()
 	title.Size = UDim2.new(1, 0, 0.06, 0)
 	title.Position = UDim2.new(0, 0, 0.01, 0)
 	title.BackgroundTransparency = 1
-	title.Text = "🎵 ZolinMusic"
+	title.Text = "Music Player"
 	title.TextColor3 = Color3.new(1, 1, 1)
 	title.TextScaled = true
 	title.Font = Enum.Font.GothamBold
