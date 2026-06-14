@@ -36,6 +36,7 @@ end
 -- Global references to be used across chunks
 local MainUI = nil
 local __ScreenFrame = nil
+local BuildVersion = nil
 
 -- ============================================
 -- CHUNK 1: __ScreenFrame & Basic UI
@@ -1076,7 +1077,8 @@ local function createChunk10()
 
 	local ZolinVersion = Instance.new("StringValue")
 	ZolinVersion.Name = "ZolinVersion"
-	ZolinVersion.Value = "1.3"
+	ZolinVersion.Value = "1.2.1"
+	BuildVersion = ZolinVersion.Value
 	ZolinVersion.Parent = DeviceTree
 
 	local AnimationUI = Instance.new("BoolValue")
@@ -1121,7 +1123,7 @@ local function createChunk11()
 	ExampleWindow.ZIndex = 6
 	ExampleWindow.Parent = ReplicatedWindow_Sys
 
-	createUICorner(ExampleWindow, "UICorner_ExampleWindow", UDim.new(0, 11))
+	createUICorner(ExampleWindow, "UICorner_ExampleWindow", UDim.new(0, 25))
 
 	local ExampleWindow_UI = Instance.new("TextButton")
 	ExampleWindow_UI.Name = "UI"
@@ -1136,7 +1138,48 @@ local function createChunk11()
 	ExampleWindow_UI.Active = true
 	ExampleWindow_UI.Parent = ExampleWindow
 
-	createUICorner(ExampleWindow_UI, "UICorner_ExampleWindow_UI", UDim.new(0, 11))
+	createUICorner(ExampleWindow_UI, "UICorner_ExampleWindow_UI", UDim.new(0, 25))
+	
+	local PreviewAppInfoZL_ExampleWindow = Instance.new("Frame")
+	PreviewAppInfoZL_ExampleWindow.Name = "PreviewAppInfoZL"
+	PreviewAppInfoZL_ExampleWindow.AnchorPoint = Vector2.new(0.5, 0.5)
+	PreviewAppInfoZL_ExampleWindow.AutomaticSize = Enum.AutomaticSize.XY
+	PreviewAppInfoZL_ExampleWindow.BackgroundColor3 = Color3.fromRGB(59, 232, 189)
+	PreviewAppInfoZL_ExampleWindow.BackgroundTransparency = 0.35
+	PreviewAppInfoZL_ExampleWindow.Position = UDim2.new(0.082, 0, 0.031, 0)
+	PreviewAppInfoZL_ExampleWindow.Size = UDim2.new(0.165, 0, 0.061, 0)
+	PreviewAppInfoZL_ExampleWindow.ZIndex = 10
+	PreviewAppInfoZL_ExampleWindow.Visible = true
+	PreviewAppInfoZL_ExampleWindow.Parent = ExampleWindow
+
+	createUICorner(PreviewAppInfoZL_ExampleWindow, "UICorner_PreviewAppInfoZL", UDim.new(0.5, 0))
+
+	local TextLabel_PreviewAppInfoZL = Instance.new("TextLabel")
+	TextLabel_PreviewAppInfoZL.Name = "AppNameLabel"
+	TextLabel_PreviewAppInfoZL.AnchorPoint = Vector2.new(0.5, 0.5)
+	TextLabel_PreviewAppInfoZL.Position = UDim2.new(0.409, 0, 0.5, 0)
+	TextLabel_PreviewAppInfoZL.Size = UDim2.new(0, 150, 0, 25)
+	TextLabel_PreviewAppInfoZL.BackgroundTransparency = 1
+	TextLabel_PreviewAppInfoZL.TextScaled = true
+	TextLabel_PreviewAppInfoZL.Font = Enum.Font.Oswald
+	TextLabel_PreviewAppInfoZL.RichText = true
+	TextLabel_PreviewAppInfoZL.TextXAlignment = Enum.TextXAlignment.Left
+	TextLabel_PreviewAppInfoZL.ZIndex = PreviewAppInfoZL_ExampleWindow.ZIndex
+	TextLabel_PreviewAppInfoZL.Text = "<b>ZolinUI</b>"
+	TextLabel_PreviewAppInfoZL.Parent = PreviewAppInfoZL_ExampleWindow
+
+	local ImageLabel_PreviewAppInfoZL = Instance.new("ImageLabel")
+	ImageLabel_PreviewAppInfoZL.AnchorPoint = Vector2.new(0.5, 0.5)
+	ImageLabel_PreviewAppInfoZL.AutomaticSize = Enum.AutomaticSize.XY
+	ImageLabel_PreviewAppInfoZL.BackgroundTransparency = 1
+	ImageLabel_PreviewAppInfoZL.Position = UDim2.new(0.9, 0, 0.5, 0)
+	ImageLabel_PreviewAppInfoZL.Size = UDim2.new(0, 39, 0, 39)
+	ImageLabel_PreviewAppInfoZL.ZIndex = PreviewAppInfoZL_ExampleWindow.ZIndex
+	ImageLabel_PreviewAppInfoZL.Image = "rbxassetid://3459878578"
+	ImageLabel_PreviewAppInfoZL.ScaleType = Enum.ScaleType.Fit
+	ImageLabel_PreviewAppInfoZL.Parent = PreviewAppInfoZL_ExampleWindow
+
+	createUICorner(ImageLabel_PreviewAppInfoZL, "UICorner_ImageLabel_PreviewAppInfoZL", UDim.new(0.5, 0))
 end
 
 -- ============================================
@@ -2096,7 +2139,7 @@ function v1.Init()
 		task.wait()
 		task.spawn(function() createChunk17() end)
 
-		print("ZolinOS UI initialized")
+		print("ZolinOS UI initialized | Version: " ..tostring(BuildVersion));
 	end
 end
 
