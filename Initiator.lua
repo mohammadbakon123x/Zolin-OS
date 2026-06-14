@@ -1984,7 +1984,8 @@ local function createChunk17()
 	urlBar.Size = UDim2.new(0.8, 0, 0.08, 0)
 	urlBar.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
 	urlBar.TextColor3 = Color3.new(1, 1, 1)
-	urlBar.PlaceholderText = "Loadstring URL"
+	urlBar.PlaceholderText = "insert Loadstring URL package"
+	urlBar.Text = ""
 	urlBar.Font = Enum.Font.Gotham
 	urlBar.TextSize = 14
 	urlBar.TextXAlignment = Enum.TextXAlignment.Left
