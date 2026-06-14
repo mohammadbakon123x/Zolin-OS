@@ -1407,27 +1407,39 @@ function ZolinModules.AppManager(dependencies)
 				warn("Preview template missing 'UI' container for:", appName)
 				preview:Destroy()
 				continue
-			end
+			end;
 			for i, v in pairs(appInstance:GetChildren()) do
 				if v:IsA("Frame") then
 					local v1 = v:Clone();
 					v1.Parent = previewUIContainer;
 					if v.Name == "PreviewAppInfoZL" then
-						v1.Visible = true;
+						v1:Destroy()
 					end
 				end;
 			end;
 			preview.Visible = true;
-			local nameLabel = preview:FindFirstChild("AppNameLabel", true);
-			local iconLabel = preview:FindFirstChild("ImageLabel", true);
+			local PreviewAppInfoZLPreview = preview:FindFirstChild("PreviewAppInfoZL");
+			if PreviewAppInfoZLPreview then
+				PreviewAppInfoZLPreview.Visible = true;
+			else
+				warn("Preview template missing 'PreviewAppInfoZL' for:", appName);
+			end;
+			local nameLabel = PreviewAppInfoZLPreview:FindFirstChild("AppNameLabel", true);
+			local iconLabel = PreviewAppInfoZLPreview:FindFirstChild("ImageLabel", true);
 			if iconLabel then
-				local homeIcon = MainUI.__ScreenFrame.HomeScreenScroller:FindFirstChild(appName)
-				if homeIcon and homeIcon:FindFirstChild("AppIcon") then
-					iconLabel.Image = homeIcon.AppIcon.Image
+				local homeIcon = MainUI.AppData:FindFirstChild(appName, true);
+				if homeIcon and homeIcon:FindFirstChild("icon") then
+					iconLabel.Image = homeIcon.icon.Value;
+				else
+					warn("HomeScreenScroller missing icon for:", appName)
 				end
+			else
+				warn("Preview template missing 'ImageLabel' for:", appName);
 			end;
 			if nameLabel then
 				nameLabel.Text = appName;
+			else
+				warn("Preview template missing 'AppNameLabel' for:", appName);
 			end;
 			if OnBackUIDisableScrollingAnimation then
 				spawn(function()
@@ -3540,8 +3552,10 @@ function ZolinModules.WallpaperSysApp()
 
 	local DEFAULT_WALLPAPERS = {
 		{name = "Default", id = "rbxassetid://2387794684"},
-		{name = "Dark Night", id = "http://www.roblox.com/asset/?id=87562192110860"},
-		{name = "Natsu", id = "http://www.roblox.com/asset/?id=14144994763"},
+		{name = "Nature lifegreen", id = "http://www.roblox.com/asset/?id=2340311201"},
+		{name = "Art Background", id = "http://www.roblox.com/asset/?id=4026687450"},
+		{name = "Galaxy", id = "http://www.roblox.com/asset/?id=601106736"},
+		{name = "Dark Red", id = "http://www.roblox.com/asset/?id=2041062764"},
 		{name = "Beach", id = "http://www.roblox.com/asset/?id=381428334"}
 	}
 
