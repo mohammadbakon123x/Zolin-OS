@@ -26,7 +26,7 @@ function __AppPackage.Install()
 	app.Name = AppName
 	app.AnchorPoint = Vector2.new(0.5, 0.5)
 	app.BackgroundTransparency = 0
-	app.BackgroundColor3 = Color3.fromRGB(29, 0, 0) -- dark red/black
+	app.BackgroundColor3 = Color3.fromRGB(20, 0, 0)
 	app.Size = UDim2.new(1, 0, 1, 0)
 	app.Position = UDim2.new(0.5, 0, 0.5, 0)
 	app.ZIndex = 6
@@ -37,13 +37,11 @@ function __AppPackage.Install()
 	dataFolder.Name = "Data"
 	dataFolder.Parent = app
 
-	local desc = Instance.new("StringValue", dataFolder)
-	desc.Name = "Description"
-	desc.Value = "Zolin Modifier – advanced game tweaks. Made by Zolin."
+	Instance.new("StringValue", dataFolder).Name = "Description"
+	dataFolder.Description.Value = "Zolin Modifier – advanced game tweaks. Made by Zolin."
 
-	local ver = Instance.new("StringValue", dataFolder)
-	ver.Name = "Version"
-	ver.Value = "1.0.0"
+	Instance.new("StringValue", dataFolder).Name = "Version"
+	dataFolder.Version.Value = "1.0.0"
 
 	local ui = Instance.new("Frame")
 	ui.Name = "UI"
@@ -55,7 +53,7 @@ function __AppPackage.Install()
 	ui.ZIndex = app.ZIndex - 1
 	ui.Parent = app
 
-	-- Preview for recent apps
+	-- Preview
 	local preview = Instance.new("Frame")
 	preview.Name = "PreviewAppInfoZL"
 	preview.AnchorPoint = Vector2.new(0.5, 0.5)
@@ -116,6 +114,11 @@ function __AppPackage.Install()
 	versionLabel.ZIndex = ui.ZIndex + 1
 	versionLabel.Parent = ui
 
+	-- 📁 Buttons folder (all main control buttons go here for easy access)
+	local buttonsFolder = Instance.new("Folder")
+	buttonsFolder.Name = "Buttons"
+	buttonsFolder.Parent = ui
+
 	-- Settings scroll area
 	local settingsFrame = Instance.new("ScrollingFrame")
 	settingsFrame.Name = "SettingsFrame"
@@ -135,13 +138,12 @@ function __AppPackage.Install()
 	layout.SortOrder = Enum.SortOrder.LayoutOrder
 	layout.Parent = settingsFrame
 
-	-- Helper to create a setting row with a cycle button
+	-- Helper: add a cycle setting and ALSO store the button in Buttons folder
 	local function addCycleSetting(name, options)
 		local row = Instance.new("Frame")
 		row.Size = UDim2.new(1, -10, 0, 40)
 		row.BackgroundTransparency = 1
 		row.Parent = settingsFrame
-		row.ZIndex = settingsFrame.ZIndex + 1
 
 		local label = Instance.new("TextLabel")
 		label.Size = UDim2.new(0.45, 0, 1, 0)
@@ -152,7 +154,6 @@ function __AppPackage.Install()
 		label.Font = Enum.Font.Gotham
 		label.TextSize = 13
 		label.TextXAlignment = Enum.TextXAlignment.Left
-		label.ZIndex = row.ZIndex + 1
 		label.Parent = row
 
 		local cycleBtn = Instance.new("TextButton")
@@ -163,7 +164,6 @@ function __AppPackage.Install()
 		cycleBtn.TextColor3 = Color3.new(1, 1, 1)
 		cycleBtn.Font = Enum.Font.Gotham
 		cycleBtn.TextSize = 12
-		cycleBtn.ZIndex = row.ZIndex + 1
 		cycleBtn.Parent = row
 
 		local idx = 1
@@ -174,13 +174,12 @@ function __AppPackage.Install()
 		return cycleBtn
 	end
 
-	-- Helper to create a toggle button
+	-- Helper: add a toggle setting and store in Buttons folder
 	local function addToggleSetting(name, defaultState)
 		local row = Instance.new("Frame")
 		row.Size = UDim2.new(1, -10, 0, 40)
 		row.BackgroundTransparency = 1
 		row.Parent = settingsFrame
-		row.ZIndex = settingsFrame.ZIndex + 1
 
 		local label = Instance.new("TextLabel")
 		label.Size = UDim2.new(0.45, 0, 1, 0)
@@ -191,7 +190,6 @@ function __AppPackage.Install()
 		label.Font = Enum.Font.Gotham
 		label.TextSize = 13
 		label.TextXAlignment = Enum.TextXAlignment.Left
-		label.ZIndex = row.ZIndex + 1
 		label.Parent = row
 
 		local toggleBtn = Instance.new("TextButton")
@@ -202,7 +200,6 @@ function __AppPackage.Install()
 		toggleBtn.TextColor3 = Color3.new(1, 1, 1)
 		toggleBtn.Font = Enum.Font.Gotham
 		toggleBtn.TextSize = 12
-		toggleBtn.ZIndex = row.ZIndex + 1
 		toggleBtn.Parent = row
 
 		local state = defaultState
@@ -214,13 +211,12 @@ function __AppPackage.Install()
 		return toggleBtn
 	end
 
-	-- Helper to create a slider/textbox for numeric values
+	-- Helper: add a slider + textbox row
 	local function addNumberSetting(name, minVal, maxVal, defaultVal)
 		local row = Instance.new("Frame")
 		row.Size = UDim2.new(1, -10, 0, 55)
 		row.BackgroundTransparency = 1
 		row.Parent = settingsFrame
-		row.ZIndex = settingsFrame.ZIndex + 1
 
 		local label = Instance.new("TextLabel")
 		label.Size = UDim2.new(0.45, 0, 0.4, 0)
@@ -231,21 +227,18 @@ function __AppPackage.Install()
 		label.Font = Enum.Font.Gotham
 		label.TextSize = 12
 		label.TextXAlignment = Enum.TextXAlignment.Left
-		label.ZIndex = row.ZIndex + 1
 		label.Parent = row
 
-		-- Slider background
 		local sliderBg = Instance.new("Frame")
 		sliderBg.Size = UDim2.new(0.45, 0, 0.25, 0)
 		sliderBg.Position = UDim2.new(0, 5, 0.45, 0)
 		sliderBg.BackgroundColor3 = Color3.fromRGB(50, 0, 0)
-		sliderBg.ZIndex = row.ZIndex + 1
 		sliderBg.Parent = row
 
 		local sliderFill = Instance.new("Frame")
 		sliderFill.Size = UDim2.new((defaultVal - minVal) / (maxVal - minVal), 0, 1, 0)
 		sliderFill.BackgroundColor3 = Color3.fromRGB(200, 0, 0)
-		sliderFill.ZIndex = row.ZIndex + 2
+		sliderFill.Name = "SliderFill"
 		sliderFill.Parent = sliderBg
 
 		local sliderCorner = Instance.new("UICorner")
@@ -256,7 +249,6 @@ function __AppPackage.Install()
 		fillCorner.CornerRadius = UDim.new(1, 0)
 		fillCorner.Parent = sliderFill
 
-		-- TextBox for exact value
 		local valueBox = Instance.new("TextBox")
 		valueBox.Size = UDim2.new(0.5, -10, 0.35, 0)
 		valueBox.Position = UDim2.new(0.5, 5, 0.65, 0)
@@ -265,75 +257,46 @@ function __AppPackage.Install()
 		valueBox.Text = tostring(defaultVal)
 		valueBox.Font = Enum.Font.Gotham
 		valueBox.TextSize = 12
-		valueBox.ZIndex = row.ZIndex + 1
-		valueBox.Parent = row
-
-		-- Slider click handling will be done in logic, but store the slider elements
-		sliderBg:SetAttribute("Min", minVal)
-		sliderBg:SetAttribute("Max", maxVal)
-		sliderBg:SetAttribute("Value", defaultVal)
-		sliderFill.Name = "SliderFill"
 		valueBox.Name = "ValueBox"
+		valueBox.Parent = row
 
 		return row
 	end
 
-	-- === ACTUAL SETTINGS ===
+	-- === CREATE ALL SETTINGS (buttons stored in Buttons folder) ===
 
 	-- ESP
-	addCycleSetting("ESP:", {"None", "All", "Friends Only", "All + Friends (Green)"}).Name = "ESPButton"
+	local espBtn = addCycleSetting("ESP:", {"None", "All", "Friends Only", "All + Friends (Green)"})
+	espBtn.Name = "ESPButton"
+	espBtn.Parent = buttonsFolder   -- 🔥 move to Buttons folder
 
 	-- Camera Type
-	addCycleSetting("Camera Type:", {"Default", "First Person"}).Name = "CameraButton"
+	local cameraBtn = addCycleSetting("Camera Type:", {"Default", "First Person"})
+	cameraBtn.Name = "CameraButton"
+	cameraBtn.Parent = buttonsFolder
 
 	-- Full Bright Light
-	addToggleSetting("Full Bright Light:", false).Name = "FullBrightButton"
+	local fullBrightBtn = addToggleSetting("Full Bright Light:", false)
+	fullBrightBtn.Name = "FullBrightButton"
+	fullBrightBtn.Parent = buttonsFolder
 
-	-- Player Speed (Not Recommended)
-	addNumberSetting("Player Speed (Not Recommended):", 0, 1990, 16).Name = "SpeedRow"
-	-- Player Jump (Not Recommended)
-	addNumberSetting("Player Jump (Not Recommended):", 0, 1990, 50).Name = "JumpRow"
+	-- Player Speed
+	local speedRow = addNumberSetting("Player Speed (Not Recommended):", 0, 1990, 16)
+	speedRow.Name = "SpeedRow"
 
-	-- Aim Asset (enable only in First Person – this restriction will be in logic)
-	local aimRow = Instance.new("Frame")
-	aimRow.Size = UDim2.new(1, -10, 0, 40)
-	aimRow.BackgroundTransparency = 1
-	aimRow.Parent = settingsFrame
-	aimRow.ZIndex = settingsFrame.ZIndex + 1
+	-- Player Jump
+	local jumpRow = addNumberSetting("Player Jump (Not Recommended):", 0, 1990, 50)
+	jumpRow.Name = "JumpRow"
 
-	local aimLabel = Instance.new("TextLabel")
-	aimLabel.Size = UDim2.new(0.45, 0, 1, 0)
-	aimLabel.Position = UDim2.new(0, 5, 0, 0)
-	aimLabel.BackgroundTransparency = 1
-	aimLabel.Text = "Aim Asset:"
-	aimLabel.TextColor3 = Color3.new(1, 1, 1)
-	aimLabel.Font = Enum.Font.Gotham
-	aimLabel.TextSize = 13
-	aimLabel.TextXAlignment = Enum.TextXAlignment.Left
-	aimLabel.ZIndex = aimRow.ZIndex + 1
-	aimLabel.Parent = aimRow
-
-	local aimBtn = Instance.new("TextButton")
-	aimBtn.Size = UDim2.new(0.5, 0, 1, 0)
-	aimBtn.Position = UDim2.new(0.5, 0, 0, 0)
-	aimBtn.BackgroundColor3 = Color3.fromRGB(40, 0, 0)
-	aimBtn.Text = "Disabled"
-	aimBtn.TextColor3 = Color3.new(1, 1, 1)
-	aimBtn.Font = Enum.Font.Gotham
-	aimBtn.TextSize = 12
-	aimBtn.ZIndex = aimRow.ZIndex + 1
-	aimBtn.Parent = aimRow
+	-- Aim Asset
+	local aimBtn = addCycleSetting("Aim Asset:", {"Disabled", "Enabled", "OnlyNoneFriends"})  -- simplified name
 	aimBtn.Name = "AimButton"
-
-	local aimOptions = {"Disabled", "Enabled", "OnlyNoneFriends"}
-	local aimIdx = 1
-	aimBtn.MouseButton1Click:Connect(function()
-		aimIdx = aimIdx % #aimOptions + 1
-		aimBtn.Text = aimOptions[aimIdx]
-	end)
+	aimBtn.Parent = buttonsFolder
 
 	-- Safe Mode
-	addToggleSetting("Safe Mode:", true).Name = "SafeModeButton"  -- default true
+	local safeModeBtn = addToggleSetting("Safe Mode:", true)
+	safeModeBtn.Name = "SafeModeButton"
+	safeModeBtn.Parent = buttonsFolder
 
 	-- ======== REGISTER THE APP ========
 	local appEntry = __AppsLaunchArgFolder:FindFirstChild(AppName)
@@ -342,7 +305,7 @@ function __AppPackage.Install()
 		appEntry.Name = AppName
 		appEntry.Parent = __AppsLaunchArgFolder
 	end
-	appEntry.Value = "https://raw.githubusercontent.com/mohammadbakon123x/Zolin-OS/refs/heads/main/ZolinModifier.lua";
+	appEntry.Value = "https://raw.githubusercontent.com/YOUR_USERNAME/YOUR_REPO/main/ZolinModifier.lua"
 
 	print(AppName .. " package installed successfully!")
 end
