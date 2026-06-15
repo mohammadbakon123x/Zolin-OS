@@ -16,13 +16,14 @@ function ZolinApp.Init(ui, launchArgs, appFolder)
 
 	-- UI References
 	local settingsFrame = ui:WaitForChild("SettingsFrame")
-	local espBtn = settingsFrame:WaitForChild("ESPButton")
-	local cameraBtn = settingsFrame:WaitForChild("CameraButton")
-	local fullBrightBtn = settingsFrame:WaitForChild("FullBrightButton")
+	local ButtonFolder = ui:WaitForChild("Buttons")
+	local espBtn = ButtonFolder:WaitForChild("ESPButton")
+	local cameraBtn = ButtonFolder:WaitForChild("CameraButton")
+	local fullBrightBtn = ButtonFolder:WaitForChild("FullBrightButton")
 	local speedRow = settingsFrame:WaitForChild("SpeedRow")
 	local jumpRow = settingsFrame:WaitForChild("JumpRow")
-	local aimBtn = settingsFrame:WaitForChild("AimButton")
-	local safeModeBtn = settingsFrame:WaitForChild("SafeModeButton")
+	local aimBtn = ButtonFolder:WaitForChild("AimButton")
+	local safeModeBtn = ButtonFolder:WaitForChild("SafeModeButton")
 
 	-- Extract sub‑elements from number rows
 	local speedSliderBg = speedRow:FindFirstChild("Frame")
