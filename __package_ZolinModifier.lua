@@ -305,7 +305,7 @@ function __AppPackage.Install()
 		appEntry.Name = AppName
 		appEntry.Parent = __AppsLaunchArgFolder
 	end
-	appEntry.Value = "https://raw.githubusercontent.com/YOUR_USERNAME/YOUR_REPO/main/ZolinModifier.lua"
+	appEntry.Value = "https://raw.githubusercontent.com/mohammadbakon123x/Zolin-OS/refs/heads/main/ZolinModifier.lua"
 
 	print(AppName .. " package installed successfully!")
 end
