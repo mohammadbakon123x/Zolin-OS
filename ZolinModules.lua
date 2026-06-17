@@ -4567,7 +4567,7 @@ function ZolinModules.ZolinInstaller()
 				local code = game:HttpGet(url)
 				local fn, compileError = loadstring(code)
 				if not fn then error("Compilation error: " .. tostring(compileError)) end
-				-- The loadstring should create the app frame inside ReplicatedWindow
+				-- The loadstring should create the app frame inside ReplicatedWindow or ReplicatedWindow_Sys
 				fn()
 				-- Register in __AppsLaunchArgFolder
 				local appEntry = appsFolder:FindFirstChild(appName)
