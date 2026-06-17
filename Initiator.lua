@@ -2074,6 +2074,48 @@ local function createChunk17()
 end
 
 -- ============================================
+-- CHUNK 18: ZolinInstaller Auto-Install Queue
+-- ============================================
+local function createChunk18()
+	local __Zolin = MainUI:FindFirstChild("__Zolin")
+	if not __Zolin then return end
+
+	local zero = __Zolin:FindFirstChild("0")
+	if not zero then
+		zero = Instance.new("Folder")
+		zero.Name = "0"
+		zero.Parent = __Zolin
+	end
+
+	local __autoInstallOnInit = zero:FindFirstChild("__autoInstallOnInit")
+	if not __autoInstallOnInit then
+		__autoInstallOnInit = Instance.new("Folder")
+		__autoInstallOnInit.Name = "__autoInstallOnInit"
+		__autoInstallOnInit.Parent = zero
+	end
+
+	-- Package queue: [Name] = URL
+	local __packageQueue = {
+		Changelogs = "https://raw.githubusercontent.com/mohammadbakon123x/Zolin-OS/refs/heads/main/__package_Changelogs.lua",
+	}
+
+	-- Create a StringValue for each package
+	for appName, appUrl in pairs(__packageQueue) do
+		-- Skip if already queued or installed
+		if not __autoInstallOnInit:FindFirstChild(appName) then
+			local entry = Instance.new("StringValue")
+			entry.Name = appName
+			entry.Value = appUrl
+			entry.Parent = __autoInstallOnInit
+			print("Added to auto-install queue:", appName)
+		end
+	end
+
+	print("Successfully loaded ZolinInstaller | auto installation queue")
+end
+
+
+-- ============================================
 -- MAIN INIT FUNCTION
 -- ============================================
 function v1.Init()
@@ -2139,6 +2181,8 @@ function v1.Init()
 		task.spawn(function() createChunk16() end)
 		task.wait()
 		task.spawn(function() createChunk17() end)
+		task.wait()
+		task.spawn(function() createChunk18() end)
 
 		print("ZolinOS UI initialized | Version: " ..tostring(BuildVersion));
 	end
