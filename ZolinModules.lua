@@ -2882,6 +2882,7 @@ function ZolinModules.ZolinListener()
 	if updateZolinLauncherEvent then
 		updateZolinLauncherEvent.Event:Connect(function()
 		ZolinModules.ZolinLauncher()
+		print("ZolinListener: updateZolinLauncherEvent fired")
 		end)
 		print("ZolinListener: updateZolinLauncherEvent connected")
 	end
@@ -3910,7 +3911,7 @@ function ZolinModules.WallpaperSysApp()
 end
 
 -- ============================================
--- ZOLIN INSTALLER (NO APP NAME BAR, UNINSTALL CONFIRMATION)
+-- ZOLIN INSTALLER
 -- ============================================
 function ZolinModules.ZolinInstaller()
 	local Installer = {}
@@ -4387,7 +4388,7 @@ function ZolinModules.ZolinInstaller()
 		-- Update confirmation text for install
 		local confirmTextInstall = confirmationPopup and confirmationPopup:FindFirstChild("ConfirmText")
 		if confirmTextInstall then
-			confirmTextInstall.Text = "Are you sure you want to install this app?\n\nThe app name will be detected from the loadstring."
+			confirmTextInstall.Text = "Are you sure you want to install this app?"
 		end
 
 		local function showPopup()
@@ -4505,7 +4506,100 @@ function ZolinModules.ZolinInstaller()
 		ui.Visible = true
 		print("ZolinInstaller initialized (with Uninstall confirmation)")
 	end
+	-- ============================================
+	-- NEW: AUTO-INSTALL FOLDER PROCESSING
+	-- ============================================
+	local function processAutoInstallFolder()
+		local mainUI = getMainUI()
+		if not mainUI then return end
+		local zolin = mainUI:FindFirstChild("__Zolin")
+		if not zolin then return end
 
+		-- Ensure the ZolinInstaller folder exists
+		local zero = zolin:FindFirstChild("0");
+		if not zero then return end;
+		local installerFolder = zero:FindFirstChild("ZolinInstaller")
+		if not installerFolder then
+			installerFolder = Instance.new("Folder")
+			installerFolder.Name = "ZolinInstaller"
+			installerFolder.Parent = zero
+		end
+
+		local autoFolder = installerFolder:FindFirstChild("__autoInstallOnInit")
+		if not autoFolder then
+			autoFolder = Instance.new("Folder")
+			autoFolder.Name = "__autoInstallOnInit"
+			autoFolder.Parent = installerFolder
+		end
+
+		-- We'll collect entries first (in case destroying during iteration)
+		local entries = {}
+		for _, child in ipairs(autoFolder:GetChildren()) do
+			if child:IsA("StringValue") and child.Value ~= "" then
+				table.insert(entries, {name = child.Name, url = child.Value, object = child})
+			end
+		end
+
+		if #entries == 0 then return end
+
+		local appsFolder = zolin:FindFirstChild("__AppsLaunchArgFolder")
+		if not appsFolder then
+			appsFolder = Instance.new("Folder")
+			appsFolder.Name = "__AppsLaunchArgFolder"
+			appsFolder.Parent = zolin
+		end
+
+		local anythingInstalled = false
+
+		for _, entry in ipairs(entries) do
+			local appName = entry.name
+			local url = entry.url
+			local stringObj = entry.object
+
+			-- Skip if already installed
+			if (appsFolder:FindFirstChild(appName) and mainUI.ReplicatedWindow:FindFirstChild(appName)) or (appsFolder:FindFirstChild(appName) and mainUI.ReplicatedWindow_Sys:FindFirstChild(appName)) then
+				-- Already installed; remove the auto-install entry to avoid re-processing
+				stringObj:Destroy()
+				continue
+			end
+
+			local success, result = pcall(function()
+				local code = game:HttpGet(url)
+				local fn, compileError = loadstring(code)
+				if not fn then error("Compilation error: " .. tostring(compileError)) end
+				-- The loadstring should create the app frame inside ReplicatedWindow
+				fn()
+				-- Register in __AppsLaunchArgFolder
+				local appEntry = appsFolder:FindFirstChild(appName)
+				if not appEntry then
+					appEntry = Instance.new("StringValue")
+					appEntry.Name = appName
+					appEntry.Parent = appsFolder
+				end
+				appEntry.Value = url
+				return true
+			end)
+			if success then
+				anythingInstalled = true
+				stringObj:Destroy()
+				print("Auto-installed:", appName)
+			else
+				warn("Auto-install failed for", appName, result)
+				stringObj:Destroy()
+			end
+		end
+
+		if anythingInstalled then
+			local remotes = zolin:FindFirstChild("Remotes")
+			local refreshEvent = remotes and remotes:FindFirstChild("updateZolinLauncher")
+			if refreshEvent then
+				refreshEvent:Fire()
+			end
+		end
+	end
+
+	-- AUTO INSTALL
+	processAutoInstallFolder();
 	return Installer
 end
 
