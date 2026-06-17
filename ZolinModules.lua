@@ -3244,6 +3244,7 @@ function ZolinModules.SettingsApp()
 				items = {
 					{name = "UI Animations", type = "toggle", settingName = "AnimationUI", valueRef = animationUIValue},
 					{name = "Animation Speed", type = "animation_speed", settingName = "TransitionSpeed", valueRef = transitionSpeedValue, min = 0.25, max = 10},
+					{name = "What's New (Changelogs)", type = "action", key = "changelogs"},
 					{name = "Power Menu", type = "action", key = "power"},
 				}
 			}
@@ -3472,6 +3473,14 @@ function ZolinModules.SettingsApp()
 							AppManager.LaunchApplication("WallpaperSys")
 						end)
 					end
+					
+					if item.key == "changelogs" then
+						actionBtn.MouseButton1Click:Connect(function()
+							AppManager.HandleExit()
+							AppManager.LaunchApplication("Changelogs")
+						end)
+					end
+					
 				elseif item.type == "input" then
 					local inputBox = Instance.new("TextBox")
 					inputBox.Size = UDim2.new(0.4, -10, 0.7, 0)
