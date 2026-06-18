@@ -211,7 +211,7 @@ function __AppPackage.Install()
 	end
 	appEntry.Value = "https://raw.githubusercontent.com/mohammadbakon123x/Zolin-OS/refs/heads/main/PlayAsAI.lua"
 
-	print(""..tostring(AppName).." App registered with ID: "..tostring(appEntry:GetFullName())" package installed successfully!")
+	print(""..tostring(AppName).." App registered with ID:" ..tostring(appEntry:GetFullName()) .."package installed successfully!")
 end
 
 __AppPackage.Install()
