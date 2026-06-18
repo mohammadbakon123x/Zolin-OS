@@ -2079,19 +2079,18 @@ end
 local function createChunk18()
 	local __Zolin = MainUI:FindFirstChild("__Zolin")
 	if not __Zolin then return end
-	local ZolinInstaller_UI = __Zolin:FindFirstChild("ZolinInstaller")
-	if not ZolinInstaller_UI then
-		local newInstaller = Instance.new("Folder", __Zolin);
-		newInstaller.Name = "ZolinInstaller"
-		ZolinInstaller_UI = newInstaller
-	end
 	local zero = __Zolin:FindFirstChild("0")
 	if not zero then
 		zero = Instance.new("Folder")
 		zero.Name = "0"
 		zero.Parent = __Zolin
 	end
-
+	local ZolinInstaller_UI = zero:FindFirstChild("ZolinInstaller")
+	if not ZolinInstaller_UI then
+		local newInstaller = Instance.new("Folder", zero);
+		newInstaller.Name = "ZolinInstaller"
+		ZolinInstaller_UI = newInstaller
+	end
 	local __autoInstallOnInit = ZolinInstaller_UI:FindFirstChild("__autoInstallOnInit")
 	if not __autoInstallOnInit then
 		__autoInstallOnInit = Instance.new("Folder")
