@@ -4518,7 +4518,8 @@ function ZolinModules.ZolinInstaller()
 	-- ============================================
 	-- NEW: AUTO-INSTALL FOLDER PROCESSING
 	-- ============================================
-	local function processAutoInstallFolder()
+	function Installer.processAutoInstallFolder()
+		print("Starting auto-install from folder...");
 		local mainUI = getMainUI()
 		if not mainUI then return end
 		local zolin = mainUI:FindFirstChild("__Zolin")
@@ -4608,7 +4609,7 @@ function ZolinModules.ZolinInstaller()
 	end
 
 	-- AUTO INSTALL
-	processAutoInstallFolder();
+	Installer.processAutoInstallFolder();
 	return Installer
 end
 
