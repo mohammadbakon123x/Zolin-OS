@@ -1,6 +1,9 @@
 -- ZolinModules (Complete Combined ModuleScript)
 local ZolinModules = {}
-
+ZolinModules.Mode = "Desktop"  --| Mobile | default - | Desktop | beta
+--Global Variables | Desktop
+ZolinModules.CurrentUptime = nil
+ZolinModules.CurrentTime = nil
 ZolinModules.AppLaunchType = {
 	["Settings"] = "ZolinModules",
 	["WallpaperSys"] = "ZolinModules",
@@ -11,7 +14,6 @@ ZolinModules.AppLaunchType = {
 ZolinModules.AppUrls = {
 	["TranslationUI"] = "https://raw.githubusercontent.com/mohammadbakon123x/Zolin-OS/refs/heads/main/TranslationApp.lua",
 }
-
 local openBuiltInModules = {}
 local RunningApps = {}
 local BackgroundApps = {}
@@ -58,6 +60,12 @@ local monitorLoopRunning = false
 local backButtonDebounce = false
 local BACK_BUTTON_COOLDOWN = 0.3
 
+
+local function cleanupManager(manager)
+	if manager and manager.Cleanup then
+		pcall(manager.Cleanup)
+	end
+end
 
 -- ============================================
 -- HELPER: Get MainUI
@@ -264,9 +272,179 @@ function ZolinModules.AnimationManager()
 			return true
 		end
 	end
+	
+	-- ============================================
+	-- DESKTOP WINDOW ANIMATION (Open / Close)
+	-- ============================================
+	function v2.AnimateDesktopWindowOpen(window, action, state)
+		if typeof(window) ~= "Instance" then print("Invalid window provided: " .. tostring(window)) return false end
+		action = action or "Open"
+		local fadeDuration = getTransitionSpeed();
 
+		local TweenService = game:GetService("TweenService")
+		local uiScale = window:FindFirstChild("UIScale");
+		if not uiScale then
+			uiScale = Instance.new("UIScale")
+			uiScale.Parent = window
+		end
+
+		-- If animations are disabled, skip all tweens and just set scale
+		if not isAnimationUIEnabled() then
+			uiScale.Scale = (action == "Open") and 1 or 0.25
+			if action == "Close" then
+				window.Visible = false
+			end
+			return true
+		end
+
+		local function createTweens()
+			local tweens = {}
+			local tweenInfo = TweenInfo.new(fadeDuration, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
+
+			if action == "Open" then
+				-- ---- OPEN: fade in and scale up ----
+				local originalScale =  uiScale.Scale or 0.85
+				local startScale = math.max(0.2, originalScale - 0.2)
+
+				-- Save original transparencies and set to 1 (fully transparent)
+				local transparencies = {}
+				local function saveAndFade(instance)
+					if not instance:IsA("GuiObject") then return end
+					local props = {}
+					if instance:IsA("Frame") or instance:IsA("ScrollingFrame") then
+						if instance.BackgroundTransparency ~= nil then
+							props.BackgroundTransparency = instance.BackgroundTransparency
+							if instance:IsA("ScrollingFrame") then
+							props.ScrollBarImageTransparency = instance.ScrollBarImageTransparency
+							instance.ScrollBarImageTransparency = 1
+							end
+							instance.BackgroundTransparency = 1
+						end
+					end
+					if instance:IsA("ImageLabel") or instance:IsA("ImageButton") then
+						if instance.ImageTransparency ~= nil and instance.BackgroundTransparency ~= nil then
+							props.ImageTransparency = instance.ImageTransparency
+							props.BackgroundTransparency = instance.BackgroundTransparency
+							instance.BackgroundTransparency = 1
+							instance.ImageTransparency = 1
+						end
+					end
+					if instance:IsA("TextLabel") or instance:IsA("TextButton") then
+						if instance.TextTransparency ~= nil and instance.BackgroundTransparency ~= nil then
+							props.TextTransparency = instance.TextTransparency
+							props.BackgroundTransparency = instance.BackgroundTransparency
+							instance.TextTransparency = 1
+							instance.BackgroundTransparency = 1
+						end
+					end
+					if instance:IsA("TextBox") then
+						if instance.TextTransparency ~= nil and instance.BackgroundTransparency ~= nil then
+						props.TextTransparency = instance.TextTransparency
+						props.BackgroundTransparency = instance.BackgroundTransparency
+						props.TextTransparency = 1
+						props.BackgroundTransparency = 1
+						end
+					end
+					if next(props) then transparencies[instance] = props end
+					for _, child in ipairs(instance:GetChildren()) do
+						saveAndFade(child)
+					end
+				end
+				saveAndFade(window)
+				task.wait();
+				window.Visible = true;
+				
+				-- Set starting scale
+				uiScale.Scale = startScale
+
+				-- Create tweens to restore original transparencies
+				for instance, props in pairs(transparencies) do
+					for prop, originalValue in pairs(props) do
+						local tween = TweenService:Create(instance, tweenInfo, { [prop] = originalValue })
+						table.insert(tweens, tween)
+					end
+				end
+				-- Scale up tween
+				table.insert(tweens, TweenService:Create(uiScale, tweenInfo, { Scale = originalScale }))
+
+			elseif action == "Close" then
+				-- ---- CLOSE: fade out and scale down ----
+				-- Gather all GuiObjects and tween their transparencies to 1
+				local function fadeOut(instance)
+					if not instance:IsA("GuiObject") then return end
+					local props = {}
+					if instance:IsA("Frame") or instance:IsA("ScrollingFrame") then
+						props.BackgroundTransparency = 1
+						if instance:IsA("ScrollingFrame") then
+						props.ScrollBarImageTransparency = 1
+						end
+					end
+					if instance:IsA("ImageLabel") or instance:IsA("ImageButton") then
+						props.ImageTransparency = 1
+						props.BackgroundTransparency = 1
+					end
+					if instance:IsA("TextLabel") or instance:IsA("TextButton") then
+						props.TextTransparency = 1
+						props.BackgroundTransparency = 1
+					end
+					if instance:IsA("TextBox") then
+						props.TextTransparency = 1
+						props.BackgroundTransparency = 1
+					end
+					if next(props) then
+						local tween = TweenService:Create(instance, tweenInfo, props)
+						table.insert(tweens, tween)
+					end
+					for _, child in ipairs(instance:GetChildren()) do
+						fadeOut(child)
+					end
+				end
+				fadeOut(window)
+
+				-- Scale down to 0.2
+				table.insert(tweens, TweenService:Create(uiScale, tweenInfo, { Scale = 0.75 }))
+			end
+
+			return tweens
+		end
+
+		local tweens = createTweens()
+
+		-- Play all tweens
+		for _, tween in ipairs(tweens) do
+			tween:Play()
+		end
+
+		-- If closing, hide the window after the animation finishes
+		if action == "Close" then
+			-- Wait for the longest tween to finish
+			if #tweens > 0 then
+				local longest = tweens[1]
+				for _, t in ipairs(tweens) do
+					if t.TweenInfo.Time > longest.TweenInfo.Time then
+						longest = t
+					end
+				end
+				longest.Completed:Connect(function()
+					window.Visible = false
+					if state == "Destroy" then
+						window:Destroy();
+					end
+				end)
+			else
+				window.Visible = false
+				if state == "Destroy" then
+					window:Destroy();
+				end
+			end
+		end
+
+		return true
+	end
+	
 	return v2
 end
+
 
 -- ============================================
 -- APP LOADER
@@ -787,6 +965,16 @@ end
 -- ============================================
 function ZolinModules.AppManager(dependencies)
 	local AppManager = {}
+	local windowRefs = {}  -- appName -> window instance
+	local window = {};
+	window._maximize = nil
+	window._restore = nil
+	window._isMaximized = nil
+	window._savedSize = nil
+	window._savedPos = nil
+	window._savedScale = nil
+	window._dragConnections = nil
+	
 	local UserInputService = game:GetService("UserInputService")
 
 	local MainUI = getMainUI()
@@ -888,9 +1076,14 @@ function ZolinModules.AppManager(dependencies)
 	end
 
 	function AppManager.GetApplication(p0)
+		if ZolinModules.Mode == "Mobile" then
 		local inApps = MainUI.__ScreenFrame.Applications:FindFirstChild(p0)
 		local inScrolling = MainUI.__ScreenFrame.BackgroundPage.ScrollingApps:FindFirstChild(p0)
 		return inApps ~= nil or inScrolling ~= nil
+		elseif ZolinModules.Mode == "Desktop" then
+		local inApps = MainUI.__ZolinDesktop.__ScreenFrame.Applications:FindFirstChild(p0)
+		return inApps ~= nil
+		end
 	end
 
 	local function findAppTemplate(appName)
@@ -906,24 +1099,27 @@ function ZolinModules.AppManager(dependencies)
 	end
 
 	function AppManager.LaunchApplication(p1)
-		if MainUI and MainUI.__ScreenFrame and MainUI.__ScreenFrame.Applications and MainUI.__ScreenFrame.Applications:FindFirstChild(p1) then
+		
+		if MainUI and (MainUI.__ScreenFrame and MainUI.__ScreenFrame.Applications and MainUI.__ScreenFrame.Applications:FindFirstChild(p1)) or (MainUI.__ZolinDesktop.__ScreenFrame and MainUI.__ZolinDesktop.__ScreenFrame.Applications and MainUI.__ZolinDesktop.__ScreenFrame.Applications:FindFirstChild(p1)) then
 			print("App already running")
 			return false
 		end
-
 		local template, isSystemApp = findAppTemplate(p1)
 		if not template then
 			warn("Failed to register app: " .. p1 .. " not found")
 			return false
 		end
-
+		if ZolinModules.Mode == "Mobile" then
 		local clonedApp = template:Clone()
 		clonedApp.Name = p1
-		if MainUI and MainUI.__ScreenFrame and MainUI.__ScreenFrame.Applications then
+		if MainUI and (MainUI.__ScreenFrame and MainUI.__ScreenFrame.Applications) and ZolinModules.Mode == "Mobile" then
 			clonedApp.Parent = MainUI.__ScreenFrame.Applications
+		elseif MainUI.__ZolinDesktop and MainUI.__ZolinDesktop.__ScreenFrame and MainUI.__ZolinDesktop.__ScreenFrame.Applications and ZolinModules.Mode == "Desktop" then
+			clonedApp.Parent = MainUI.__ZolinDesktop.__ScreenFrame.Applications
 		end
 		local ModuleScript = clonedApp:FindFirstChildOfClass("ModuleScript")
 
+		--[[ old method we used for loading modules
 		if ModuleScript then
 			local module = require(ModuleScript)
 			if module and module.Init then
@@ -931,7 +1127,7 @@ function ZolinModules.AppManager(dependencies)
 				if ui then module.Init(ui, {}, clonedApp) else module.Init(clonedApp, {}, clonedApp) end
 			end
 		end
-
+		--]]
 		-- Check if this app should use ZolinModules launch type (built-in module)
 		local launchType = ZolinModules.AppLaunchType and ZolinModules.AppLaunchType[p1]
 		if launchType == "ZolinModules" then
@@ -1006,12 +1202,16 @@ function ZolinModules.AppManager(dependencies)
 			end
 		end
 		clonedApp.Visible = true
+		if ZolinModules.Mode == "Mobile" then
 		if not isSystemApp and MainUI and MainUI.__ScreenFrame and MainUI.__ScreenFrame.HomeScreenScroller then
 			MainUI.__ScreenFrame.HomeScreenScroller.Visible = false
 		end
+		end
 		local oldActive = ActiveApp
 		ActiveApp = p1
+		if ZolinModules.Mode == "Mobile" then
 		task.spawn(function() AnimationManager.AnimateWindow(clonedApp, "Open") end)
+		end
 		table.insert(RunningApps, p1)
 		triggerEvent("onAppLaunched", p1)
 		triggerEvent("onActiveAppChanged", p1, oldActive)
@@ -1019,6 +1219,322 @@ function ZolinModules.AppManager(dependencies)
 		local bgPage = MainUI and MainUI.__ScreenFrame and MainUI.__ScreenFrame:FindFirstChild("BackgroundPage")
 		if bgPage and bgPage.Visible then AppManager.RefreshBackgroundPage() end
 		return true
+		elseif ZolinModules.Mode == "Desktop" then
+			-- --------------------------------------------------------
+			-- DESKTOP MODE: Launch as window
+			-- --------------------------------------------------------
+			if ZolinModules.Mode == "Desktop" then
+				local desktopFolder = MainUI:FindFirstChild("__ZolinDesktop")
+				if not desktopFolder then
+					warn("__ZolinDesktop not found")
+					return false
+				end
+				local desktopScreenFrame = desktopFolder:FindFirstChild("__ScreenFrame")
+				if not desktopScreenFrame then
+					warn("Desktop __ScreenFrame not found")
+					return false
+				end
+				local replicatedSys = MainUI:FindFirstChild("ReplicatedWindow_Sys")
+				if not replicatedSys then
+					warn("Desktop ReplicatedWindow_Sys not found")
+					return false
+				end
+				local windowTemplate = replicatedSys:FindFirstChild("ExampleWindowV2")
+				if not windowTemplate then
+					warn("ExampleWindowV2 template not found")
+					return false
+				end
+
+				-- 1. Clone the window
+				local windowApp = windowTemplate:Clone()
+				windowApp.Name = p1
+				spawn(function()
+				AnimationManager.AnimateDesktopWindowOpen(windowApp, "Open");
+				end)
+				--windowApp.Visible = true
+				windowApp.Parent = desktopScreenFrame:FindFirstChild("Applications");
+
+				-- 2. Set title and icon
+				local tileInfo = windowApp:FindFirstChild("TileInfo")
+				if tileInfo then
+					local nameLabel = tileInfo:FindFirstChild("AppName")
+					if nameLabel then nameLabel.Text = p1 end
+					local iconImg = tileInfo:FindFirstChild("AppIcon")
+					if iconImg then
+						local meta = AppLoader.GetAppMetadata(p1)
+						if meta and meta.icon then
+							iconImg.Image = meta.icon
+						end
+					end
+				end
+
+				-- 3. Place the app's UI into the window's UI frame
+				local windowUI = windowApp:FindFirstChild("UI")
+				if windowUI then
+					-- Clone the app's UI contents into the window's UI frame
+					local appUI = template:FindFirstChild("UI")
+					if appUI then
+						-- Clone all children of appUI directly into windowUI
+						for _, child in ipairs(appUI:GetChildren()) do
+							local clone = child:Clone()
+							clone.Parent = windowUI
+							-- Optionally set sizes/positions if needed, but assume they're already scaled.
+						end
+					else
+						-- Fallback: if app has no UI frame, just clone the whole template into windowUI
+						warn("App template missing 'UI' frame, using full template")
+						local content = template:Clone()
+						content.Parent = windowUI
+						content.Size = UDim2.new(1, 0, 1, 0)
+						content.Position = UDim2.new(0, 0, 0, 0)
+					end
+				else
+					warn("Window template missing 'UI' frame")
+					windowApp:Destroy()
+					return false
+				end
+
+				--[ 4. Initialize the app module if it exists | desktop launch
+
+				-- Check if this app should use ZolinModules launch type (built-in module)
+				local launchType = ZolinModules.AppLaunchType and ZolinModules.AppLaunchType[p1]
+				if launchType == "ZolinModules" then
+					-- This is a built-in module, track it but don't show the cloned UI
+					local modules = ZolinModules.GetAll()
+					local builtInModules = {
+						Settings = modules.SettingsApp,
+						WallpaperSys = modules.WallpaperSysApp,
+						ZolinInstaller = modules.ZolinInstaller,
+					}
+					local builtInModule = builtInModules[p1]
+					if builtInModule then
+						table.insert(RunningApps, p1)
+						ActiveApp = p1
+						local ui = windowApp:FindFirstChild("UI")
+						if ui and builtInModule.Init then
+							builtInModule.Init(ui, {}, windowApp)
+						end
+						openBuiltInModules[p1] = windowApp
+						print("Launched built-in module:", p1)
+					end
+					-- Inside AppManager.LaunchApplication, after the existing ZolinModules check:
+				else
+					-- First, try the new folder-based registry
+					local appUrl = nil
+					local appsFolder = MainUI.__Zolin:FindFirstChild("__AppsLaunchArgFolder")
+					if appsFolder then
+						local entry = appsFolder:FindFirstChild(p1)
+						if entry and entry:IsA("StringValue") then
+							appUrl = entry.Value
+						end
+					end
+					-- Fallback to the old table
+					if not appUrl then
+						appUrl = ZolinModules.AppUrls and ZolinModules.AppUrls[p1]
+					end
+					if appUrl then
+						print("Fetching app from URL:", appUrl);
+						local success, result = pcall(function()
+							return game:HttpGet(appUrl)
+						end)
+						if success and result then
+							local fn, compileError = loadstring(result)
+							if fn then
+								local execSuccess, moduleReturn = pcall(fn)
+								if execSuccess then
+									if type(moduleReturn) == "function" then
+										local ui = windowApp:FindFirstChild("UI")
+										moduleReturn(ui, {}, windowApp)
+									elseif type(moduleReturn) == "table" and moduleReturn.Init then
+										local ui = windowApp:FindFirstChild("UI")
+										moduleReturn.Init(ui, {}, windowApp)
+									end
+									table.insert(RunningApps, p1)
+									ActiveApp = p1
+									openBuiltInModules[p1] = windowApp
+									print("Launched loadstring app:", p1)
+								else
+									warn("Failed to execute loadstring app:", p1, moduleReturn)
+								end
+							else
+								warn("Failed to compile loadstring app:", p1, compileError)
+							end
+						else
+							warn("Failed to fetch loadstring app:", p1, appUrl)
+						end
+					else
+						warn("No URL found for loadstring app:", p1)
+						return false
+					end
+				end
+				--]]
+
+				-- ----------------------------------------------------
+				-- Window state (maximize/restore) – local variables
+				-- These are shared by the Max button and drag logic
+				-- ----------------------------------------------------
+				local isMaximized = false
+				local savedSize = windowApp.Size
+				local savedPos = windowApp.Position
+				local savedScale = 1
+
+
+				-- 4. Connect window controls (Tilebar buttons)
+				local tilebar = windowApp:FindFirstChild("Tilebar")
+				if tilebar then
+					-- Exit (close)
+					local exitBtn = tilebar:FindFirstChild("Exit")
+					if exitBtn then
+						exitBtn.MouseButton1Click:Connect(function()
+							-- bring window to front
+							ZolinModules.ZIndexManagerInstance.BringToFront(windowApp);
+							
+							AppManager.CloseApp(p1)
+						end)
+					end
+
+					-- Min (background)
+					local minBtn = tilebar:FindFirstChild("Min")
+					if minBtn then
+						minBtn.MouseButton1Click:Connect(function()
+							-- bring window to front
+							ActiveApp = p1
+							ZolinModules.ZIndexManagerInstance.BringToFront(windowApp);
+							AppManager.HandleExit()  -- uses background logic
+						end)
+					end
+
+					-- Max (toggle fullscreen / restore)
+					local maxBtn = tilebar:FindFirstChild("Max")
+					if maxBtn then
+						-- State variables for this window
+						local isMaximized = false
+						local savedSize = windowApp.Size
+						local savedPos = windowApp.Position
+						local savedScale = windowApp.UIScale and windowApp.UIScale.Scale or 0.85;
+
+						 function AppManager.maximize()
+							savedSize = windowApp.Size
+							savedPos = windowApp.Position
+							local scale = windowApp:FindFirstChildOfClass("UIScale")
+							if scale then
+								savedScale = scale.Scale
+								scale.Scale = 1
+							end
+							windowApp.Size = UDim2.new(1, 0, 0.94, 0)
+							windowApp.Position = UDim2.new(0.5, 0, 0.47, 0)
+							windowApp.AnchorPoint = Vector2.new(0.5, 0.5)
+							isMaximized = true
+						end
+
+						function AppManager.restore()
+							windowApp.Size = savedSize
+							windowApp.Position = savedPos
+							windowApp.AnchorPoint = Vector2.new(0, 0)
+							local scale = windowApp:FindFirstChildOfClass("UIScale")
+							if scale then
+								scale.Scale = savedScale
+							end
+							isMaximized = false
+						end
+
+						-- Toggle
+						maxBtn.MouseButton1Click:Connect(function()
+							-- bring window to front
+							ZolinModules.ZIndexManagerInstance.BringToFront(windowApp);
+							
+							if isMaximized then
+								AppManager.restore()
+							else
+							 AppManager.maximize()
+							end
+						end)
+
+						-- Expose these to the drag logic
+						window._maximize = AppManager.maximize
+						window._restore = AppManager.restore
+						window._isMaximized = function() return isMaximized end
+						window._savedSize = { get = function() return savedSize end, set = function(s) savedSize = s end }
+						window._savedPos = { get = function() return savedPos end, set = function(p) savedPos = p end }
+						window._savedScale = { get = function() return savedScale end, set = function(s) savedScale = s end }
+					end
+				end
+				-- 5. Make window draggable via Tilebar
+				if tilebar then
+					local dragging = false
+					local dragStart, startPos
+					local dragConnection, endConnection
+
+					local function startDrag(input)
+						if input.UserInputType == Enum.UserInputType.MouseButton1 then
+							if isMaximized then
+								AppManager.restore()
+								startPos = windowApp.Position
+							end
+							dragging = true
+							dragStart = input.Position
+							startPos = windowApp.Position
+							ZolinModules.ZIndexManagerInstance.BringToFront(windowApp)
+							if ActiveApp ~= p1 then
+								local oldActive = ActiveApp
+								ActiveApp = p1
+								triggerEvent("onActiveAppChanged", p1, oldActive)
+							end
+						end
+					end
+
+					local function updateDrag(input)
+						if not dragging or input.UserInputType ~= Enum.UserInputType.MouseMovement then return end
+						local delta = input.Position - dragStart
+						local newX = startPos.X.Offset + delta.X
+						local newY = startPos.Y.Offset + delta.Y
+						windowApp.Position = UDim2.new(startPos.X.Scale, newX, startPos.Y.Scale, newY)
+						ZolinModules.ZIndexManagerInstance.BringToFront(windowApp)
+						if ActiveApp ~= p1 then
+							local oldActive = ActiveApp
+							ActiveApp = p1
+							triggerEvent("onActiveAppChanged", p1, oldActive)
+						end
+					end
+
+					local function endDrag(input)
+						if input.UserInputType == Enum.UserInputType.MouseButton1 then
+							if not isMaximized then
+								local absPos = windowApp.AbsolutePosition
+								local absSize = windowApp.AbsoluteSize
+								local desktopAbsPos = desktopScreenFrame.AbsolutePosition
+								local desktopSize = desktopScreenFrame.AbsoluteSize
+								if absPos.Y <= desktopAbsPos.Y + 7.5 then
+									AppManager.maximize()
+									dragging = false
+									return
+								end
+							end
+							dragging = false
+						end
+					end
+					tilebar.InputBegan:Connect(startDrag)
+					dragConnection = UserInputService.InputChanged:Connect(updateDrag)
+					endConnection = UserInputService.InputEnded:Connect(endDrag)
+
+					-- Store connections for cleanup (optional)
+					window._dragConnections = { dragConnection, endConnection }
+				end
+
+				-- 6. Store window reference and track the app
+				ZolinModules.ZIndexManagerInstance.Register(windowApp, windowApp.ZIndex)
+				windowRefs[p1] = window
+				table.insert(RunningApps, p1)
+				ActiveApp = p1
+				triggerEvent("onAppLaunched", p1)
+				triggerEvent("onActiveAppChanged", p1, nil)
+
+				-- Optional: bring window to front | we should tell ZolinZIndexManager to bring it to front
+				ZolinModules.ZIndexManagerInstance.BringToFront(windowApp)
+				print("Launched desktop window for:", p1)
+				return true
+			end
+		end
 	end
 
 	function AppManager.HandleExit()
@@ -1032,13 +1548,23 @@ function ZolinModules.AppManager(dependencies)
 		end
 
 	function AppManager.CloseApp(p3)
-		local app = MainUI.__ScreenFrame.Applications:FindFirstChild(p3)
+		local app = nil
+		if ZolinModules.Mode == "Mobile" then
+			app = MainUI.__ScreenFrame.Applications:FindFirstChild(p3)
+		elseif ZolinModules.Mode == "Desktop" then
+			app = MainUI.__ZolinDesktop.__ScreenFrame.Applications:FindFirstChild(p3)
+		end
 		if app then
 			local isSystem = AppManager.IsSystemApp(p3)
 			if isSystem and ActiveApp == p3 then
+				if ZolinModules.Mode == "Mobile" then
 				AnimationManager.AnimateWindow(p3, "Close")
+				end
 			end
-			app:Destroy()
+			if ZolinModules.Mode == "Desktop" then
+			ZolinModules.ZIndexManagerInstance.Unregister(app)
+			AnimationManager.AnimateDesktopWindowOpen(app, "Close", "Destroy");
+			end
 			for i, name in ipairs(RunningApps) do
 				if name == p3 then
 					table.remove(RunningApps, i)
@@ -1055,24 +1581,32 @@ function ZolinModules.AppManager(dependencies)
 			if ActiveApp == p3 then
 				ActiveApp = nil
 				if #RunningApps == 0 and #BackgroundApps == 0 then
+					if ZolinModules.Mode == "Mobile" then
 					if MainUI and MainUI.__ScreenFrame and MainUI.__ScreenFrame.HomeScreenScroller then
 						MainUI.__ScreenFrame.HomeScreenScroller.Visible = true
+					end
+					elseif ZolinModules.Mode == "Desktop" then
+						-- we will not do this for desktop
 					end
 				end
 			end
 			print("App closed: " .. p3)
+			if ZolinModules.Mode == "Mobile" then
 			AppManager.RemovePreview(p3)
-
 			-- Refresh background page if it's open
 			local bgPage = MainUI.__ScreenFrame:FindFirstChild("BackgroundPage")
 			if bgPage and bgPage.Visible then
 				AppManager.RefreshBackgroundPage()
 			end
-
+			elseif ZolinModules.Mode == "Desktop" then
+				-- we will not do this for desktop
+			end
 			triggerEvent("onAppClosed", p3)
 			if oldActive == p3 then
 				triggerEvent("onActiveAppChanged", ActiveApp, oldActive)
 			end
+		else
+			warn("Attempted to close non-existent app: " .. tostring(p3))
 		end
 	end
 
@@ -1088,6 +1622,7 @@ function ZolinModules.AppManager(dependencies)
 		for _, name in ipairs(appsToClose) do
 			AppManager.CloseApp(name)
 		end
+		if ZolinModules.Mode == "Mobile" then
 		if MainUI and MainUI.__ScreenFrame and MainUI.__ScreenFrame.HomeScreenScroller then
 			MainUI.__ScreenFrame.HomeScreenScroller.Visible = true
 		end
@@ -1095,11 +1630,19 @@ function ZolinModules.AppManager(dependencies)
 		if bgPage and bgPage.Visible then
 			AppManager.RefreshBackgroundPage()
 		end
+		elseif ZolinModules.Mode == "Desktop" then
+			-- we will not do this for desktop
+		end
 		triggerEvent("onAppsCleared")
 	end
 
 	function AppManager.ExitApplication(p4)
-		local app = MainUI.__ScreenFrame.Applications:FindFirstChild(p4)
+		local app = nil
+		if ZolinModules.Mode == "Mobile" then
+		app = MainUI.__ScreenFrame.Applications:FindFirstChild(p4)
+		elseif ZolinModules.Mode == "Desktop" then
+			app = MainUI.__ZolinDesktop.__ScreenFrame.Applications:FindFirstChild(p4)
+		end
 		if app then
 			local isSystem = AppManager.IsSystemApp(p4)
 
@@ -1108,13 +1651,22 @@ function ZolinModules.AppManager(dependencies)
 				AppManager.CloseApp(p4)
 				return
 			end
-
+			if ZolinModules.Mode == "Mobile" then
 			-- Only show home screen for non-system apps
 			if not isSystem then
 				MainUI.__ScreenFrame.HomeScreenScroller.Visible = true
 			end
-
 			AnimationManager.AnimateWindow(p4, "Close", true);
+			
+			elseif ZolinModules.Mode == "Desktop" then
+				spawn(function()
+				AnimationManager.AnimateDesktopWindowOpen(app, "Close");
+				end)
+				local win = windowRefs[p4]
+				if win then
+					win.Visible = false
+				end
+			end
 			for i, name in ipairs(RunningApps) do
 				if name == p4 then
 					table.remove(RunningApps, i)
@@ -1133,10 +1685,16 @@ function ZolinModules.AppManager(dependencies)
 			if oldActive == p4 then
 				triggerEvent("onActiveAppChanged", ActiveApp, oldActive)
 			end
+			if ZolinModules.Mode == "Mobile" then
 			local bgPage = MainUI.__ScreenFrame:FindFirstChild("BackgroundPage")
 			if bgPage and bgPage.Visible then
 				AppManager.RefreshBackgroundPage()
 			end
+			elseif ZolinModules.Mode == "Desktop" then
+				-- we will not do this for desktop
+			end
+		else
+			warn("Attempted to minimize non-existent app: " .. tostring(p4))
 		end
 	end
 
@@ -1150,20 +1708,27 @@ function ZolinModules.AppManager(dependencies)
 	end
 
 	function AppManager.ResumeApplication(p5)
-	if not AppManager.GetApplication(p5) then return end
-		local app = MainUI.__ScreenFrame.Applications:FindFirstChild(p5)
+	if not AppManager.GetApplication(p5) then print("Attempted to resume non-existent app: " .. tostring(p5)) return false end
+		local app = nil
+		if ZolinModules.Mode == "Mobile" then
+		app = MainUI.__ScreenFrame.Applications:FindFirstChild(p5)
+		elseif ZolinModules.	Mode == "Desktop" then
+			app = MainUI.__ZolinDesktop.__ScreenFrame.Applications:FindFirstChild(p5)
+		end
 		if app then
-			app.Visible = true
-
 			local isSystem = AppManager.IsSystemApp(p5)
+			if ZolinModules.Mode == "Mobile" then
+			app.Visible = true
 			if not isSystem then
 				MainUI.__ScreenFrame.HomeScreenScroller.Visible = false
 			end
-
 			spawn(function()
 				AnimationManager.AnimateWindow(app, "Open")
 			end);
-
+			elseif ZolinModules.Mode == "Desktop" then
+				AnimationManager.AnimateDesktopWindowOpen(app, "Open")
+				ZolinModules.ZIndexManagerInstance.BringToFront(app)
+			end
 			for i, name in ipairs(BackgroundApps) do
 				if name == p5 then
 					table.remove(BackgroundApps, i)
@@ -1178,13 +1743,16 @@ function ZolinModules.AppManager(dependencies)
 			-- Trigger events
 			triggerEvent("onAppResumed", p5)
 			triggerEvent("onActiveAppChanged", p5, oldActive)
-
+			if ZolinModules.Mode == "Mobile" then
 			local bgPage = MainUI.__ScreenFrame:FindFirstChild("BackgroundPage")
 			if bgPage and bgPage.Visible then
 				bgPage.Visible = false
 				if not isSystem then
 					MainUI.__ScreenFrame.HomeScreenScroller.Visible = true
 				end
+			end
+			elseif ZolinModules.Mode == "Desktop" then
+				-- we will not do this for desktop
 			end
 		end
 	end
@@ -1541,9 +2109,616 @@ function ZolinModules.AppManager(dependencies)
 end
 
 -- ============================================
+-- TASKBAR MANAGER (Desktop only)
+-- ============================================
+function ZolinModules.TaskbarManager()
+	-- If an instance already exists, return it (singleton pattern)
+	if ZolinModules._taskbarManagerInstance then
+		return ZolinModules._taskbarManagerInstance
+	end
+
+	local TaskbarManager = {}
+	local taskbarButtons = {}
+	local isInitialized = false
+
+	function TaskbarManager.Init()
+		if isInitialized then
+			print("TaskbarManager already initialized, skipping.")
+			return
+		end
+
+		local MainUI = getMainUI()
+		if not MainUI then
+			warn("TaskbarManager: MainUI not found")
+			return
+		end
+
+		if ZolinModules.Mode ~= "Desktop" then
+			print("TaskbarManager: Skipping (not Desktop mode)")
+			return
+		end
+
+		local desktopFolder = MainUI:FindFirstChild("__ZolinDesktop")
+		if not desktopFolder then
+			warn("TaskbarManager: __ZolinDesktop not found")
+			return
+		end
+
+		local desktopScreenFrame = desktopFolder:FindFirstChild("__ScreenFrame")
+		if not desktopScreenFrame then
+			warn("TaskbarManager: desktop __ScreenFrame not found")
+			return
+		end
+
+		local taskbarFrame = desktopScreenFrame:FindFirstChild("Taskbar")
+		if not taskbarFrame then
+			warn("TaskbarManager: TaskbarFrame not found")
+			return
+		end
+
+		local taskbarApps = taskbarFrame:FindFirstChild("TaskbarApps")
+		if not taskbarApps then
+			warn("TaskbarManager: TaskbarApps not found")
+			return
+		end
+
+		local replicatedIcons = MainUI:FindFirstChild("ReplicatedIcons")
+		if not replicatedIcons then
+			warn("TaskbarManager: ReplicatedIcons not found")
+			return
+		end
+
+		local buttonTemplate = replicatedIcons:FindFirstChild("AppButtonTemplate")
+		if not buttonTemplate then
+			warn("TaskbarManager: AppButtonTemplate not found")
+			return
+		end
+
+		-- Clean up any existing buttons (fresh start)
+		for _, child in ipairs(taskbarApps:GetChildren()) do
+			if child:IsA("TextButton") then
+				child:Destroy()
+			end
+		end
+		taskbarButtons = {}
+
+		-- Get AppManager and AppLoader from modules
+		local modules = ZolinModules.GetAll_Desktop()
+		local AppManager = modules.AppManager
+		local AppLoader = modules.AppLoader
+
+		if not AppManager then
+			warn("TaskbarManager: AppManager not available")
+			return
+		end
+
+		-- Function to update highlights
+		local function updateTaskbarHighlights(activeApp)
+			for appName, btn in pairs(taskbarButtons) do
+				-- Active/inactive background color
+				if appName == activeApp then
+					btn.BackgroundColor3 = Color3.fromRGB(30, 102, 158)  -- active color
+				else
+					btn.BackgroundColor3 = Color3.fromRGB(20, 67, 104)  -- inactive color
+				end
+
+				-- Highlight frames (if they exist)
+				local highlight = btn:FindFirstChild("HighlightFrame")
+				local highlightActive = btn:FindFirstChild("HighlightFrameActive")
+
+				if highlight then
+					local isOpen = false
+					local RunningApps = AppManager.GetRunningApps and AppManager.GetRunningApps() or {}
+					local BackgroundApps = AppManager.GetBackgroundApps and AppManager.GetBackgroundApps() or {}
+
+					for _, name in ipairs(RunningApps) do
+						if name == appName then isOpen = true; break end
+					end
+					if not isOpen then
+						for _, name in ipairs(BackgroundApps) do
+							if name == appName then isOpen = true; break end
+						end
+					end
+					highlight.Visible = isOpen
+				end
+
+				if highlightActive then
+					highlightActive.Visible = (appName == activeApp)
+				end
+			end
+		end
+		
+		local StartMenuButton = taskbarFrame:FindFirstChild("StartMenuButton");
+		if StartMenuButton then
+			ZolinModules.StartMenuManager().Init();
+			StartMenuButton.MouseButton1Click:Connect(function()
+				ZolinModules.StartMenuManager().Toggle();
+				print("StartMenuButton clicked")
+			end)
+		end
+		
+		-- Subscribe to app events (using the AppManager's Subscribe method)
+		AppManager.Subscribe("onAppLaunched", function(appName)
+			if ZolinModules.Mode ~= "Desktop" then return end
+			if taskbarButtons[appName] then return end -- already exists
+
+			local btn = buttonTemplate:Clone()
+			btn.Name = appName
+			btn.Parent = taskbarApps
+			btn.Visible = true
+			btn.Text = ""
+
+			-- Set icon
+			local icon = btn:FindFirstChild("AppIcon")
+			if icon and icon:IsA("ImageLabel") then
+				local meta = AppLoader.GetAppMetadata(appName)
+				if meta and meta.icon then
+					icon.Image = meta.icon
+				end
+			end
+
+			taskbarButtons[appName] = btn
+
+			-- Left-click: toggle minimize/restore
+			btn.MouseButton1Click:Connect(function()
+				local win = AppManager._windowRefs and AppManager._windowRefs[appName]
+				if win then
+					if win.Visible then
+						AppManager.ExitApplication(appName)
+					else
+						AppManager.ResumeApplication(appName)
+					end
+				end
+			end)
+
+			-- Right-click: fire context menu event
+			local contextEvent = MainUI:FindFirstChild("__Zolin") and
+				MainUI.__Zolin:FindFirstChild("Remotes") and
+				MainUI.__Zolin.Remotes:FindFirstChild("ContextMenuEvent")
+			if contextEvent then
+				btn.MouseButton2Click:Connect(function()
+					contextEvent:Fire("taskbar", appName, {})
+				end)
+			end
+
+			updateTaskbarHighlights(AppManager.GetActiveApp())
+		end)
+
+		AppManager.Subscribe("onAppClosed", function(appName)
+			if ZolinModules.Mode ~= "Desktop" then return end
+			local btn = taskbarButtons[appName]
+			if btn then
+				btn:Destroy()
+				taskbarButtons[appName] = nil
+			end
+			updateTaskbarHighlights(AppManager.GetActiveApp())
+		end)
+
+		AppManager.Subscribe("onAppBackgrounded", function(appName)
+			if ZolinModules.Mode ~= "Desktop" then return end
+			updateTaskbarHighlights(AppManager.GetActiveApp())
+		end)
+
+		AppManager.Subscribe("onAppResumed", function(appName)
+			if ZolinModules.Mode ~= "Desktop" then return end
+			updateTaskbarHighlights(AppManager.GetActiveApp())
+		end)
+
+		AppManager.Subscribe("onActiveAppChanged", function(newActive, oldActive)
+			if ZolinModules.Mode ~= "Desktop" then return end
+			updateTaskbarHighlights(newActive)
+		end)
+
+		AppManager.Subscribe("onAppsCleared", function()
+			for appName, btn in pairs(taskbarButtons) do
+				btn:Destroy()
+			end
+			taskbarButtons = {}
+		end)
+
+		isInitialized = true
+		print("TaskbarManager initialized successfully!")
+	end
+	
+	
+	-- Store instance globally
+	ZolinModules._taskbarManagerInstance = TaskbarManager
+	return TaskbarManager
+end
+
+function ZolinModules.StartMenuManager()
+	if ZolinModules._startMenuManagerInstance then
+		return ZolinModules._startMenuManagerInstance
+	end
+
+	local StartMenuManager = {}
+	local isInitialized = false
+	local startMenuFrame, appListFrame, powerListFrame
+	local isOpen = false
+	local overlay = nil
+
+	function StartMenuManager.Toggle()
+		if not isInitialized then print("StartMenuManager: Not initialized") return end
+		if isOpen then
+			StartMenuManager.Close()
+		else
+			StartMenuManager.Open()
+		end
+	end
+
+	function StartMenuManager.Open()
+		if not isInitialized then return end
+		startMenuFrame.Visible = true
+		overlay.Visible = true
+		isOpen = true
+		-- Bring to front
+	end
+
+	function StartMenuManager.Close()
+		if not isInitialized then return end
+		startMenuFrame.Visible = false
+		overlay.Visible = false
+		isOpen = false
+	end
+
+	function StartMenuManager.IsOpen()
+		return isOpen
+	end
+
+	function StartMenuManager.Init()
+		if isInitialized then return end
+
+		local MainUI = getMainUI()
+		if not MainUI then
+			warn("StartMenuManager: MainUI not found")
+			return
+		end
+
+		if ZolinModules.Mode ~= "Desktop" then
+			print("StartMenuManager: Skipping (not Desktop mode)")
+			return
+		end
+
+		local desktopFolder = MainUI:FindFirstChild("__ZolinDesktop")
+		if not desktopFolder then
+			warn("StartMenuManager: __ZolinDesktop not found")
+			return
+		end
+		local desktopScreenFrame = desktopFolder:FindFirstChild("__ScreenFrame")
+		if not desktopScreenFrame then
+			warn("StartMenuManager: desktop __ScreenFrame not found")
+			return
+		end
+
+		-- Find StartMenu frame
+		startMenuFrame = desktopScreenFrame:FindFirstChild("StartMenu")
+		if not startMenuFrame then
+			warn("StartMenuManager: StartMenu frame not found")
+			return
+		end
+
+		appListFrame = startMenuFrame:FindFirstChild("AppsList")
+		if not appListFrame then
+			warn("StartMenuManager: AppList not found")
+			return
+		end
+
+		powerListFrame = startMenuFrame:FindFirstChild("PowerList")
+		-- PowerList can be nil, that's fine.
+
+		-- Create overlay for closing on outside click
+		overlay = Instance.new("Frame")
+		overlay.Name = "StartMenuOverlay"
+		overlay.Size = UDim2.new(1, 0, 1, 0)
+		overlay.BackgroundTransparency = 1
+		overlay.Visible = false
+		overlay.ZIndex = 998  -- behind menu
+		overlay.Parent = desktopScreenFrame
+		overlay.InputBegan:Connect(function(input)
+			if input.UserInputType == Enum.UserInputType.MouseButton1 or
+				input.UserInputType == Enum.UserInputType.MouseButton2 then
+				if startMenuFrame.Visible then
+					local mousePos = game:GetService("UserInputService"):GetMouseLocation()
+					local absPos = startMenuFrame.AbsolutePosition
+					local absSize = startMenuFrame.AbsoluteSize
+					local inside = mousePos.X >= absPos.X and mousePos.X <= absPos.X + absSize.X and
+						mousePos.Y >= absPos.Y and mousePos.Y <= absPos.Y + absSize.Y
+					if not inside then
+						StartMenuManager.Close()
+					end
+				end
+			end
+		end)
+
+		-- Get modules
+		local modules = ZolinModules.GetAll_Desktop()
+		local AppManager = modules.AppManager
+		local AppLoader = modules.AppLoader
+
+		if not AppManager or not AppLoader then
+			warn("StartMenuManager: AppManager or AppLoader not available")
+			return
+		end
+
+		-- Populate app list
+		local apps = AppLoader.GetAllApps()
+		-- Clear existing children (keep layout)
+		for _, child in ipairs(appListFrame:GetChildren()) do
+			child:Destroy()
+		end
+
+		-- Ensure UIListLayout exists
+		local layout = appListFrame:FindFirstChildOfClass("UIListLayout")
+		if not layout then
+			layout = Instance.new("UIListLayout")
+			layout.FillDirection = Enum.FillDirection.Vertical
+			layout.HorizontalAlignment = Enum.HorizontalAlignment.Left
+			layout.VerticalAlignment = Enum.VerticalAlignment.Top
+			layout.Padding = UDim.new(0, 4)
+			layout.SortOrder = Enum.SortOrder.LayoutOrder
+			layout.Parent = appListFrame
+		end
+
+		-- For each app, create an entry
+		for order, appData in ipairs(apps) do
+			if not AppManager.IsSystemApp(appData.name) then
+				local entry = Instance.new("Frame")
+				entry.Size = UDim2.new(1, 0, 0, 40)
+				entry.BackgroundColor3 = Color3.fromRGB(45, 45, 55)
+				entry.BackgroundTransparency = 1
+				entry.BorderSizePixel = 0
+				entry.LayoutOrder = order
+				entry.ZIndex = startMenuFrame.ZIndex + 1;
+				entry.Parent = appListFrame
+				
+				local entryButton = Instance.new("TextButton")
+				entryButton.Size = UDim2.new(1, 0, 1, 0)
+				entryButton.BackgroundTransparency = 1
+				entryButton.Text = ""
+				entryButton.ZIndex = entry.ZIndex + 1;
+				entryButton.Parent = entry
+
+				-- Hover effect
+				entry.MouseEnter:Connect(function()
+					entry.BackgroundTransparency = 0.7
+				end)
+				entry.MouseLeave:Connect(function()
+					entry.BackgroundTransparency = 1
+				end)
+
+				-- App icon
+				local icon = Instance.new("ImageLabel")
+				icon.Size = UDim2.new(0, 32, 0, 32)
+				icon.Position = UDim2.new(0, 5, 0.5, -16)
+				icon.BackgroundTransparency = 1
+				icon.Image = appData.metadata.icon or "rbxassetid://12905435514"
+				icon.ScaleType = Enum.ScaleType.Fit
+				icon.ZIndex = entry.ZIndex + 1;
+				icon.Parent = entry
+
+				-- App name
+				local nameLabel = Instance.new("TextLabel")
+				nameLabel.Size = UDim2.new(1, -50, 1, 0)
+				nameLabel.Position = UDim2.new(0, 45, 0, 0)
+				nameLabel.BackgroundTransparency = 1
+				nameLabel.Text = appData.name
+				nameLabel.TextColor3 = Color3.new(1, 1, 1)
+				nameLabel.TextXAlignment = Enum.TextXAlignment.Left
+				nameLabel.TextYAlignment = Enum.TextYAlignment.Center
+				nameLabel.Font = Enum.Font.Gotham
+				nameLabel.TextSize = 14
+				nameLabel.ZIndex = entry.ZIndex + 1;
+				nameLabel.Parent = entry
+
+				-- Left click: launch app
+				local function launch()
+					if AppManager then
+						-- Check if already running, resume or launch
+						if AppManager.GetApplication(appData.name) then
+							AppManager.ResumeApplication(appData.name)
+						else
+							AppManager.LaunchApplication(appData.name)
+						end
+					end
+					StartMenuManager.Close()
+				end
+
+				entryButton.MouseButton1Click:Connect(launch)
+
+				-- Right click: context menu
+				entryButton.MouseButton2Click:Connect(function()
+					local ContextEvent = MainUI:FindFirstChild("__Zolin") and
+						MainUI.__Zolin:FindFirstChild("Remotes") and
+						MainUI.__Zolin.Remotes:FindFirstChild("ContextMenuEvent")
+					if ContextEvent then
+						ContextEvent:Fire("startmenu", appData.name, entry)
+					end
+				end)
+			end
+		end
+
+		-- Initially hidden
+		startMenuFrame.Visible = false
+
+		isInitialized = true
+		print("StartMenuManager initialized successfully!")
+	end
+
+	ZolinModules._startMenuManagerInstance = StartMenuManager
+	return StartMenuManager
+end
+
+-- ============================================
+-- ZINDEX MANAGER (for desktop windows & UI layers)
+-- ============================================
+function ZolinModules.ZIndexManager()
+	local ZIndexManager = {}
+	local registered = {}
+	local nextZ = 1000
+
+	function ZIndexManager.Register(instance, baseZ)
+		if registered[instance] then return false end
+		baseZ = baseZ or nextZ
+		registered[instance] = { baseZ = baseZ, currentZ = baseZ }
+		instance.ZIndex = baseZ
+		if baseZ + 1 > nextZ then nextZ = baseZ + 1 end
+		print("[ZIndexManager] Registered:", instance.Name, "with ZIndex:", baseZ)
+		return true
+	end
+
+	local function shiftHierarchy(instance, delta)
+		if delta == 0 then return end
+		instance.ZIndex = instance.ZIndex + delta
+		for _, child in ipairs(instance:GetChildren()) do
+			if child:IsA("GuiObject") then
+				if child:IsA("Frame") or child:IsA("ScrollingFrame") or child:IsA("TextButton") or child:IsA("ImageButton") or child:IsA("TextBox") or child:IsA("ImageLabel") or child:IsA("TextLabel") then
+					shiftHierarchy(child, delta)
+				end
+			end
+		end
+	end
+
+function ZIndexManager.BringToFront(instance)
+    local data = registered[instance]
+    if not data then
+        warn("[ZIndexManager] Instance not registered:", instance and instance.Name)
+        return false
+    end
+
+    -- Count visible windows and find maxZ
+    local visibleCount = 0
+    local maxZ = 0
+    for inst, d in pairs(registered) do
+        if inst.Visible then
+            visibleCount = visibleCount + 1
+            if d.currentZ > maxZ then maxZ = d.currentZ end
+        end
+    end
+
+    -- If only one visible window, no need to change
+    if visibleCount <= 1 then
+        return true
+    end
+
+    -- Check if this instance is uniquely the highest
+    local countAtMax = 0
+    local isThisAtMax = false
+    for inst, d in pairs(registered) do
+        if inst.Visible and d.currentZ == maxZ then
+            countAtMax = countAtMax + 1
+            if inst == instance then
+                isThisAtMax = true
+            end
+        end
+    end
+
+    -- If this instance is the only one at maxZ, it's already highest, skip
+    if countAtMax == 1 and isThisAtMax then
+        print("[ZIndexManager] Already highest (unique), skipping:", instance.Name)
+        return true
+    end
+
+    -- Set to maxZ + 1 (now it becomes the new highest)
+    local newZ = maxZ + 1
+    local delta = newZ - data.currentZ
+
+    data.currentZ = newZ
+    instance.ZIndex = newZ
+
+    -- Shift children
+    if delta ~= 0 then
+        for _, child in ipairs(instance:GetChildren()) do
+			if child:IsA("GuiObject") then
+				if child:IsA("Frame") or child:IsA("ScrollingFrame") or child:IsA("TextButton") or child:IsA("ImageButton") or child:IsA("TextBox") or child:IsA("ImageLabel") or child:IsA("TextLabel") then
+				shiftHierarchy(child, delta)
+				end
+            end
+        end
+    end
+
+    if newZ + 1 > nextZ then nextZ = newZ + 1 end
+    print("[ZIndexManager] Brought to front:", instance.Name, "new ZIndex:", newZ)
+    return true
+end
+	
+	function ZIndexManager.Reset(instance)
+		local data = registered[instance]
+		if not data then return false end
+		data.currentZ = data.baseZ
+		instance.ZIndex = data.baseZ
+		return true
+	end
+
+	function ZIndexManager.ResetAll()
+		for instance, data in pairs(registered) do
+			data.currentZ = data.baseZ
+			instance.ZIndex = data.baseZ
+		end
+		local maxBase = 0
+		for _, data in pairs(registered) do
+			if data.baseZ > maxBase then maxBase = data.baseZ end
+		end
+		nextZ = maxBase + 1
+	end
+
+	function ZIndexManager.ShiftAll(delta)
+		if delta == 0 then return true end
+		local maxZ = 0
+		for instance, data in pairs(registered) do
+			local newZ = data.currentZ + delta
+			data.currentZ = newZ
+			instance.ZIndex = newZ
+			if newZ > maxZ then maxZ = newZ end
+		end
+		nextZ = maxZ + 1
+		return true
+	end
+
+	function ZIndexManager.Unregister(instance)
+		if registered[instance] then
+			registered[instance] = nil
+			print("[ZIndexManager] Unregistered:", instance.Name)
+			return true
+		end
+		return false
+	end
+
+	function ZIndexManager.GetZIndex(instance)
+		local data = registered[instance]
+		return data and data.currentZ or nil
+	end
+
+	function ZIndexManager.GetHighestZ()
+		local maxZ = 0
+		for _, data in pairs(registered) do
+			if data.currentZ > maxZ then maxZ = data.currentZ end
+		end
+		return maxZ
+	end
+
+	function ZIndexManager.GetAllRegistered()
+		local result = {}
+		for instance, data in pairs(registered) do
+			result[instance] = { baseZ = data.baseZ, currentZ = data.currentZ }
+		end
+		return result
+	end
+
+	function ZIndexManager.PeekNextZ()
+		return nextZ
+	end
+
+	return ZIndexManager
+end
+
+-- Create a global instance (so all parts of the code use the same manager)
+ZolinModules.ZIndexManagerInstance = ZolinModules.ZIndexManager()
+
+-- ============================================
 -- VOLUME MANAGER
 -- ============================================
 function ZolinModules.VolumeManager()
+	--if ZolinModules.Mode ~= "Mobile" then return end
 	local VolumeManager = {}
 
 	local UNMUTED_ICON = "rbxassetid://14840403306"
@@ -2487,15 +3662,19 @@ end
 -- ============================================
 function ZolinModules.ClockManager()
 	local ClockModule = {}
+
 	local MainUI = getMainUI()
 	if not MainUI then
 		warn("ClockManager: Could not find ScreenGui ancestor")
 		return ClockModule
 	end
+
+	-- Ensure __Zolin and Runtime exist
 	local zolin = MainUI:FindFirstChild("__Zolin")
 	if not zolin then
-		warn("ClockManager: __Zolin folder not found")
-		return ClockModule
+		zolin = Instance.new("Folder")
+		zolin.Name = "__Zolin"
+		zolin.Parent = MainUI
 	end
 	local Runtime = zolin:FindFirstChild("Runtime")
 	if not Runtime then
@@ -2503,32 +3682,87 @@ function ZolinModules.ClockManager()
 		Runtime.Name = "Runtime"
 		Runtime.Parent = zolin
 	end
+
+	-- Create/Get StringValues
 	local Clock = Runtime:FindFirstChild("Clock") or Instance.new("StringValue", Runtime)
-	Clock.Value = "03:30 AM"
 	Clock.Name = "Clock"
-	local function Update()
-		local t = os.date("*t")
-		local hour12 = t.hour % 12
+	local Uptime = Runtime:FindFirstChild("CurrentUptime") or Instance.new("StringValue", Runtime)
+	Uptime.Name = "CurrentUptime"
+
+	-- Timezone offset (e.g., 3 for GMT+3, can be changed)
+	local timeZoneOffset = 3
+	local startTime = os.time()
+
+	local function formatUptime(seconds)
+		local h = math.floor(seconds / 3600)
+		local m = math.floor((seconds % 3600) / 60)
+		local s = math.floor(seconds % 60)
+		return string.format("%02d:%02d:%02d", h, m, s)
+	end
+
+	local function getFormattedTime()
+		local utc = os.date("!*t")
+		local hour = (utc.hour + timeZoneOffset) % 24
+		local minute = utc.min
+		local second = utc.sec
+		local ampm = hour >= 12 and "PM" or "AM"
+		local hour12 = hour % 12
 		if hour12 == 0 then hour12 = 12 end
-		local ampm = t.hour < 12 and "AM" or "PM"
-		Clock.Value = string.format("%02d:%02d %s", hour12, t.min, ampm)
+
+		if ZolinModules.Mode == "Desktop" then
+			-- Desktop: include seconds
+			return string.format("%02d:%02d:%02d %s", hour12, minute, second, ampm)
+		else
+			-- Mobile: no seconds (original format)
+			return string.format("%02d:%02d %s", hour12, minute, ampm)
+		end
+	end
+
+	local function getFormattedDate()
+		local utc = os.date("!*t")
+		local timestamp = os.time(utc) + (timeZoneOffset * 3600)
+		local localDate = os.date("*t", timestamp)
+		return string.format("%02d/%02d/%04d", localDate.month, localDate.day, localDate.year)
+	end
+
+	local function Update()
+		local timeStr = getFormattedTime()
+		local dateStr = getFormattedDate()
+		local uptimeStr = formatUptime(os.time() - startTime)
+
+		-- Update global Runtime values
+		Clock.Value = timeStr
+		Uptime.Value = uptimeStr
+
+		-- Update global variables
+		ZolinModules.CurrentUptime = uptimeStr
+		ZolinModules.CurrentTime = timeStr
+
+		-- Update UI elements that have the "Clock" or "Date" attribute
 		for _, v in pairs(MainUI:GetDescendants()) do
-			if v:IsA("TextButton") or v:IsA("TextLabel") then
-				if v:GetAttribute("Clock") == true and v.Visible == true then
-					v.Text = Clock.Value
+			if v:IsA("TextLabel") or v:IsA("TextButton") then
+				if v:GetAttribute("Clock") == true and v.Visible then
+					v.Text = timeStr
+				end
+				if ZolinModules.Mode == "Desktop" then
+					if v:GetAttribute("Date") == true and v.Visible then
+						v.Text = dateStr
+					end
 				end
 			end
 		end
 	end
+
 	function ClockModule.Init()
 		Update()
 		task.spawn(function()
 			while true do
-				task.wait(1)
+				task.wait(0.05)
 				Update()
 			end
 		end)
 	end
+
 	return ClockModule
 end
 
@@ -2707,7 +3941,7 @@ function ZolinModules.ZolinLauncher()
 		warn("ZolinLauncher: Could not find ScreenGui")
 		return
 	end
-
+	if ZolinModules.Mode == "Mobile" then
 	local __ScreenFrame = MainUI:FindFirstChild("__ScreenFrame")
 	if not __ScreenFrame then
 		warn("ZolinLauncher: __ScreenFrame not found")
@@ -2718,7 +3952,7 @@ function ZolinModules.ZolinLauncher()
 	local ReplicatedIcons = MainUI:FindFirstChild("ReplicatedIcons")
 	local appIconTemplate = ReplicatedIcons and ReplicatedIcons:FindFirstChild("AppIconTemplate")
 
-	local modules = ZolinModules.GetAll()
+	local modules = ZolinModules.GetAll();
 	local AppManager = modules.AppManager
 	local AppLoader = modules.AppLoader
 
@@ -2820,6 +4054,143 @@ function ZolinModules.ZolinLauncher()
 	end
 	populateHomeScreen()
 	print("ZolinLauncher: Home screen ready!")
+	elseif ZolinModules.Mode == "Desktop" then
+		local __ZolinDesktop = MainUI:FindFirstChild("__ZolinDesktop")
+		if not __ZolinDesktop then
+			warn("ZolinLauncher: __ZolinDesktop not found")
+			return
+		end
+		local __ScreenFrame = __ZolinDesktop:FindFirstChild("__ScreenFrame")
+		if not __ScreenFrame then
+			warn("ZolinLauncher: __ScreenFrame not found")
+			return
+		end
+
+		local HomeScreenScroller = __ScreenFrame:FindFirstChild("HomeScreenScrollerV2")
+		local ReplicatedIcons = MainUI:FindFirstChild("ReplicatedIcons")
+		local appIconTemplate = ReplicatedIcons and ReplicatedIcons:FindFirstChild("AppIconTemplateV2")
+
+		local modules = ZolinModules.GetAll_Desktop()
+		local AppManager = modules.AppManager
+		local AppLoader = modules.AppLoader
+
+		-- Ensure we have a remote for right‑click events
+		local __Zolin = MainUI:FindFirstChild("__Zolin")
+		if not __Zolin then
+			__Zolin = Instance.new("Folder")
+			__Zolin.Name = "__Zolin"
+			__Zolin.Parent = MainUI
+		end
+		local Remotes = __Zolin:FindFirstChild("Remotes")
+		if not Remotes then
+			Remotes = Instance.new("Folder")
+			Remotes.Name = "Remotes"
+			Remotes.Parent = __Zolin
+		end
+		local AppRightClick = Remotes:FindFirstChild("ContextMenuEvent")
+
+		-- Store built‑in modules
+		local builtInModules = {
+			Settings = modules.SettingsApp,
+			ZolinInstaller = modules.ZolinInstaller
+		}
+		local openBuiltInModules = {}
+
+		local function populateHomeScreen()
+			if not AppLoader then
+				warn("AppLoader not available")
+				return
+			end
+
+			if not HomeScreenScroller then
+				warn("HomeScreenScrollerV2 not found")
+				return
+			end
+
+			-- Clear existing icons
+			for _, child in ipairs(HomeScreenScroller:GetChildren()) do
+				if child ~= appIconTemplate and child:IsA("ImageButton") then
+					child:Destroy()
+				end
+			end
+
+			local apps = AppLoader.GetAllApps()
+			for _, appData in ipairs(apps) do
+				if AppManager and AppManager.IsSystemApp and AppManager.IsSystemApp(appData.name) then
+					-- Skip system apps
+				else
+					if not appIconTemplate then
+						warn("AppIconTemplateV2 not found")
+						return
+					end
+
+					local icon = appIconTemplate:Clone()
+					icon.Name = appData.name
+					icon.Visible = true
+					icon.Parent = HomeScreenScroller
+
+					local iconImage = icon:FindFirstChild("IconImage") or icon
+					if iconImage:IsA("ImageLabel") or iconImage:IsA("ImageButton") then
+						iconImage.Image = appData.metadata.icon
+					end
+
+					local label = icon:FindFirstChild("AppName")
+					if label and label:IsA("TextLabel") then
+						label.Text = appData.name
+					end
+
+					-- ----- Double‑click detection -----
+					local lastClickTime = 0
+					local doubleClickThreshold = 0.3  -- seconds
+
+					icon.MouseButton1Click:Connect(function()
+						local now = tick()
+						if now - lastClickTime <= doubleClickThreshold then
+							-- Double‑click: launch or resume the app
+							if AppManager then
+								local builtInModule = builtInModules[appData.name]
+								if builtInModule then
+									local moduleUI = openBuiltInModules[appData.name]
+									if moduleUI and moduleUI.Visible then
+										moduleUI.Visible = false
+										openBuiltInModules[appData.name] = nil
+									else
+										local appInstance = __ScreenFrame.Applications:FindFirstChild(appData.name)
+										if not appInstance and not AppManager.GetApplication(appData.name) then
+											AppManager.LaunchApplication(appData.name)
+										elseif not AppManager.GetActiveApp() then
+											openBuiltInModules[appData.name] = appInstance
+											AppManager.ResumeApplication(appData.name)
+										end
+									end
+								else
+									if not AppManager.GetApplication(appData.name) then
+										AppManager.LaunchApplication(appData.name)
+									elseif not AppManager.GetActiveApp() then
+										AppManager.ResumeApplication(appData.name)
+									end
+								end
+							end
+							lastClickTime = 0  -- reset to avoid triple‑click
+						else
+							-- Single‑click: just record the time
+							lastClickTime = now
+						end
+					end)
+
+					-- ----- Right‑click: fire remote event -----
+					icon.MouseButton2Click:Connect(function()
+						if AppRightClick then
+							AppRightClick:Fire("app", appData.name, {})
+							print("ContextMenu")
+						end
+					end)
+				end
+			end
+		end
+		populateHomeScreen()
+		print("ZolinLauncher: Home screen ready!")
+	end
 end
 -- ============================================
 -- ZOLIN LISTENER
@@ -2846,10 +4217,12 @@ function ZolinModules.ZolinListener()
 	local moreOptionsVolStyleEvent = Remotes:FindFirstChild("moreOptionsVolStyle")
 	local CloseAllAppsEvent = Remotes:FindFirstChild("CloseAllApps")
 	local updateZolinLauncherEvent = Remotes:FindFirstChild("updateZolinLauncher")
+	local contactDirHWupdateEvent = Remotes:FindFirstChild("contactDirHWupdateEvent")
 	
 	local modules = ZolinModules.GetAll()
 	local AppManager = modules.AppManager
 	local VolumeStyleOptions = modules.VolumeStyleOptions
+	local DirectHW = modules.DirectHW
 
 	if moreOptionsVolStyleEvent then
 		moreOptionsVolStyleEvent.Event:Connect(function(p1, p2)
@@ -2886,7 +4259,419 @@ function ZolinModules.ZolinListener()
 		end)
 		print("ZolinListener: updateZolinLauncherEvent connected")
 	end
+	
+	-- ===== contactDirHWupdateEvent =====
+	if contactDirHWupdateEvent and DirectHW then
+		contactDirHWupdateEvent.Event:Connect(function(...)
+			local args = {...}
+			local eventType = args[1]
+
+			if eventType == "ViewportCreated" then
+				local appName = args[2]
+				local viewportData = args[3]
+				print("[DirectHW Event] Viewport created for:", appName)
+
+			elseif eventType == "ViewportDestroyed" then
+				local appName = args[2]
+				print("[DirectHW Event] Viewport destroyed for:", appName)
+
+			elseif eventType == "ModelLoaded" then
+				local appName = args[2]
+				local assetId = args[3]
+				print("[DirectHW Event] Model loaded in", appName, ":", assetId)
+
+			elseif eventType == "CameraUpdated" then
+				local appName = args[2]
+				local cframe = args[3]
+				local fov = args[4]
+				print("[DirectHW Event] Camera updated for:", appName)
+
+			elseif eventType == "RequestViewportInfo" then
+				-- App is asking for list of active viewports
+				local activeViewports = DirectHW.GetActiveViewports()
+				local viewportNames = {}
+				for _, vp in ipairs(activeViewports) do
+					table.insert(viewportNames, vp.appName)
+				end
+				-- Fire back with the info
+				contactDirHWupdateEvent:Fire("ViewportInfoResponse", viewportNames)
+
+			elseif eventType == "SyncAllCameras" then
+				-- Example: sync all cameras to a specific position
+				local targetCFrame = args[2]
+				if targetCFrame then
+					for _, vp in ipairs(DirectHW.GetActiveViewports()) do
+						DirectHW.SetCamera(vp, targetCFrame)
+					end
+				end
+
+			elseif eventType == "PauseAllAnimations" then
+				-- Example: pause all viewport animations
+				for _, vp in ipairs(DirectHW.GetActiveViewports()) do
+					for _, conn in ipairs(vp.animations) do
+						-- We don't have a pause method, but we could add one
+						-- For now, just disconnect them
+						conn:Disconnect()
+					end
+					vp.animations = {}
+				end
+
+			elseif eventType == "DestroyAllViewports" then
+				-- Emergency: destroy all viewports
+				local allViewports = DirectHW.GetActiveViewports()
+				for i = #allViewports, 1, -1 do
+					DirectHW.Destroy(allViewports[i])
+				end
+				print("[DirectHW Event] All viewports destroyed")
+
+			else
+				-- Custom event – forward it if needed
+				print("[DirectHW Event] Custom event:", eventType, unpack(args, 2))
+			end
+		end)
+		print("ZolinListener: contactDirHWupdateEvent connected")
+	end
 	print("ZolinListener: Ready!")
+end
+
+-- ============================================
+-- CONTEXT MENU MANAGER (Desktop only) - SINGLETON
+-- ============================================
+function ZolinModules.ContextMenuManager()
+	if ZolinModules._contextMenuManagerInstance then
+		return ZolinModules._contextMenuManagerInstance
+	end
+
+	local ContextMenuManager = {}
+	local isInitialized = false
+	local overlay, menuFrame
+	local isOpen = false
+
+	-- Helper to create a menu item
+	local function createMenuItem(label, callback, iconId, isSeparator, order)
+		if isSeparator then
+			local sep = Instance.new("Frame")
+			sep.Size = UDim2.new(1, 0, 0, 1)
+			sep.BackgroundColor3 = Color3.fromRGB(60, 60, 70)
+			sep.BackgroundTransparency = 0
+			sep.BorderSizePixel = 0
+			sep.LayoutOrder = order
+			sep.Parent = menuFrame
+			return sep
+		end
+
+		local btn = Instance.new("TextButton")
+		btn.Size = UDim2.new(1, 0, 0, 30)
+		btn.BackgroundColor3 = Color3.fromRGB(35, 35, 45)
+		btn.BackgroundTransparency = 0
+		btn.BorderSizePixel = 0
+		btn.Text = label or ""
+		btn.TextColor3 = Color3.new(1, 1, 1)
+		btn.Font = Enum.Font.Gotham
+		btn.TextSize = 14
+		btn.TextXAlignment = Enum.TextXAlignment.Left
+		btn.AutoButtonColor = false
+		btn.LayoutOrder = order
+		btn.ZIndex = 1000
+		btn.Parent = menuFrame
+
+		if iconId then
+			local icon = Instance.new("ImageLabel")
+			icon.Size = UDim2.new(0, 20, 0, 20)
+			icon.Position = UDim2.new(0, 5, 0.5, -10)
+			icon.BackgroundTransparency = 1
+			icon.Image = iconId
+			icon.ScaleType = Enum.ScaleType.Fit
+			icon.ZIndex = 1001
+			icon.Parent = btn
+			btn.TextXAlignment = Enum.TextXAlignment.Left
+			btn.Padding = UDim.new(0, 30)
+		end
+
+		btn.MouseEnter:Connect(function()
+			btn.BackgroundColor3 = Color3.fromRGB(50, 50, 65)
+		end)
+		btn.MouseLeave:Connect(function()
+			btn.BackgroundColor3 = Color3.fromRGB(35, 35, 45)
+		end)
+
+		if callback then
+			btn.MouseButton1Click:Connect(function()
+				local success, err = pcall(callback)
+				if not success then
+					warn("Context menu callback error:", err)
+				end
+				ContextMenuManager.Close()
+			end)
+		end
+
+		return btn
+	end
+
+	-- Build menu from items table
+	local function buildMenu(items)
+		for _, child in ipairs(menuFrame:GetChildren()) do
+			child:Destroy()
+		end
+
+		for order, item in ipairs(items) do
+			if item.isSeparator then
+				createMenuItem(nil, nil, nil, true, order)
+			else
+				createMenuItem(item.label, item.callback, item.icon, false, order)
+			end
+		end
+
+		local totalHeight = 0
+		for _, child in ipairs(menuFrame:GetChildren()) do
+			if child:IsA("TextButton") then
+				totalHeight = totalHeight + 30
+			elseif child:IsA("Frame") then
+				totalHeight = totalHeight + 1
+			end
+		end
+		local NewUIListLayout = Instance.new("UIListLayout");
+		NewUIListLayout.Parent = menuFrame;
+		NewUIListLayout.SortOrder = Enum.SortOrder.LayoutOrder;
+		NewUIListLayout.FillDirection = Enum.FillDirection.Vertical;
+		
+		local newUIStroke = Instance.new("UIStroke");
+		newUIStroke.Parent = menuFrame;
+		newUIStroke.Color = Color3.fromRGB(255, 255, 255);
+		newUIStroke.Thickness = 1.5;
+		newUIStroke.Transparency = 0.6;
+		
+		-- Padding from UIListLayout (2 per gap) + extra margins (top/bottom)
+		local gapPadding = math.max(0, 2 * (#items - 1))
+		local extraPadding = 4
+		totalHeight = totalHeight + gapPadding + extraPadding
+
+		menuFrame.Size = UDim2.new(0, 220, 0, totalHeight)
+	end
+
+	function ContextMenuManager.Show(position, items)
+		if not isInitialized then
+			warn("ContextMenuManager not initialized")
+			return
+		end
+		if not items or #items == 0 then return end
+
+		buildMenu(items)
+
+		local ViewportSize = game:GetService("Workspace").CurrentCamera.ViewportSize
+		local menuWidth = 220
+		local offsetX = 10
+		local offsetY = 10
+		local posX = math.max(10, math.min(position.X + offsetX, ViewportSize.X - menuWidth - 10))
+		local posY = math.max(10, math.min(position.Y + offsetY, ViewportSize.Y - 10))
+
+		menuFrame.Position = UDim2.new(0, posX, 0, posY)
+		menuFrame.Visible = true
+		overlay.Visible = true
+		isOpen = true
+
+		task.wait()
+		local menuHeight = menuFrame.AbsoluteSize.Y
+		local maxY = ViewportSize.Y - menuHeight - 10
+		if posY > maxY then
+			posY = math.max(10, position.Y - menuHeight - offsetY)
+			menuFrame.Position = UDim2.new(0, posX, 0, posY)
+		end
+	end
+
+	function ContextMenuManager.Close()
+		if overlay then overlay.Visible = false end
+		if menuFrame then menuFrame.Visible = false end
+		isOpen = false
+	end
+
+	function ContextMenuManager.IsOpen()
+		return isOpen
+	end
+
+	function ContextMenuManager.Init()
+		if isInitialized then return end
+
+		local MainUI = getMainUI()
+		if not MainUI then
+			warn("ContextMenuManager: MainUI not found")
+			return
+		end
+
+		if ZolinModules.Mode ~= "Desktop" then
+			print("ContextMenuManager: Skipping (not Desktop mode)")
+			return
+		end
+
+		local desktopFolder = MainUI:FindFirstChild("__ZolinDesktop")
+		if not desktopFolder then
+			warn("ContextMenuManager: __ZolinDesktop not found")
+			return
+		end
+		local desktopScreenFrame = desktopFolder:FindFirstChild("__ScreenFrame")
+		if not desktopScreenFrame then
+			warn("ContextMenuManager: desktop __ScreenFrame not found")
+			return
+		end
+
+		-- ---- 1. Overlay ----
+		overlay = Instance.new("Frame")
+		overlay.Name = "ContextOverlay"
+		overlay.Size = UDim2.new(1, 0, 1, 0)
+		overlay.BackgroundTransparency = 1
+		overlay.Visible = false
+		overlay.ZIndex = 999
+		overlay.Parent = desktopScreenFrame
+
+		overlay.InputBegan:Connect(function(input)
+			if input.UserInputType == Enum.UserInputType.MouseButton1 or
+				input.UserInputType == Enum.UserInputType.MouseButton2 then
+				if menuFrame and menuFrame.Visible then
+					local mousePos = game:GetService("UserInputService"):GetMouseLocation()
+					local absPos = menuFrame.AbsolutePosition
+					local absSize = menuFrame.AbsoluteSize
+					local inside = mousePos.X >= absPos.X and mousePos.X <= absPos.X + absSize.X and
+						mousePos.Y >= absPos.Y and mousePos.Y <= absPos.Y + absSize.Y
+					if not inside then
+						ContextMenuManager.Close()
+					end
+				else
+					ContextMenuManager.Close()
+				end
+			end
+		end)
+
+		-- ---- 2. Menu Frame (with UIListLayout and UIPadding) ----
+		menuFrame = Instance.new("Frame")
+		menuFrame.Name = "ContextMenu"
+		menuFrame.Size = UDim2.new(0, 220, 0, 0)
+		menuFrame.BackgroundColor3 = Color3.fromRGB(35, 35, 45)
+		menuFrame.BackgroundTransparency = 0
+		menuFrame.BorderSizePixel = 0
+		menuFrame.Visible = false
+		menuFrame.ZIndex = 1000
+		menuFrame.Parent = desktopScreenFrame
+
+		local Corner = Instance.new("UICorner")
+		Corner.CornerRadius = UDim.new(0, 6)
+		Corner.Parent = menuFrame
+
+		local Stroke = Instance.new("UIStroke")
+		Stroke.Color = Color3.fromRGB(60, 60, 70)
+		Stroke.Thickness = 1
+		Stroke.Parent = menuFrame
+
+		-- UIListLayout (directly on menuFrame)
+		local Layout = Instance.new("UIListLayout")
+		Layout.FillDirection = Enum.FillDirection.Vertical
+		Layout.HorizontalAlignment = Enum.HorizontalAlignment.Left
+		Layout.VerticalAlignment = Enum.VerticalAlignment.Top
+		Layout.Padding = UDim.new(0, 2)
+		Layout.SortOrder = Enum.SortOrder.LayoutOrder
+		Layout.Parent = menuFrame
+
+		-- Left/right padding
+		local Padding = Instance.new("UIPadding")
+		Padding.PaddingLeft = UDim.new(0, 10)
+		Padding.PaddingRight = UDim.new(0, 10)
+		Padding.Parent = menuFrame
+
+		-- ---- 3. Desktop right-click ----
+		desktopScreenFrame.InputBegan:Connect(function(input)
+			if input.UserInputType == Enum.UserInputType.MouseButton2 then
+				if not isOpen then
+					local mousePos = game:GetService("UserInputService"):GetMouseLocation()
+					local defaultItems = {
+						{ label = "Refresh", callback = function()
+							print("Refreshing desktop...")
+							local remotes = MainUI.__Zolin and MainUI.__Zolin:FindFirstChild("Remotes")
+							if remotes then
+								local evt = remotes:FindFirstChild("updateZolinLauncher")
+								if evt then evt:Fire() end
+							end
+						end },
+						{ isSeparator = true },
+						{ label = "Personalize", callback = function()
+							local modules = ZolinModules.GetAll_Desktop()
+							if modules.AppManager then
+								modules.AppManager.LaunchApplication("WallpaperSys")
+							end
+						end },
+					}
+					ContextMenuManager.Show(mousePos, defaultItems)
+				end
+			end
+		end)
+
+		-- ---- 4. ContextMenuEvent ----
+		local ContextEvent = MainUI:FindFirstChild("__Zolin") and
+			MainUI.__Zolin:FindFirstChild("Remotes") and
+			MainUI.__Zolin.Remotes:FindFirstChild("ContextMenuEvent")
+		if ContextEvent then
+			ContextEvent.Event:Connect(function(source, appName, extra)
+				if source == "taskbar" then
+					local items = {
+						{ label = "Restore", callback = function()
+							local modules = ZolinModules.GetAll_Desktop()
+							if modules.AppManager then
+								modules.AppManager.ResumeApplication(appName)
+							end
+						end },
+						{ label = "Minimize", callback = function()
+							local modules = ZolinModules.GetAll_Desktop()
+							if modules.AppManager then
+								modules.AppManager.ExitApplication(appName)
+							end
+						end },
+						{ isSeparator = true },
+						{ label = "Close", callback = function()
+							local modules = ZolinModules.GetAll_Desktop()
+							if modules.AppManager then
+								modules.AppManager.CloseApp(appName)
+							end
+						end },
+					}
+					local mousePos = game:GetService("UserInputService"):GetMouseLocation()
+					ContextMenuManager.Show(mousePos, items)
+				elseif source == "app" then
+					local items = {
+						{ label = "Open", callback = function()
+							local modules = ZolinModules.GetAll_Desktop()
+							if modules.AppManager then
+								modules.AppManager.LaunchApplication(appName)
+							end
+						end },
+					}
+					local mousePos = game:GetService("UserInputService"):GetMouseLocation()
+					ContextMenuManager.Show(mousePos, items)
+				elseif source == "startmenu" then
+					local items = {
+						{ label = "Open", callback = function()
+							local modules = ZolinModules.GetAll_Desktop()
+							if modules.AppManager then
+								modules.AppManager.LaunchApplication(appName)
+							end
+						end },
+						{ isSeparator = true },
+						{ label = "Close", callback = function()
+							local modules = ZolinModules.GetAll_Desktop()
+							if modules.AppManager then
+								modules.AppManager.CloseApp(appName)
+							end
+						end },
+					}
+					local mousePos = game:GetService("UserInputService"):GetMouseLocation()
+					ContextMenuManager.Show(mousePos, items)
+				end
+			end)
+		end
+
+		isInitialized = true
+		print("ContextMenuManager initialized successfully!")
+	end
+
+	ZolinModules._contextMenuManagerInstance = ContextMenuManager
+	return ContextMenuManager
 end
 
 -- ============================================
@@ -2902,7 +4687,13 @@ function ZolinModules.SettingsApp()
 
 	function Settings.Init(ui, launchArgs, appFolder)
 		-- Get modules from ZolinModules
-		local modules = ZolinModules.GetAll()
+		local modules = nil;
+		if ZolinModules.Mode == "Mobile" then
+			modules = ZolinModules.GetAll()
+		elseif ZolinModules.Mode == "Desktop" then
+			modules = ZolinModules.GetAll_Desktop()
+		end
+		if not modules then warn("ZolinModules module not found/init") return end
 		local SettingsManager = modules.SettingsManager
 		local VolumeManager = modules.VolumeManager
 		local PlatformManager = modules.PlatformManager
@@ -3350,8 +5141,10 @@ function ZolinModules.SettingsApp()
 						local val = SettingsManager.GetSetting(item.key) or item.min
 						valueLabel.Text = string.format("%d%%", val * 100)
 						if item.key == "Volume" then
+							if not VolumeManager then return end
 							VolumeManager.SetVolume(val)
 						elseif item.key == "NotificationVolume" then
+							if not VolumeManager then return end
 							VolumeManager.SetNotificationVolume(val)
 						end
 					end
@@ -3463,7 +5256,11 @@ function ZolinModules.SettingsApp()
 
 					if item.key == "power" then
 						actionBtn.MouseButton1Click:Connect(function()
+							if PowerMenuManager and PowerMenuManager.Toggle then
 							PowerMenuManager.Toggle()
+							else
+								warn("PowerMenuManager.Toggle() is not a valid function")
+							end
 						end)
 					end
 
@@ -3509,6 +5306,7 @@ function ZolinModules.SettingsApp()
 
 		-- Load initial values from VolumeManager
 		local function loadInitialVolumeValues()
+			if VolumeManager then
 			local mediaVolume = VolumeManager.GetVolume()
 			local notificationVolume = VolumeManager.GetNotificationVolume()
 			local mediaMuted = VolumeManager.GetMuted()
@@ -3517,6 +5315,9 @@ function ZolinModules.SettingsApp()
 			SettingsManager.SetSetting("NotificationVolume", notificationVolume)
 			SettingsManager.SetSetting("Muted_Media", mediaMuted)
 			SettingsManager.SetSetting("Muted_Notifications", notificationsMuted)
+			else
+				warn("VolumeManager module not found. Cannot load initial volume values.")
+			end
 		end
 
 		loadInitialVolumeValues()
@@ -4592,7 +6393,7 @@ function ZolinModules.ZolinInstaller()
 			if success then
 				anythingInstalled = true
 				stringObj:Destroy()
-				print("Auto-installed:", appName)
+				print("installed:", appName .." | SYSTEM PRELOAD INSTALLTION")
 			else
 				warn("Auto-install failed for", appName, result)
 				stringObj:Destroy()
@@ -4640,29 +6441,103 @@ function ZolinModules.GetAll()
 	modules.AppManager = ZolinModules.AppManager(deps)
 	return modules
 end
+-- ============================================
+-- EXPORT ALL MODULES
+-- ============================================
+function ZolinModules.GetAll_Desktop()
+	local modules = {
+		AnimationManager = ZolinModules.AnimationManager(),
+		AppLoader = ZolinModules.AppLoader(),
+		CooldownManager = ZolinModules.CooldownManager(),
+		VolumeManager = ZolinModules.VolumeManager(),
+		VolumeStyleOptions = ZolinModules.VolumeStyleOptions(),
+		--PowerMenuManager = ZolinModules.PowerMenuManager(),
+		ClockManager = ZolinModules.ClockManager(),
+		PlatformManager = ZolinModules.PlatformManager(),
+		SettingsManager = ZolinModules.SettingsManager(),  -- Add this
+		SettingsApp = ZolinModules.SettingsApp(),          -- Add this
+		WallpaperSysApp = ZolinModules.WallpaperSysApp(),  -- Add this
+		ZolinInstaller = ZolinModules.ZolinInstaller(),
+		ZIndexManager = ZolinModules.ZIndexManager(),
+		TaskbarManager = ZolinModules.TaskbarManager(),
+		StartMenuManager = ZolinModules.StartMenuManager(),
+		ContextMenuManager = ZolinModules.ContextMenuManager(),
+	}
+	local deps = {
+		AnimationManager = modules.AnimationManager,
+		AppLoader = modules.AppLoader,
+		CooldownManager = modules.CooldownManager,
+	}
+	--modules.NotificationManager = ZolinModules.NotificationManager(deps)
+	modules.AppManager = ZolinModules.AppManager(deps)
+	return modules
+end
 
 -- ============================================
 -- AUTO-INITIALIZE ALL MODULES
 -- ============================================
 function ZolinModules.Init()
-	local modules = ZolinModules.GetAll()
-	spawn(function()
-		for name, module in pairs(modules) do
-			if module and module.Init then
-				pcall(module.Init)
-				print("Initialized:", name)
-				elseif module and module.Initialize then
-				pcall(module.Initialize)
-				print("Initialized:", name)
+	if ZolinModules.Mode == "Mobile" then
+		local MainUI = getMainUI()
+		if MainUI then
+			-- Show mobile frame, hide desktop frame
+			local mobileFrame = MainUI:FindFirstChild("__ScreenFrame")
+			if mobileFrame then
+				mobileFrame.Visible = true
+			end
+			local desktopFolder = MainUI:FindFirstChild("__ZolinDesktop")
+			if desktopFolder then
+				desktopFolder.Visible = false
 			end
 		end
-		-- ============================================
-		-- START ALL MODULES
-		-- ============================================
-		ZolinModules.ZolinListener();
-		ZolinModules.ZolinLauncher();
-	end)
 
+		-- Initialize modules for mobile
+		local modules = ZolinModules.GetAll()
+		spawn(function()
+			for name, module in pairs(modules) do
+				if module and module.Init then
+					pcall(module.Init)
+					print("Initialized:", name)
+				elseif module and module.Initialize then
+					pcall(module.Initialize)
+					print("Initialized:", name)
+				end
+			end
+			ZolinModules.ZolinListener()
+			ZolinModules.ZolinLauncher()
+		end)
+
+	elseif ZolinModules.Mode == "Desktop" then
+		local MainUI = getMainUI()
+		if MainUI then
+			-- Hide mobile frame, show desktop frame
+			local mobileFrame = MainUI:FindFirstChild("__ScreenFrame")
+			if mobileFrame then
+				mobileFrame.Visible = false
+			end
+			local desktopFolder = MainUI:FindFirstChild("__ZolinDesktop")
+			if desktopFolder then
+				desktopFolder.Visible = true
+			end
+			MainUI.__Zolin.Data.TransitionSpeed.Value = 0.25; -- like windows 10 fade animation
+		end
+
+		-- Initialize modules for desktop
+		local modules = ZolinModules.GetAll_Desktop()
+		spawn(function()
+			for name, module in pairs(modules) do
+				if module and module.Init then
+					pcall(module.Init)
+					print("Initialized:", name)
+				elseif module and module.Initialize then
+					pcall(module.Initialize)
+					print("Initialized:", name)
+				end
+			end
+			ZolinModules.ZolinListener()
+			ZolinModules.ZolinLauncher()
+		end)
+	end
 end
 -- // AUTO INITIALIZE //
 
