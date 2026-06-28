@@ -36,6 +36,8 @@ end
 -- Global references to be used across chunks
 local MainUI = nil
 local __ScreenFrame = nil
+local __ZolinDesktop = nil
+local __DesktopScreenFrame = nil
 local BuildVersion = nil
 
 -- ============================================
@@ -1077,7 +1079,7 @@ local function createChunk10()
 
 	local ZolinVersion = Instance.new("StringValue")
 	ZolinVersion.Name = "ZolinVersion"
-	ZolinVersion.Value = "1.2.1"
+	ZolinVersion.Value = "1.2.2"
 	BuildVersion = ZolinVersion.Value
 	ZolinVersion.Parent = DeviceTree
 
@@ -1102,6 +1104,14 @@ local function createChunk10()
 	local updateZolinLauncher = Instance.new("BindableEvent")
 	updateZolinLauncher.Name = "updateZolinLauncher"
 	updateZolinLauncher.Parent = Remotes
+	
+	local contactDirHWupdateEvent = Instance.new("BindableEvent")
+	contactDirHWupdateEvent.Name = "contactDirHWupdateEvent"
+	contactDirHWupdateEvent.Parent = Remotes
+	
+	local ContextMenuEvent = Instance.new("BindableEvent")
+	ContextMenuEvent.Name = "ContextMenuEvent"
+	ContextMenuEvent.Parent = Remotes
 end
 
 -- ============================================
@@ -2118,6 +2128,554 @@ local function createChunk18()
 	print("Successfully loaded ZolinInstaller | auto installation queue")
 end
 
+-- ============================================
+-- CHUNK 19: __ZolinDesktop -> __ScreenFrame & Basic UI
+-- ============================================
+local function createChunk19()
+	-- UIStroke
+	createUIStroke(__ZolinDesktop, "UIStroke", Color3.fromRGB(33, 33, 33), 14.8, 0.67, 3)
+
+	-- UICorner
+	createUICorner(__ZolinDesktop, "UICorner", UDim.new(0, 8))
+
+	-- UIScale
+	createUIScale(__ZolinDesktop, "UIScale", 1)
+
+	-- Applications Folder
+	local Applications = Instance.new("Folder")
+	Applications.Name = "Applications"
+	Applications.Parent = __DesktopScreenFrame
+
+	-- Wallpaper
+	local Wallpaper = Instance.new("ImageLabel")
+	Wallpaper.Name = "Wallpaper"
+	Wallpaper.AnchorPoint = Vector2.new(0.5, 0.5)
+	Wallpaper.Position = UDim2.new(0.5, 0, 0.5, 0)
+	Wallpaper.Size = UDim2.new(1, 0, 1, 0)
+	Wallpaper.BackgroundTransparency = 0
+	Wallpaper.Image = "rbxassetid://2387794684"
+	Wallpaper.ScaleType = Enum.ScaleType.Stretch
+	Wallpaper.ZIndex = 2
+	Wallpaper.ClipsDescendants = false
+	Wallpaper.Parent = __DesktopScreenFrame
+	Wallpaper.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+end
+
+-- ============================================
+-- CHUNK 20: __ZolinDesktop -> __ScreenFrame -> HomeScreenScroller
+-- ============================================
+local function createChunk20()
+	local HomeScreenScroller = Instance.new("ScrollingFrame")
+	HomeScreenScroller.Name = "HomeScreenScrollerV2"
+	HomeScreenScroller.AnchorPoint = Vector2.new(0.5, 0.5)
+	HomeScreenScroller.Position = UDim2.new(0.5, 0, 0.495, 0)
+	HomeScreenScroller.Size = UDim2.new(0.99, 0, 0.891, 0)
+	HomeScreenScroller.BackgroundTransparency = 1
+	HomeScreenScroller.ZIndex = 3
+	HomeScreenScroller.Visible = true
+	HomeScreenScroller.ScrollingDirection = Enum.ScrollingDirection.X
+	HomeScreenScroller.AutomaticCanvasSize = Enum.AutomaticSize.XY
+	HomeScreenScroller.CanvasSize = UDim2.new(1, 1, 0, 0)
+	HomeScreenScroller.ScrollBarImageTransparency = 1
+	HomeScreenScroller.ScrollBarThickness = 0
+	HomeScreenScroller.ScrollingEnabled = false
+	HomeScreenScroller.Active = true
+	HomeScreenScroller.VerticalScrollBarInset = Enum.ScrollBarInset.None
+	HomeScreenScroller.VerticalScrollBarPosition = Enum.VerticalScrollBarPosition.Right
+	HomeScreenScroller.HorizontalScrollBarInset = Enum.ScrollBarInset.None
+	HomeScreenScroller.ElasticBehavior = Enum.ElasticBehavior.Always
+	HomeScreenScroller.Parent = __DesktopScreenFrame
+
+	local UIListLayout2 = Instance.new("UIListLayout")
+	UIListLayout2.SortOrder = Enum.SortOrder.Name
+	UIListLayout2.FillDirection = Enum.FillDirection.Vertical
+	UIListLayout2.VerticalAlignment = Enum.VerticalAlignment.Top
+	UIListLayout2.HorizontalAlignment = Enum.HorizontalAlignment.Left
+	UIListLayout2.HorizontalFlex = Enum.UIFlexAlignment.None
+	UIListLayout2.ItemLineAlignment = Enum.ItemLineAlignment.Automatic
+	UIListLayout2.VerticalFlex = Enum.UIFlexAlignment.Fill
+	UIListLayout2.Padding = UDim.new(0.07, 0)
+	UIListLayout2.Wraps = true
+	UIListLayout2.Parent = HomeScreenScroller
+end
+
+-- ============================================
+-- CHUNK 21: __ZolinDesktop -> ReplicatedIcons & Notification Templates
+-- ============================================
+local function createChunk21()
+	local ReplicatedIcons = nil
+	if not MainUI:FindFirstChild("ReplicatedIcons") then
+	ReplicatedIcons = Instance.new("Folder")
+	ReplicatedIcons.Name = "ReplicatedIcons"
+	ReplicatedIcons.Parent = MainUI
+	else
+		ReplicatedIcons = MainUI:FindFirstChild("ReplicatedIcons")
+	end
+
+	local AppIconTemplate = Instance.new("ImageButton")
+	AppIconTemplate.Name = "AppIconTemplateV2"
+	AppIconTemplate.Visible = false
+	AppIconTemplate.BackgroundColor3 = Color3.fromRGB(65, 65, 65)
+	AppIconTemplate.Size = UDim2.new(0.037, 0, 0.087, 0)
+	AppIconTemplate.Position = UDim2.new(0.5, 0, 0.5, 0)
+	AppIconTemplate.AnchorPoint = Vector2.new(0.5, 0.5)
+	AppIconTemplate.BackgroundTransparency = 0
+	AppIconTemplate.ImageTransparency = 0
+	AppIconTemplate.Visible = false
+	AppIconTemplate.ScaleType = Enum.ScaleType.Fit
+	AppIconTemplate.ZIndex = 4
+	AppIconTemplate.Parent = ReplicatedIcons
+
+	local UIAspectRatioConstraint16 = Instance.new("UIAspectRatioConstraint")
+	UIAspectRatioConstraint16.Parent = AppIconTemplate
+	UIAspectRatioConstraint16.AspectRatio = 1
+	UIAspectRatioConstraint16.AspectType = Enum.AspectType.FitWithinMaxSize
+	UIAspectRatioConstraint16.DominantAxis = Enum.DominantAxis.Width
+
+	local UIStroke1 = Instance.new("UIStroke")
+	UIStroke1.Parent = AppIconTemplate
+	UIStroke1.Color = Color3.fromRGB(65, 64, 64)
+	UIStroke1.ApplyStrokeMode = Enum.ApplyStrokeMode.Contextual
+	UIStroke1.Thickness = 2
+	UIStroke1.Transparency = 0.58
+
+	createUICorner(AppIconTemplate, "UICorner1", UDim.new(0.2, 0))
+
+	local AppName = Instance.new("TextLabel")
+	AppName.Name = "AppName"
+	AppName.Parent = AppIconTemplate
+	AppName.AnchorPoint = Vector2.new(0.5, 0.5)
+	AppName.Position = UDim2.new(0.5, 0, 1.294, 0)
+	AppName.Size = UDim2.new(1.882, 0, 0.353, 0)
+	AppName.BackgroundTransparency = 1
+	AppName.Text = "App Name"
+	AppName.TextColor3 = Color3.fromRGB(255, 251, 251)
+	AppName.TextScaled = true
+	AppName.TextSize = 14
+	AppName.TextWrapped = true
+	AppName.RichText = true
+	AppName.Font = Enum.Font.SourceSansBold
+	AppName.TextXAlignment = Enum.TextXAlignment.Center
+	AppName.TextYAlignment = Enum.TextYAlignment.Center
+	AppName.TextStrokeTransparency = 0.5
+	AppName.ZIndex = 4
+	AppName.Visible = true
+
+	local UIAspectRatioConstraint17 = Instance.new("UIAspectRatioConstraint")
+	UIAspectRatioConstraint17.Parent = AppName
+	UIAspectRatioConstraint17.AspectRatio = 5.333
+	UIAspectRatioConstraint17.AspectType = Enum.AspectType.FitWithinMaxSize
+	UIAspectRatioConstraint17.DominantAxis = Enum.DominantAxis.Width
+
+	local UITextSizeConstraint_AppName = Instance.new("UITextSizeConstraint")
+	UITextSizeConstraint_AppName.Parent = AppName
+	UITextSizeConstraint_AppName.MaxTextSize = 30
+	UITextSizeConstraint_AppName.MinTextSize = 1
+	
+	local OutlineFrameHighlight = Instance.new("Frame");
+	OutlineFrameHighlight.Name = "OutlineFrameHighlight";
+	OutlineFrameHighlight.Size = UDim2.new(1.272, 0, 1.439, 0);
+	OutlineFrameHighlight.Position = UDim2.new(-0.211, 0, -0.137, 0);
+	OutlineFrameHighlight.BackgroundTransparency = 0.45;
+	OutlineFrameHighlight.BackgroundColor3 = Color3.fromRGB(49, 49, 49);
+	OutlineFrameHighlight.ZIndex = 2;
+	OutlineFrameHighlight.Visible = false;
+	OutlineFrameHighlight.Parent = AppIconTemplate;
+	createUICorner(OutlineFrameHighlight, "UICorner1", UDim.new(0.1, 0));
+	createUIStroke(OutlineFrameHighlight, "UIStroke", Color3.fromRGB(0, 112, 231), 5.5, 0.58, 1)
+	
+	local UIAspectRatioConstraint18 = Instance.new("UIAspectRatioConstraint")
+	UIAspectRatioConstraint18.Parent = OutlineFrameHighlight
+	UIAspectRatioConstraint18.AspectRatio = 0.915
+	UIAspectRatioConstraint18.AspectType = Enum.AspectType.FitWithinMaxSize
+	UIAspectRatioConstraint18.DominantAxis = Enum.DominantAxis.Width
+end
+
+-- ============================================
+-- CHUNK 22: ReplicatedWindow_Sys & ExampleWindow | Desktop Mode
+-- ============================================
+local function createChunk22()
+	local ReplicatedWindow_Sys 
+	if not MainUI:FindFirstChild("ReplicatedWindow_Sys") then
+	ReplicatedWindow_Sys = Instance.new("Folder")
+	ReplicatedWindow_Sys.Name = "ReplicatedWindow_Sys"
+	ReplicatedWindow_Sys.Parent = MainUI
+	else
+		ReplicatedWindow_Sys = MainUI:FindFirstChild("ReplicatedWindow_Sys")
+	end
+	
+	local ExampleWindow = Instance.new("Frame")
+	ExampleWindow.Name = "ExampleWindowV2"
+	ExampleWindow.AnchorPoint = Vector2.new(0.5, 0.5)
+	ExampleWindow.BackgroundTransparency = 0
+	ExampleWindow.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+	ExampleWindow.Size = UDim2.new(1, 0, 0.882, 0)
+	ExampleWindow.Position = UDim2.new(0.5, 0, 0.499, 0)
+	ExampleWindow.Visible = false
+	ExampleWindow.ZIndex = 6
+	ExampleWindow.Active = true
+	ExampleWindow.Parent = ReplicatedWindow_Sys
+	createUIScale(ExampleWindow, "UIScale", 0.85);
+	createUICorner(ExampleWindow, "UICorner_ExampleWindow", UDim.new(0, 2))
+
+	local ExampleWindow_UI = Instance.new("Frame")
+	ExampleWindow_UI.Name = "UI"
+	ExampleWindow_UI.AnchorPoint = Vector2.new(0.5, 0.5)
+	ExampleWindow_UI.BackgroundTransparency = 1
+	ExampleWindow_UI.BackgroundColor3 = Color3.fromRGB(70, 255, 255)
+	ExampleWindow_UI.Size = UDim2.new(1, 0, 0.937, 0)
+	ExampleWindow_UI.Position = UDim2.new(0.5, 0, 0.531, 0)
+	ExampleWindow_UI.ZIndex = ExampleWindow.ZIndex + 1
+	ExampleWindow_UI.Visible = true
+	ExampleWindow_UI.Active = true
+	ExampleWindow_UI.Parent = ExampleWindow
+	
+	local TileInfo = Instance.new("Frame")
+	TileInfo.Name = "TileInfo"
+	TileInfo.AnchorPoint = Vector2.new(0.5, 0.5)
+	TileInfo.BackgroundTransparency = 1
+	TileInfo.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+	TileInfo.Size = UDim2.new(1, 0, 0.064, 0)
+	TileInfo.Position = UDim2.new(0.5, 0, 0.03, 0)
+	TileInfo.ZIndex = ExampleWindow_UI.ZIndex
+	TileInfo.Visible = true
+	TileInfo.Active = true
+	TileInfo.Parent = ExampleWindow
+	
+	local UIAspectRatioConstraint19 = Instance.new("UIAspectRatioConstraint")
+	UIAspectRatioConstraint19.Parent = TileInfo
+	UIAspectRatioConstraint19.AspectRatio = 41.274
+	UIAspectRatioConstraint19.AspectType = Enum.AspectType.FitWithinMaxSize
+	UIAspectRatioConstraint19.DominantAxis = Enum.DominantAxis.Width
+	
+	createUICorner(TileInfo, "UICorner", UDim.new(0, 2));
+	
+	local AppIcon = Instance.new("ImageLabel");
+	AppIcon.Name = "AppIcon";
+	AppIcon.BackgroundTransparency = 1;
+	AppIcon.Position = UDim2.new(0.006, 0, 0, 0);
+	AppIcon.Size = UDim2.new(0.03, 0, 1, 0);
+	AppIcon.ZIndex = TileInfo.ZIndex + 1;
+	AppIcon.ScaleType = Enum.ScaleType.Fit;
+	AppIcon.Parent = TileInfo;
+	
+	local UIAspectRatioConstraint20 = Instance.new("UIAspectRatioConstraint");
+	UIAspectRatioConstraint20.Parent = AppIcon;
+	UIAspectRatioConstraint20.AspectRatio = 1;
+	UIAspectRatioConstraint20.AspectType = Enum.AspectType.FitWithinMaxSize;
+	UIAspectRatioConstraint20.DominantAxis = Enum.DominantAxis.Width;
+	
+	local AppName = Instance.new("TextLabel");
+	AppName.Name = "AppName";
+	AppName.Parent = TileInfo;
+	AppName.Position = UDim2.new(0.042, 0, 0, 0);
+	AppName.Size = UDim2.new(0.156, 0, 1, 0);
+	AppName.ZIndex = TileInfo.ZIndex + 1;
+	AppName.BackgroundTransparency = 1;
+	AppName.TextScaled = true;
+	AppName.TextSize = 23;
+	AppName.TextColor3 = Color3.fromRGB(0, 0, 0);
+	AppName.Font = Enum.Font.SourceSansBold;
+	AppName.TextXAlignment = Enum.TextXAlignment.Left;
+	
+	local UITextSizeConstraint = Instance.new("UITextSizeConstraint");
+	UITextSizeConstraint.MaxTextSize = 23;
+	UITextSizeConstraint.MinTextSize = 1;
+	UITextSizeConstraint.Parent = AppName;
+	
+	local UIAspectRatioConstraint2 = Instance.new("UIAspectRatioConstraint");
+	UIAspectRatioConstraint2.Parent = AppName;
+	UIAspectRatioConstraint2.AspectRatio = 5.146;
+	UIAspectRatioConstraint2.AspectType = Enum.AspectType.FitWithinMaxSize;
+	UIAspectRatioConstraint2.DominantAxis = Enum.DominantAxis.Width;
+	
+	local TileBar = Instance.new("Frame")
+	TileBar.Name = "Tilebar"
+	TileBar.AnchorPoint = Vector2.new(0.5, 0.5)
+	TileBar.BackgroundTransparency = 0
+	TileBar.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+	TileBar.Size = UDim2.new(1, 0, 0.064, 0)
+	TileBar.Position = UDim2.new(0.5, 0, 0.031, 0)
+	TileBar.ZIndex = ExampleWindow_UI.ZIndex
+	TileBar.Visible = true
+	TileBar.Active = true
+	TileBar.Parent = ExampleWindow
+	
+	local UIAspectRatioConstraint20 = Instance.new("UIAspectRatioConstraint")
+	UIAspectRatioConstraint20.Parent = TileBar
+	UIAspectRatioConstraint20.AspectRatio = 40.989
+	UIAspectRatioConstraint20.AspectType = Enum.AspectType.FitWithinMaxSize
+	UIAspectRatioConstraint20.DominantAxis = Enum.DominantAxis.Width
+	
+	createUICorner(TileBar, "UICorner", UDim.new(0, 2));
+	
+	local UIListLayout = Instance.new("UIListLayout")
+	UIListLayout.Parent = TileBar
+	UIListLayout.SortOrder = Enum.SortOrder.LayoutOrder
+	UIListLayout.FillDirection = Enum.FillDirection.Horizontal
+	UIListLayout.VerticalAlignment = Enum.VerticalAlignment.Top
+	UIListLayout.HorizontalAlignment = Enum.HorizontalAlignment.Right
+	UIListLayout.Padding = UDim.new(0, 0)
+	
+	local Exit = Instance.new("ImageButton");
+	Exit.Name = "Exit";
+	Exit.AnchorPoint = Vector2.new(0.5, 0.5)
+	Exit.Size = UDim2.new(0.044, 0, 0.951, 0);
+	Exit.ZIndex = TileBar.ZIndex + 1;
+	Exit.Visible = true
+	Exit.Active = true
+	Exit.Parent = TileBar;
+	Exit.Image = "rbxassetid://18749164740";
+	Exit.ScaleType = Enum.ScaleType.Fit;
+	Exit.BackgroundColor3 = Color3.fromRGB(255, 0, 0);
+	Exit.LayoutOrder = 1;
+	
+	local UIAspectRatioConstraint21 = Instance.new("UIAspectRatioConstraint");
+	UIAspectRatioConstraint21.Parent = Exit;
+	UIAspectRatioConstraint21.AspectRatio = 1.538;
+	UIAspectRatioConstraint21.AspectType = Enum.AspectType.FitWithinMaxSize;
+	UIAspectRatioConstraint21.DominantAxis = Enum.DominantAxis.Width;
+	
+	local Min = Instance.new("ImageButton");
+	Min.Name = "Min";
+	Min.AnchorPoint = Vector2.new(0.5, 0.5)
+	Min.Size = UDim2.new(0.044, 0, 0.951, 0);
+	Min.ZIndex = TileBar.ZIndex + 1;
+	Min.Visible = true
+	Min.Active = true
+	Min.Parent = TileBar;
+	Min.Image = "rbxassetid://18786430625";
+	Min.ScaleType = Enum.ScaleType.Fit;
+	Min.BackgroundColor3 = Color3.fromRGB(255, 0, 0);
+	Min.BackgroundTransparency = 1;
+	Min.LayoutOrder = -1;
+
+	local UIAspectRatioConstraint22 = Instance.new("UIAspectRatioConstraint");
+	UIAspectRatioConstraint22.Parent = Min;
+	UIAspectRatioConstraint22.AspectRatio = 1.538;
+	UIAspectRatioConstraint22.AspectType = Enum.AspectType.FitWithinMaxSize;
+	UIAspectRatioConstraint22.DominantAxis = Enum.DominantAxis.Width;
+	
+	local Max = Instance.new("ImageButton");
+	Max.Name = "Max";
+	Max.AnchorPoint = Vector2.new(0.5, 0.5)
+	Max.Size = UDim2.new(0.044, 0, 0.951, 0);
+	Max.ZIndex = TileBar.ZIndex + 1;
+	Max.Visible = true
+	Max.Active = true
+	Max.Parent = TileBar;
+	Max.Image = "rbxassetid://85022922514331";
+	Max.ScaleType = Enum.ScaleType.Fit;
+	Max.BackgroundColor3 = Color3.fromRGB(255, 0, 0);
+	Max.BackgroundTransparency = 1;
+	Max.LayoutOrder = 0;
+
+	local UIAspectRatioConstraint23 = Instance.new("UIAspectRatioConstraint");
+	UIAspectRatioConstraint23.Parent = Max;
+	UIAspectRatioConstraint23.AspectRatio = 1.538;
+	UIAspectRatioConstraint23.AspectType = Enum.AspectType.FitWithinMaxSize;
+	UIAspectRatioConstraint23.DominantAxis = Enum.DominantAxis.Width;
+	
+end
+
+local function createChunk23()
+	local taskbar = Instance.new("Frame")
+	taskbar.Name = "Taskbar"
+	taskbar.Size = UDim2.new(1, 0, 0.07, 0);
+	taskbar.AnchorPoint = Vector2.new(0.5, 1)
+	taskbar.Size = UDim2.new(1, 0, 0.06, 0);
+	taskbar.Position = UDim2.new(0.5, 0, 1, 0);
+	taskbar.BackgroundTransparency = 1;
+	taskbar.ZIndex = 999999998;
+	taskbar.Parent = __DesktopScreenFrame;
+	local UIListLayout = Instance.new("UIListLayout");
+	UIListLayout.Parent = taskbar;
+	UIListLayout.FillDirection = Enum.FillDirection.Horizontal;
+	UIListLayout.HorizontalAlignment = Enum.HorizontalAlignment.Left;
+	UIListLayout.VerticalAlignment = Enum.VerticalAlignment.Center;
+	UIListLayout.SortOrder = Enum.SortOrder.LayoutOrder;
+	local TaskbarApps = Instance.new("Frame");
+	TaskbarApps.Name = "TaskbarApps"
+	TaskbarApps.Size = UDim2.new(0.7, 0, 1, 0);
+	TaskbarApps.BackgroundTransparency = 0.55;
+	TaskbarApps.BackgroundColor3 = Color3.fromRGB(43, 43, 43);
+	TaskbarApps.ZIndex = 999999997;
+	TaskbarApps.Parent = taskbar;
+	local UIListLayout2 = Instance.new("UIListLayout");
+	UIListLayout2.Parent = TaskbarApps;
+	UIListLayout2.FillDirection = Enum.FillDirection.Horizontal;
+	UIListLayout2.HorizontalAlignment = Enum.HorizontalAlignment.Left;
+	UIListLayout2.VerticalAlignment = Enum.VerticalAlignment.Center;
+	UIListLayout2.SortOrder = Enum.SortOrder.LayoutOrder;
+	local TaskbarWidgets = Instance.new("Frame");
+	TaskbarWidgets.Name = "TaskbarWidgets"
+	TaskbarWidgets.Size = UDim2.new(0.27, 0, 1, 0);
+	TaskbarWidgets.BackgroundTransparency = 0.55;
+	TaskbarWidgets.BackgroundColor3 = Color3.fromRGB(43, 43, 43);
+	TaskbarWidgets.AnchorPoint = Vector2.new(0, 1);
+	TaskbarWidgets.LayoutOrder = 1;
+	TaskbarWidgets.ZIndex = TaskbarApps.ZIndex;
+	TaskbarWidgets.Parent = taskbar;
+	local UIListLayout3 = Instance.new("UIListLayout");
+	UIListLayout3.Parent = TaskbarWidgets;
+	UIListLayout3.FillDirection = Enum.FillDirection.Horizontal;
+	UIListLayout3.HorizontalAlignment = Enum.HorizontalAlignment.Right;
+	UIListLayout3.VerticalAlignment = Enum.VerticalAlignment.Center;
+	UIListLayout3.SortOrder = Enum.SortOrder.LayoutOrder;
+	local TimeDateFrame = Instance.new("Frame");
+	TimeDateFrame.Name = "TimeDateFrame"
+	TimeDateFrame.Size = UDim2.new(0.348, 0, 1, 0);
+	TimeDateFrame.BackgroundTransparency = 1;
+	TimeDateFrame.ZIndex = 1;
+	TimeDateFrame.AnchorPoint = Vector2.new(0.5, 0.5);
+	TimeDateFrame.Parent = TaskbarWidgets;
+	local UIListLayout4 = Instance.new("UIListLayout");
+	UIListLayout4.Parent = TimeDateFrame;
+	UIListLayout4.FillDirection = Enum.FillDirection.Vertical;
+	UIListLayout4.HorizontalAlignment = Enum.HorizontalAlignment.Right;
+	UIListLayout4.VerticalAlignment = Enum.VerticalAlignment.Center;
+	UIListLayout4.SortOrder = Enum.SortOrder.LayoutOrder;
+	local DateLabel = Instance.new("TextLabel");
+	DateLabel.Name = "DateLabel";
+	DateLabel.Size = UDim2.new(1, 0, 0.5, 0);
+	DateLabel.BackgroundTransparency = 1;
+	DateLabel.AnchorPoint = Vector2.new(0.5, 0.5);
+	DateLabel.TextColor3 = Color3.fromRGB(255, 255, 255);
+	DateLabel.TextScaled = true;
+	DateLabel.ZIndex = 999999997;
+	DateLabel.Parent = TimeDateFrame;
+	DateLabel:SetAttribute("Date", true);
+	DateLabel.LayoutOrder = 1;
+	local TimeLabel = Instance.new("TextLabel");
+	TimeLabel.Name = "TimeLabel";
+	TimeLabel.Size = UDim2.new(1, 0, 0.5, 0);
+	TimeLabel.BackgroundTransparency = 1;
+	TimeLabel.AnchorPoint = Vector2.new(0.5, 0.5);
+	TimeLabel.TextColor3 = Color3.fromRGB(255, 255, 255);
+	TimeLabel.TextScaled = true;
+	TimeLabel.ZIndex = 999999997;
+	TimeLabel.Parent = TimeDateFrame;
+	TimeLabel:SetAttribute("Clock", true)
+	TimeLabel.LayoutOrder = 0;
+	local UITextSizeConstraint = Instance.new("UITextSizeConstraint");
+	UITextSizeConstraint.MaxTextSize = 28;
+	UITextSizeConstraint.Parent = TimeLabel;
+	local UITextSizeConstraint2 = Instance.new("UITextSizeConstraint");
+	UITextSizeConstraint2.MaxTextSize = 28;
+	UITextSizeConstraint2.Parent = DateLabel;
+	local StartMenuButton = Instance.new("ImageButton");
+	StartMenuButton.Name = "StartMenuButton";
+	StartMenuButton.AnchorPoint = Vector2.new(0.5, 0.5);
+	StartMenuButton.Size = UDim2.new(0.03, 0, 1, 0);
+	StartMenuButton.BackgroundTransparency = 0.55;
+	StartMenuButton.BackgroundColor3 = Color3.fromRGB(43, 43, 43);
+	StartMenuButton.LayoutOrder = -1;
+	StartMenuButton.ZIndex = taskbar.ZIndex -1;
+	StartMenuButton.Parent = taskbar;
+	StartMenuButton.Image = "rbxassetid://384763834";
+	StartMenuButton.ScaleType = Enum.ScaleType.Fit;
+end
+
+local function createChunk24()
+	local StartMenuFrame = Instance.new("Frame");
+	StartMenuFrame.Name = "StartMenu";
+	StartMenuFrame.AnchorPoint = Vector2.new(0, 1);
+	StartMenuFrame.BackgroundTransparency = 0.05;
+	StartMenuFrame.BackgroundColor3 = Color3.fromRGB(0, 61, 0);
+	StartMenuFrame.Position = UDim2.new(0, 0, 0.94, 0);
+	StartMenuFrame.Size = UDim2.new(0.12, 0, 0.45, 0);
+	StartMenuFrame.ZIndex = 999999997;
+	StartMenuFrame.Visible = false;
+	StartMenuFrame.Parent = __DesktopScreenFrame;
+	local UIListLayout = Instance.new("UIListLayout");
+	UIListLayout.Parent = StartMenuFrame;
+	UIListLayout.SortOrder = Enum.SortOrder.LayoutOrder;
+	UIListLayout.Padding = UDim.new(0, 0);
+	UIListLayout.FillDirection = Enum.FillDirection.Horizontal;
+	UIListLayout.HorizontalAlignment = Enum.HorizontalAlignment.Left;
+	UIListLayout.VerticalAlignment = Enum.VerticalAlignment.Top;
+	local AppsList = Instance.new("Frame");
+	AppsList.Name = "AppsList";
+	AppsList.BackgroundTransparency = 1;
+	AppsList.Size = UDim2.new(0.72, 2, 1, 0);
+	AppsList.LayoutOrder = 1;
+	AppsList.AnchorPoint = Vector2.new(0, 1);
+	AppsList.ZIndex = 999999998;
+	AppsList.Parent = StartMenuFrame;
+	local UIListLayout2 = Instance.new("UIListLayout");
+	UIListLayout2.Parent = AppsList;
+	UIListLayout2.SortOrder = Enum.SortOrder.LayoutOrder;
+	UIListLayout2.Padding = UDim.new(0, 0);
+	UIListLayout2.FillDirection = Enum.FillDirection.Vertical;
+	UIListLayout2.VerticalAlignment = Enum.VerticalAlignment.Bottom;
+	UIListLayout2.HorizontalAlignment = Enum.HorizontalAlignment.Center;
+	local ScrollingApps = Instance.new("ScrollingFrame");
+	ScrollingApps.AnchorPoint = Vector2.new(0.5, 0.5);
+	ScrollingApps.Active = true;
+	ScrollingApps.BackgroundTransparency = 1;
+	ScrollingApps.Size = UDim2.new(1, 0, 1, 0);
+	ScrollingApps.ZIndex = 999999999;
+	ScrollingApps.Parent = AppsList;
+	ScrollingApps.AutomaticCanvasSize = Enum.AutomaticSize.Y;
+	ScrollingApps.CanvasSize = UDim2.new(0, 0, 2, 0);
+	ScrollingApps.ScrollBarThickness = 4;
+	ScrollingApps.ScrollingDirection = Enum.ScrollingDirection.Y;
+	ScrollingApps.ScrollBarImageTransparency = 0;
+	ScrollingApps.ScrollBarImageColor3 = Color3.fromRGB(255, 255, 255);
+	ScrollingApps.VerticalScrollBarPosition = Enum.VerticalScrollBarPosition.Right;
+	local PowerList = Instance.new("Frame");
+	PowerList.Name = "PowerList";
+	PowerList.AnchorPoint = Vector2.new(0, 1);
+	PowerList.BackgroundTransparency = 1;
+	PowerList.Size = UDim2.new(0.27, 2, 1, 0);
+	PowerList.LayoutOrder = 0;
+	PowerList.ZIndex = AppsList.ZIndex;
+	local UIListLayout3 = Instance.new("UIListLayout");
+	UIListLayout3.Parent = PowerList;
+	UIListLayout3.SortOrder = Enum.SortOrder.LayoutOrder;
+	UIListLayout3.FillDirection = Enum.FillDirection.Vertical;
+	UIListLayout3.VerticalAlignment = Enum.VerticalAlignment.Bottom;
+	UIListLayout3.HorizontalAlignment = Enum.HorizontalAlignment.Center;
+	PowerList.Parent = StartMenuFrame;
+	
+	--AppButtonTemplate
+	local AppButtonTemplate = Instance.new("TextButton");
+	AppButtonTemplate.Name = "AppButtonTemplate";
+	AppButtonTemplate.BackgroundColor3 = Color3.fromRGB(30, 102, 158);
+	AppButtonTemplate.AnchorPoint = Vector2.new(0.5, 0.5);
+	AppButtonTemplate.Size = UDim2.new(0.05, 0,0.955, 0);
+	AppButtonTemplate.ZIndex = 999999998;
+	AppButtonTemplate.Visible = false;
+	AppButtonTemplate.Parent = MainUI:FindFirstChild("ReplicatedIcons");
+	local HighlightFrame = Instance.new("Frame");
+	HighlightFrame.Name = "HighlightFrame";
+	HighlightFrame.BackgroundColor3 = Color3.fromRGB(30, 146, 199);
+	HighlightFrame.AnchorPoint = Vector2.new(0.5, 1);
+	HighlightFrame.Size = UDim2.new(0.8, 0, 0.1, 0);
+	HighlightFrame.Position = UDim2.new(0.5, 0, 1, 0);
+	HighlightFrame.ZIndex = AppButtonTemplate.ZIndex;
+	HighlightFrame.Visible = false;
+	HighlightFrame.Parent = AppButtonTemplate;
+	local HighlightFrameActive = Instance.new("Frame");
+	HighlightFrameActive.Name = "HighlightFrameActive";
+	HighlightFrameActive.BackgroundColor3 = Color3.fromRGB(36, 182, 244);
+	HighlightFrameActive.AnchorPoint = Vector2.new(0.5, 1);
+	HighlightFrameActive.Size = UDim2.new(1, 0, 0.1, 0);
+	HighlightFrameActive.Position = UDim2.new(0.5, 0, 1, 0);
+	HighlightFrameActive.ZIndex = AppButtonTemplate.ZIndex;
+	HighlightFrameActive.Visible = false;
+	HighlightFrameActive.Parent = AppButtonTemplate;
+	local AppIcon = Instance.new("ImageLabel");
+	AppIcon.Name = "AppIcon";
+	AppIcon.BackgroundTransparency = 1;
+	AppIcon.ScaleType = Enum.ScaleType.Fit;
+	AppIcon.AnchorPoint = Vector2.new(0.5, 0.5);
+	AppIcon.Size = UDim2.new(0.636, 0, 0.911, 0);
+	AppIcon.Position = UDim2.new(0.5, 0, 0.5, 0);
+	AppIcon.ZIndex = AppButtonTemplate.ZIndex;
+	AppIcon.Visible = true;
+	AppIcon.Parent = AppButtonTemplate;
+end
 
 -- ============================================
 -- MAIN INIT FUNCTION
@@ -2138,7 +2696,9 @@ function v1.Init()
 	end
 
 	__ScreenFrame = MainUI:FindFirstChild("__ScreenFrame")
-	if not __ScreenFrame then
+	__ZolinDesktop = MainUI:FindFirstChild("__ZolinDesktop")
+	
+	if not __ScreenFrame and not __ZolinDesktop then
 		__ScreenFrame = Instance.new("Frame")
 		__ScreenFrame.Name = "__ScreenFrame"
 		__ScreenFrame.AnchorPoint = Vector2.new(0.5, 0.5)
@@ -2150,6 +2710,31 @@ function v1.Init()
 		__ScreenFrame.Active = true
 		__ScreenFrame.Visible = true
 		__ScreenFrame.Parent = MainUI
+		
+		__ZolinDesktop = Instance.new("Frame")
+		__ZolinDesktop.Name = "__ZolinDesktop"
+		__ZolinDesktop.AnchorPoint = Vector2.new(0.5, 0.5)
+		__ZolinDesktop.Position = UDim2.new(0.5, 0, 0.5, 0)
+		__ZolinDesktop.Size = UDim2.new(0.9, 0, 0.9, 0)
+		__ZolinDesktop.BackgroundTransparency = 1
+		__ZolinDesktop.ZIndex = 999999999
+		__ZolinDesktop.ClipsDescendants = true
+		__ZolinDesktop.Active = true
+		__ZolinDesktop.Visible = false
+		__ZolinDesktop.Parent = MainUI
+		
+		
+		__DesktopScreenFrame = Instance.new("Frame")
+		__DesktopScreenFrame.Name = "__ScreenFrame"
+		__DesktopScreenFrame.AnchorPoint = Vector2.new(0.5, 0.5)
+		__DesktopScreenFrame.Position = UDim2.new(0.5, 0, 0.5, 0)
+		__DesktopScreenFrame.Size = UDim2.new(1, 0, 1, 0)
+		__DesktopScreenFrame.BackgroundTransparency = 1
+		__DesktopScreenFrame.ZIndex = 999999999
+		__DesktopScreenFrame.ClipsDescendants = true
+		__DesktopScreenFrame.Active = true
+		__DesktopScreenFrame.Visible = true
+		__DesktopScreenFrame.Parent = __ZolinDesktop
 
 		-- Call all chunk functions with small delays to avoid register limit
 		task.spawn(function() createChunk1() end)
@@ -2187,7 +2772,19 @@ function v1.Init()
 		task.spawn(function() createChunk17() end)
 		task.wait()
 		task.spawn(function() createChunk18() end)
-
+		task.wait()
+		task.spawn(function() createChunk19() end)
+		task.wait()
+		task.spawn(function() createChunk20() end)
+		task.wait()
+		task.spawn(function() createChunk21() end)
+		task.wait()
+		task.spawn(function() createChunk22() end)
+		task.wait()
+		task.spawn(function() createChunk23() end)
+		task.wait()
+		task.spawn(function() createChunk24() end)
+		
 		print("ZolinOS UI initialized | Version: " ..tostring(BuildVersion));
 	end
 end
