@@ -1891,10 +1891,11 @@ local function createChunk16()
 	ImageLabel_ButtonSettings.ScaleType = Enum.ScaleType.Fit
 	ImageLabel_ButtonSettings.Parent = ButtonSettings
 
-	-- CONNECTION EVENTS
+	--[[ CONNECTION EVENTS
 	ButtonSettings.MouseButton1Click:Connect(function()
 		__ScreenFrame.Visible = not __ScreenFrame.Visible
 	end)
+	--]]
 end
 
 -- ============================================
