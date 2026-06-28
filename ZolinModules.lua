@@ -1,6 +1,6 @@
 -- ZolinModules (Complete Combined ModuleScript)
 local ZolinModules = {}
-ZolinModules.Mode = "Mobile"  --| Mobile | default - | Desktop | beta
+ZolinModules.Mode = "Desktop"  --| Mobile | default - | Desktop | beta
 --Global Variables | Desktop
 ZolinModules.CurrentUptime = nil
 ZolinModules.CurrentTime = nil
@@ -6489,6 +6489,7 @@ function ZolinModules.Init()
 					end)
 				end
 			end
+			
 			-- Show mobile frame, hide desktop frame
 			local mobileFrame = MainUI:FindFirstChild("__ScreenFrame")
 			if mobileFrame then
@@ -6539,7 +6540,6 @@ function ZolinModules.Init()
 				desktopFolder.Visible = true
 			end
 			MainUI.__Zolin.Data.TransitionSpeed.Value = 0.25; -- like windows 10 fade animation
-		end
 
 		-- Initialize modules for desktop
 		local modules = ZolinModules.GetAll_Desktop()
@@ -6555,9 +6555,9 @@ function ZolinModules.Init()
 			end
 			ZolinModules.ZolinListener()
 			ZolinModules.ZolinLauncher()
-		end)
+			end)
+		end
 	end
-end
 -- // AUTO INITIALIZE //
 
 ZolinModules.Init();
