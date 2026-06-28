@@ -1,6 +1,6 @@
 -- ZolinModules (Complete Combined ModuleScript)
 local ZolinModules = {}
-ZolinModules.Mode = "Desktop"  --| Mobile | default - | Desktop | beta
+ZolinModules.Mode = "Mobile"  --| Mobile | default - | Desktop | beta
 --Global Variables | Desktop
 ZolinModules.CurrentUptime = nil
 ZolinModules.CurrentTime = nil
@@ -6480,6 +6480,15 @@ function ZolinModules.Init()
 	if ZolinModules.Mode == "Mobile" then
 		local MainUI = getMainUI()
 		if MainUI then
+			local SideButtons = MainUI:FindFirstChild("SideButtons")
+			if SideButtons then
+				local ButtonSettings = SideButtons:FindFirstChild("ButtonSettings")
+				if ButtonSettings then
+					ButtonSettings.MouseButton1Click:Connect(function()
+						MainUI.__ScreenFrame.Visible = not MainUI.__ScreenFrame.Visible
+					end)
+				end
+			end
 			-- Show mobile frame, hide desktop frame
 			local mobileFrame = MainUI:FindFirstChild("__ScreenFrame")
 			if mobileFrame then
@@ -6510,6 +6519,16 @@ function ZolinModules.Init()
 	elseif ZolinModules.Mode == "Desktop" then
 		local MainUI = getMainUI()
 		if MainUI then
+			local SideButtons = MainUI:FindFirstChild("SideButtons")
+			if SideButtons then
+				local ButtonSettings = SideButtons:FindFirstChild("ButtonSettings")
+				if ButtonSettings then
+					ButtonSettings.MouseButton1Click:Connect(function()
+						MainUI.__ZolinDesktop.Visible = not MainUI.__ZolinDesktop.Visible
+					end)
+					end
+				end
+			end
 			-- Hide mobile frame, show desktop frame
 			local mobileFrame = MainUI:FindFirstChild("__ScreenFrame")
 			if mobileFrame then
