@@ -5452,6 +5452,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 																	PlayerCurrentData["IsTeleported"] = false
 																	PlayerCurrentData["ReturnTimer"] = nil
 																	PlayerCurrentData["Init"] = false
+																	PlayerCurrentData["TeleportPending"] = false
 																end
 															end
 														end
