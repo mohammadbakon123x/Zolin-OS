@@ -3073,7 +3073,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 	SliderSelection5.SizeConstraint = Enum.SizeConstraint.RelativeXY;
 	SliderSelection5.Visible = true
 	SliderSelection5.ZIndex = 6;
-	SliderSelection5.LayoutOrder = 2;
+	SliderSelection5.LayoutOrder = 6;
 	local UICorner_Slider5 = Instance.new("UICorner", SliderSelection5);
 	UICorner_Slider2.CornerRadius = UDim.new(0, 5);
 	local Title_Slider5 = Instance.new("TextLabel", SliderSelection5);
