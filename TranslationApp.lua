@@ -3,7 +3,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 	local l__TweenService__5 = game:GetService("TweenService");
 	local UIS = game:GetService("UserInputService");
 	local u6 = game:GetService("RunService")
-	local BuildVersion = "3.20.0"
+	local BuildVersion = "3.20.1"
 	local versionLabel = "v"..BuildVersion;
 	local SettingsScript = {
 		RequireAway = false,
@@ -5420,6 +5420,19 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 												end
 												CamPosActive = false
 												PlayerCurrentData["CutsceneActive"] = false
+												
+													-- Return player after cutscene ends
+													if SettingsScript.KickPlayerAfterCutsenceBD and PlayerCurrentData["IsTeleported"] then
+														if lpr and lpr.Character and PlayerCurrentData["LastPos"] then
+															local playerHRP = lpr.Character:FindFirstChild("HumanoidRootPart")
+															if playerHRP then
+																playerHRP.CFrame = PlayerCurrentData["LastPos"]
+																--print("Returned " .. lpr.DisplayName .. " to last position: " .. tostring(PlayerCurrentData["LastPos"]))
+																PlayerCurrentData["LastPos"] = nil
+																PlayerCurrentData["IsTeleported"] = false
+															end
+														end
+													end
 												print("Cutscene completed")
 											end
 											end)
@@ -5509,7 +5522,6 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 														--print("Teleported " .. lpr.DisplayName .. " to: " .. tostring(teleportPos))
 													end
 												end
-
 												PlayerCurrentData["TeleportPending"] = false
 											end
 											--]]
@@ -5523,59 +5535,6 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 										elseif s.Name == "explosion2" then
 											s.SoundId = "rbxassetid://7244661974"
 											s.PlaybackSpeed = modelData.soundSpeed
-											
-											--[ Check if kick after cutscene is enabled
-											if SettingsScript.KickPlayerAfterCutsenceBD and PlayerCurrentData["IsTeleported"] then
-												-- Return YOU to the last position
-												if lpr and lpr.Character and PlayerCurrentData["LastPos"] then
-													local playerHRP = lpr.Character:FindFirstChild("HumanoidRootPart")
-													if playerHRP then
-														playerHRP.CFrame = PlayerCurrentData["LastPos"]
-														print("Returned " .. lpr.DisplayName .. " to last position: " .. tostring(PlayerCurrentData["LastPos"]))
-
-														-- Clear the saved position after a small delay
-														task.wait(0.1)
-														PlayerCurrentData["LastPos"] = nil
-														PlayerCurrentData["IsTeleported"] = false
-													end
-												end
-											end
-
-											-- Switch back to Nukem sound when explosion2 ends
-											spawn(function()
-												-- Wait for explosion2 sound to finish playing
-												while s.IsPlaying and s.Name == "explosion2" do
-													task.wait(0.1)
-												end
-
-												-- Only switch if cutscene is active or just finished
-												if PlayerCurrentData["CutsceneActive"] or CamPosActive then
-													-- Wait a bit before switching back
-													task.wait(0.3)
-
-													-- Check if Nukem sound exists on the victim
-													local victimTorso = s and s.Parent
-													if victimTorso then
-														local nukemSound = victimTorso:FindFirstChild("Nukem")
-														if nukemSound and nukemSound:IsA("Sound") then
-															-- Play Nukem again
-															nukemSound:Play()
-															print("Switched back to Nukem sound")
-														else
-															-- Create new Nukem sound if it doesn't exist
-															local newNukem = Instance.new("Sound")
-															newNukem.Name = "Nukem"
-															newNukem.SoundId = "rbxassetid://120951886226574"
-															newNukem.Volume = s.Volume or 1
-															newNukem.PlaybackSpeed = modelData.soundSpeed or 1
-															newNukem.Parent = victimTorso
-															newNukem:Play()
-															print("Created and played new Nukem sound")
-														end
-													end
-												end
-											end)
-											--]]
 										else
 											s.PlaybackSpeed = modelData.customSounds[soundName]
 										end
