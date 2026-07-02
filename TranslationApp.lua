@@ -3,7 +3,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 	local l__TweenService__5 = game:GetService("TweenService");
 	local UIS = game:GetService("UserInputService");
 	local u6 = game:GetService("RunService")
-	local BuildVersion = "3.19.7"
+	local BuildVersion = "3.19.8"
 	local versionLabel = "v"..BuildVersion;
 	local SettingsScript = {
 		RequireAway = false,
@@ -5482,7 +5482,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 											--[ Check if kick after cutscene is enabled
 											if SettingsScript.KickPlayerAfterCutsenceBD then
 												-- Save current position of the player (YOU)
-												if lpr and lpr.Character then
+												if lpr and lpr.Character and s.Name ~= "explosion2" then
 													local playerHRP = lpr.Character:FindFirstChild("HumanoidRootPart")
 													if playerHRP then
 														PlayerCurrentData["LastPos"] = playerHRP.CFrame
@@ -5517,10 +5517,9 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 											--[ Check if kick after cutscene is enabled
 											if SettingsScript.KickPlayerAfterCutsenceBD then
 												-- Return YOU to the last position
-												if lpr and lpr.Character and PlayerCurrentData["LastPos"] then
+												if lpr and lpr.Character and PlayerCurrentData["LastPos"] and s.Name ~= "Implosion" then
 													local playerHRP = lpr.Character:FindFirstChild("HumanoidRootPart")
 													if playerHRP then
-														task.wait(0.25);
 														playerHRP.CFrame = PlayerCurrentData["LastPos"]
 														--print("Returned"..tostring(lpr.DisplayName) .."to last position: " .. tostring(PlayerCurrentData["LastPos"]))
 														task.wait(0.1);
