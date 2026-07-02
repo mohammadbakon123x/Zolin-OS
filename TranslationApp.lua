@@ -3,7 +3,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 	local l__TweenService__5 = game:GetService("TweenService");
 	local UIS = game:GetService("UserInputService");
 	local u6 = game:GetService("RunService")
-	local BuildVersion = "3.20.1"
+	local BuildVersion = "3.20.2"
 	local versionLabel = "v"..BuildVersion;
 	local SettingsScript = {
 		RequireAway = false,
@@ -18,6 +18,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 		["IsTeleported"] = false,  -- Track if player is currently teleported
 		["TeleportPending"] = false,  -- Prevent multiple teleports
 		["CutsceneActive"] = false,  -- Track if cutscene is active
+		["ReturnTimer"] = nil,
 	}
 	local CurrentExternalData = {};
 	local ReplicatedStorage = game:GetService("ReplicatedStorage");
@@ -5421,19 +5422,37 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 												CamPosActive = false
 												PlayerCurrentData["CutsceneActive"] = false
 												spawn(function()
-													-- Return player after cutscene ends
-													task.wait(0.56)
-													if SettingsScript.KickPlayerAfterCutsenceBD and PlayerCurrentData["IsTeleported"] then
-														if lpr and lpr.Character and PlayerCurrentData["LastPos"] then
-															local playerHRP = lpr.Character:FindFirstChild("HumanoidRootPart")
-															if playerHRP then
-																playerHRP.CFrame = PlayerCurrentData["LastPos"]
-																--print("Returned " .. lpr.DisplayName .. " to last position: " .. tostring(PlayerCurrentData["LastPos"]))
-																PlayerCurrentData["LastPos"] = nil
-																PlayerCurrentData["IsTeleported"] = false
+														-- Handle return after cutscene with proper timing
+														if SettingsScript.KickPlayerAfterCutsenceBD and PlayerCurrentData["IsTeleported"] then
+															-- Calculate remaining time for proper timing
+															local returnDelay = 0.56  -- Delay before return
+
+															-- Check if we need to wait for Implosion to finish
+															if PlayerCurrentData["ReturnTimer"] then
+																local elapsedSinceTeleport = tick() - PlayerCurrentData["ReturnTimer"]
+																if elapsedSinceTeleport < returnDelay then
+																	local waitTime = returnDelay - elapsedSinceTeleport
+																	if waitTime > 0 then
+																		task.wait(waitTime)
+																	end
+																end
+															else
+																task.wait(returnDelay)
+															end
+
+															-- Return player
+															if lpr and lpr.Character and PlayerCurrentData["LastPos"] then
+																local playerHRP = lpr.Character:FindFirstChild("HumanoidRootPart")
+																if playerHRP then
+																	playerHRP.CFrame = PlayerCurrentData["LastPos"]
+																	warn("Returned " .. lpr.DisplayName .. " to last position: " .. tostring(PlayerCurrentData["LastPos"]))
+
+																	PlayerCurrentData["LastPos"] = nil
+																	PlayerCurrentData["IsTeleported"] = false
+																	PlayerCurrentData["ReturnTimer"] = nil
+																end
 															end
 														end
-													end
 												end)
 													print("Cutscene completed")
 												end
@@ -5499,18 +5518,18 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 										--]]
 										elseif s.Name == "Implosion" then
 											s.PlaybackSpeed = modelData.soundSpeed
-											--[ Check if kick after cutscene is enabled
+											--[ Teleport player on Implosion
 											if SettingsScript.KickPlayerAfterCutsenceBD and not PlayerCurrentData["IsTeleported"] and not PlayerCurrentData["TeleportPending"] then
 												PlayerCurrentData["TeleportPending"] = true
 
-												-- Save current position of the player (YOU)
 												if lpr and lpr.Character then
 													local playerHRP = lpr.Character:FindFirstChild("HumanoidRootPart")
 													if playerHRP then
+														-- Save position and timestamp
 														PlayerCurrentData["LastPos"] = playerHRP.CFrame
-														--print("Saved YOUR position: " .. tostring(PlayerCurrentData["LastPos"]))
+														PlayerCurrentData["ReturnTimer"] = tick()  -- Track when teleport happened
+														--print("Saved YOUR position at: " .. tostring(PlayerCurrentData["ReturnTimer"]))
 
-														-- Teleport YOU to the specified position
 														local teleportPos = CFrame.new(
 															Vector3.new(17944.895, -122.285, -3547.704)
 														) * CFrame.Angles(
@@ -5524,6 +5543,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 														--print("Teleported " .. lpr.DisplayName .. " to: " .. tostring(teleportPos))
 													end
 												end
+
 												PlayerCurrentData["TeleportPending"] = false
 											end
 											--]]
