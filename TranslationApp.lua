@@ -3,7 +3,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 	local l__TweenService__5 = game:GetService("TweenService");
 	local UIS = game:GetService("UserInputService");
 	local u6 = game:GetService("RunService")
-	local BuildVersion = "3.20.2"
+	local BuildVersion = "3.20.3"
 	local versionLabel = "v"..BuildVersion;
 	local SettingsScript = {
 		RequireAway = false,
@@ -19,6 +19,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 		["TeleportPending"] = false,  -- Prevent multiple teleports
 		["CutsceneActive"] = false,  -- Track if cutscene is active
 		["ReturnTimer"] = nil,
+		["Init"] = false,
 	}
 	local CurrentExternalData = {};
 	local ReplicatedStorage = game:GetService("ReplicatedStorage");
@@ -5425,7 +5426,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 														-- Handle return after cutscene with proper timing
 														if SettingsScript.KickPlayerAfterCutsenceBD and PlayerCurrentData["IsTeleported"] then
 															-- Calculate remaining time for proper timing
-															local returnDelay = 0.56  -- Delay before return
+															local returnDelay = 0.24  -- Delay before return
 
 															-- Check if we need to wait for Implosion to finish
 															if PlayerCurrentData["ReturnTimer"] then
@@ -5519,12 +5520,12 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 										elseif s.Name == "Implosion" then
 											s.PlaybackSpeed = modelData.soundSpeed
 											--[ Teleport player on Implosion
-											if SettingsScript.KickPlayerAfterCutsenceBD and not PlayerCurrentData["IsTeleported"] and not PlayerCurrentData["TeleportPending"] then
+											if SettingsScript.KickPlayerAfterCutsenceBD and not PlayerCurrentData["IsTeleported"] and not PlayerCurrentData["TeleportPending"] and not PlayerCurrentData["Init"] then
 												PlayerCurrentData["TeleportPending"] = true
-
 												if lpr and lpr.Character then
 													local playerHRP = lpr.Character:FindFirstChild("HumanoidRootPart")
 													if playerHRP then
+														if PlayerCurrentData["Init"] then return end
 														-- Save position and timestamp
 														PlayerCurrentData["LastPos"] = playerHRP.CFrame
 														PlayerCurrentData["ReturnTimer"] = tick()  -- Track when teleport happened
@@ -5540,6 +5541,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 
 														playerHRP.CFrame = teleportPos
 														PlayerCurrentData["IsTeleported"] = true
+														PlayerCurrentData["Init"] = true
 														--print("Teleported " .. lpr.DisplayName .. " to: " .. tostring(teleportPos))
 													end
 												end
