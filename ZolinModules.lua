@@ -1,6 +1,6 @@
 -- ZolinModules (Complete Combined ModuleScript)
 local ZolinModules = {}
-ZolinModules.Mode = "Mobile"  --| Mobile | default - | Desktop | beta
+ZolinModules.Mode = "Desktop"  --| Mobile | default - | Desktop | beta
 --Global Variables | Desktop
 ZolinModules.CurrentUptime = nil
 ZolinModules.CurrentTime = nil
