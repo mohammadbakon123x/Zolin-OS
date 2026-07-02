@@ -3078,7 +3078,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 	SliderSelection5.SizeConstraint = Enum.SizeConstraint.RelativeXY;
 	SliderSelection5.Visible = true
 	SliderSelection5.ZIndex = 6;
-	SliderSelection5.LayoutOrder = 3;
+	SliderSelection5.LayoutOrder = 2;
 	local UICorner_Slider5 = Instance.new("UICorner", SliderSelection5);
 	UICorner_Slider2.CornerRadius = UDim.new(0, 5);
 	local Title_Slider5 = Instance.new("TextLabel", SliderSelection5);
@@ -3094,7 +3094,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 	Title_Slider5.Text = "  Enable Auto Kick Player after cutsence beatdown :"
 	Title_Slider5.TextColor3 = Color3.fromRGB(194, 194, 194);
 	Title_Slider5.TextScaled = false;
-	Title_Slider5.TextSize = 34;
+	Title_Slider5.TextSize = 29;
 	Title_Slider5.TextWrapped = true;
 	Title_Slider5.TextXAlignment = Enum.TextXAlignment.Left;
 	Title_Slider5.TextYAlignment = Enum.TextYAlignment.Center;
