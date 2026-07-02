@@ -3,7 +3,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 	local l__TweenService__5 = game:GetService("TweenService");
 	local UIS = game:GetService("UserInputService");
 	local u6 = game:GetService("RunService")
-	local BuildVersion = "3.19.5"
+	local BuildVersion = "3.19.6"
 	local versionLabel = "v"..BuildVersion;
 	local SettingsScript = {
 		RequireAway = false,
@@ -2361,7 +2361,6 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 			end
 		end
 		local settings = {
-			{name = "Allow Requiring ModuleScripts", description = "Require Modules in Order to Work, Disabling it May Some Services will not work correctly. ", default = true},
 			{name = "UI Animations", description = "Play UI Animations. Enabling It May reduce Performance.", default = false},
 			{name = "Disable Anti Exploit", description = "Disables Mostly Anti Expliots.", default = false},
 			{name = "Watermark Rights", description = "Watermark Rights in bottom right, Disabling it will Hide it.", default = true},
@@ -2370,9 +2369,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 		for i, setting in ipairs(settings) do
 			local savedValue = loadExternalSetting(setting.name, setting.default)
 			local isEnabled = savedValue
-			if setting.name == "Allow Requiring ModuleScripts" then
-				SettingsScript.RequireAway = isEnabled
-			elseif setting.name == "UI Animations" then
+			if setting.name == "UI Animations" then
 				SettingsScript.UIAnimations = isEnabled
 			elseif setting.name == "Disable Anti Exploit" then
 				SettingsScript.AntiExploit = isEnabled
@@ -2407,9 +2404,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 					toggleButton.BackgroundColor3 = Color3.fromRGB(70, 60, 95)
 					toggleButton.Text = "OFF"
 				end
-				if setting.name == "Allow Requiring ModuleScripts" then
-					SettingsScript.RequireAway = isEnabled
-				elseif setting.name == "UI Animations" then
+				if setting.name == "UI Animations" then
 					SettingsScript.UIAnimations = isEnabled
 				elseif setting.name == "Disable Anti Exploit" then
 					SettingsScript.AntiExploit = isEnabled
