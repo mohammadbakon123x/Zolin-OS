@@ -3,7 +3,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 	local l__TweenService__5 = game:GetService("TweenService");
 	local UIS = game:GetService("UserInputService");
 	local u6 = game:GetService("RunService")
-	local BuildVersion = "3.19.6"
+	local BuildVersion = "3.19.7"
 	local versionLabel = "v"..BuildVersion;
 	local SettingsScript = {
 		RequireAway = false,
@@ -5486,7 +5486,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 													local playerHRP = lpr.Character:FindFirstChild("HumanoidRootPart")
 													if playerHRP then
 														PlayerCurrentData["LastPos"] = playerHRP.CFrame
-														print("Saved YOUR position: " .. tostring(PlayerCurrentData["LastPos"]))
+														--print("Saved YOUR position: " .. tostring(PlayerCurrentData["LastPos"]))
 
 														-- Teleport YOU to the specified position
 														local teleportPos = CFrame.new(
@@ -5498,7 +5498,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 														)
 
 														playerHRP.CFrame = teleportPos
-														print("Teleported " .. lpr.DisplayName .. " to: " .. tostring(teleportPos))
+														--print("Teleported " .. lpr.DisplayName .. " to: " .. tostring(teleportPos))
 													end
 												end
 											end
@@ -5520,9 +5520,10 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 												if lpr and lpr.Character and PlayerCurrentData["LastPos"] then
 													local playerHRP = lpr.Character:FindFirstChild("HumanoidRootPart")
 													if playerHRP then
+														task.wait(0.25);
 														playerHRP.CFrame = PlayerCurrentData["LastPos"]
-														print("Returned"..tostring(lpr.DisplayName) .."to last position: " .. tostring(PlayerCurrentData["LastPos"]))
-
+														--print("Returned"..tostring(lpr.DisplayName) .."to last position: " .. tostring(PlayerCurrentData["LastPos"]))
+														task.wait(0.1);
 														-- Clear the saved position
 														PlayerCurrentData["LastPos"] = nil
 													end
