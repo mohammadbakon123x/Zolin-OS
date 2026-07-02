@@ -5426,7 +5426,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 														-- Handle return after cutscene with proper timing
 														if SettingsScript.KickPlayerAfterCutsenceBD and PlayerCurrentData["IsTeleported"] then
 															-- Calculate remaining time for proper timing
-															local returnDelay = 0.24  -- Delay before return
+															local returnDelay = 0.1  -- Delay before return
 
 															-- Check if we need to wait for Implosion to finish
 															if PlayerCurrentData["ReturnTimer"] then
