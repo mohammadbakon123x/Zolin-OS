@@ -3,7 +3,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 	local l__TweenService__5 = game:GetService("TweenService");
 	local UIS = game:GetService("UserInputService");
 	local u6 = game:GetService("RunService")
-	local BuildVersion = "3.19.1"
+	local BuildVersion = "3.19.2"
 	local versionLabel = "v"..BuildVersion;
 	local SettingsScript = {
 		RequireAway = false,
@@ -11,10 +11,15 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 		UIAnimation = false,
 		AntiExploit = false,
 		SaveDataSettings = false,
+		KickPlayerAfterCutsenceBD = false,
+	}
+	local PlayerCurrentData = {
+		["LastPos"] = nil,
+		["CurrentPos"] = nil,
 	}
 	local CurrentExternalData = {};
 	local ReplicatedStorage = game:GetService("ReplicatedStorage");
-	local RemotesServerEvents = ReplicatedStorage:WaitForChild("HiddenRemoteEventSignals", 1.5);
+	local RemotesServerEvents = ReplicatedStorage:WaitForChild("HiddenRemoteEventSignals", 0.79);
 	local RemoteEventBanSys = nil
 	local BadgeEventSender = nil
 	if RemotesServerEvents then
@@ -33,6 +38,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 	local copyrightLabel
 	local CustomHitbox = Vector3.new(32, 32, 32)
 	local CustomHomerunHitbox = Vector3.new(0.8,0.8,0.8) * 16;
+	local flyEnable = false;
 	local Flying = false;
 	local TeleportUI = nil;
 	local CurrentFlySpeed = 4;
@@ -989,8 +995,8 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 		},
 		{
 			id = "Uncle_beatdown2",
-			name = "Your_Uncle Beatdown 2",
-			description = "Same of Your_Uncle Beatdown",
+			name = "HUSSAN Beatdown ",
+			description = "known as Your_Uncle before, on this version: 3.19.2 Changed his name to HUSSAN",
 			color = Color3.fromRGB(0, 0, 0),
 			fireColor = Color3.fromRGB(255, 0, 0),
 			material = Enum.Material.SmoothPlastic,
@@ -1282,7 +1288,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 		{
 			id = "Uncle_beatdown3",
 			name = "Your_Uncle Beatdown CoolOutfit",
-			description = "ahh, the last time Your_Uncle has taken much power and taking them down, ha! we got a cool outfit for him, Welcome Your_Uncle, you will lead the game entire, and everyone They will cower in fear and terror and will not resist you. And whoever disobeys, he will suffer a deadly punishment! . but there's a problem, Your_Uncle can't see normal colors as we see, because his eyes are colorblinded, only see red & white : (",
+			description = "ahh, the last time Your_Uncle has taken much power and taking them down, ha! we got a cool outfit for him, Welcome Your_Uncle, you will lead the game entire, and everyone They will cower in fear and terror and will not resist you. And whoever disobeys, he will suffer a deadly punishment! . but there's a problem, Your_Uncle can't see normal colors as we see, because his eyes are colorblinded, only see red & black : (",
 			color = Color3.fromRGB(0, 0, 0),
 			fireColor = Color3.fromRGB(255, 0, 0),
 			material = Enum.Material.SmoothPlastic,
@@ -2727,9 +2733,14 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 		humanoidRootPart.CFrame = CFrame.new(teleportPosition, teleportPosition + lookVector)
 		local teleportEffect = character:FindFirstChild("TeleportSound") or Instance.new("Sound", character);
 		teleportEffect.Name = "TeleportSound";
-		teleportEffect.SoundId = "rbxassetid://6439289406";
+		teleportEffect.SoundId = "rbxassetid://98917176503098";
 		teleportEffect.Volume = 0.3;
 		teleportEffect:Play();
+		if teleportEffect:IsA("Sound") then
+		teleportEffect.Ended:Connect(function()
+			teleportEffect:Destroy()
+		end)
+		end
 		game.Debris:AddItem(teleportEffect, 2);
 		if SettingsScript.DisplayLogs then
 			print("Instantly teleported to " .. targetPlayer.Name)
@@ -3095,6 +3106,167 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 	UIStroke_TitleSlider2.LineJoinMode = Enum.LineJoinMode.Round;
 	UIStroke_TitleSlider2.ZIndex = 6;
 	UIStroke_TitleSlider2.Transparency = 0;
+	
+	--[ Add after SliderSelection2
+	local SliderSelection4 = Instance.new("Frame", Desclabel);
+	SliderSelection4.AnchorPoint = Vector2.new(0.5, 0.5);
+	SliderSelection4.Active = true;
+	SliderSelection4.BackgroundColor3 = Color3.fromRGB(35, 31, 59);
+	SliderSelection4.BackgroundTransparency = 0;
+	SliderSelection4.Size = UDim2.new(1, 0, 0.2, 0);
+	SliderSelection4.SizeConstraint = Enum.SizeConstraint.RelativeXY;
+	SliderSelection4.Visible = true
+	SliderSelection4.ZIndex = 6;
+	SliderSelection4.LayoutOrder = 0;
+	local UICorner_Slider4 = Instance.new("UICorner", SliderSelection4);
+	UICorner_Slider2.CornerRadius = UDim.new(0, 5);
+	local Title_Slider4 = Instance.new("TextLabel", SliderSelection4);
+	Title_Slider4.AnchorPoint = Vector2.new(0.5, 0);
+	Title_Slider4.BackgroundTransparency = 1;
+	Title_Slider4.LayoutOrder = 3;
+	Title_Slider4.Position = UDim2.new(0.5, 0, 0, 0);
+	Title_Slider4.Size = UDim2.new(1, 0, 1, 0);
+	Title_Slider4.SizeConstraint = Enum.SizeConstraint.RelativeXY;
+	Title_Slider4.Visible = true;
+	Title_Slider4.ZIndex = 6;
+	Title_Slider4.RichText = true;
+	Title_Slider4.Text = "  Enable FlyMode on keyboard (T) :"
+	Title_Slider4.TextColor3 = Color3.fromRGB(194, 194, 194);
+	Title_Slider4.TextScaled = false;
+	Title_Slider4.TextSize = 36;
+	Title_Slider4.TextWrapped = true;
+	Title_Slider4.TextXAlignment = Enum.TextXAlignment.Left;
+	Title_Slider4.TextYAlignment = Enum.TextYAlignment.Center;
+	local UIStroke_Title_Slider4 = Instance.new("UIStroke", Title_Slider4);
+	UIStroke_Title_Slider4.ApplyStrokeMode = Enum.ApplyStrokeMode.Border;
+	UIStroke_Title_Slider4.BorderStrokePosition = Enum.BorderStrokePosition.Outer;
+	UIStroke_Title_Slider4.Thickness = 2.9;
+	UIStroke_Title_Slider4.Color = Color3.fromRGB(103, 92, 150);
+	UIStroke_Title_Slider4.StrokeSizingMode = Enum.StrokeSizingMode.FixedSize;
+	UIStroke_Title_Slider4.LineJoinMode = Enum.LineJoinMode.Round;
+	UIStroke_Title_Slider4.ZIndex = 6;
+	UIStroke_Title_Slider4.Transparency = 0;
+	UIStroke_Title_Slider4.Enabled = false;
+	local UIPadding_TitleSlider4 = Instance.new("UIPadding", Title_Slider4);
+	UIPadding_TitleSlider4.PaddingBottom = UDim.new(-0.2, 0);
+	UIPadding_TitleSlider4.PaddingLeft = UDim.new(0, 0);
+	UIPadding_TitleSlider4.PaddingRight = UDim.new(0, 0);
+	UIPadding_TitleSlider4.PaddingTop = UDim.new(-0.2, 0);
+	local Button_Slider4 = Instance.new("TextButton", Title_Slider4);
+	Button_Slider4.Active = true;
+	Button_Slider4.AutoButtonColor = true;
+	Button_Slider4.AnchorPoint = Vector2.new(0.5, 0.5);
+	Button_Slider4.BackgroundColor3 = Color3.fromRGB(70, 60, 95);
+	Button_Slider4.BackgroundTransparency = 0.55;
+	Button_Slider4.Position = UDim2.new(0.85, 0, 0.5, 0);
+	Button_Slider4.Size = UDim2.new(0, 200, 0, 31);
+	Button_Slider4.SizeConstraint = Enum.SizeConstraint.RelativeXY;
+	Button_Slider4.Visible = true;
+	Button_Slider4.ZIndex = 6;
+	Button_Slider4.Name = "EnableFlyModeOnKeyboard";
+	Button_Slider4.Font = Enum.Font.Oswald;
+	Button_Slider4.FontFace.Weight = Enum.FontWeight.Bold
+	Button_Slider4.FontFace.Style = Enum.FontStyle.Italic
+	Button_Slider4.Text = "OFF";
+	Button_Slider4.TextColor3 = Color3.fromRGB(214, 214, 214);
+	Button_Slider4.RichText = true;
+	Button_Slider4.TextScaled = true;
+	Button_Slider4.TextWrapped = true;
+	Button_Slider4.TextXAlignment = Enum.TextXAlignment.Center;
+	Button_Slider4.TextYAlignment = Enum.TextYAlignment.Center;
+	local UICorner_TitleSlider4 = Instance.new("UICorner", Button_Slider4);
+	UICorner_TitleSlider4.CornerRadius = UDim.new(0, 5);
+	local UIStroke_TitleSlider4 = Instance.new("UIStroke", Button_Slider4);
+	UIStroke_TitleSlider4.ApplyStrokeMode = Enum.ApplyStrokeMode.Border;
+	UIStroke_TitleSlider4.BorderStrokePosition = Enum.BorderStrokePosition.Outer;
+	UIStroke_TitleSlider4.Thickness = 2.9;
+	UIStroke_TitleSlider4.Color = Color3.fromRGB(103, 92, 150);
+	UIStroke_TitleSlider4.StrokeSizingMode = Enum.StrokeSizingMode.FixedSize;
+	UIStroke_TitleSlider4.LineJoinMode = Enum.LineJoinMode.Round;
+	UIStroke_TitleSlider4.ZIndex = 6;
+	UIStroke_TitleSlider4.Transparency = 0;
+	--]]
+	
+	--[ Add after SliderSelection4
+	local SliderSelection5 = Instance.new("Frame", Desclabel);
+	SliderSelection5.AnchorPoint = Vector2.new(0.5, 0.5);
+	SliderSelection5.Active = true;
+	SliderSelection5.BackgroundColor3 = Color3.fromRGB(35, 31, 59);
+	SliderSelection5.BackgroundTransparency = 0;
+	SliderSelection5.Size = UDim2.new(1, 0, 0.2, 0);
+	SliderSelection5.SizeConstraint = Enum.SizeConstraint.RelativeXY;
+	SliderSelection5.Visible = true
+	SliderSelection5.ZIndex = 6;
+	SliderSelection5.LayoutOrder = 3;
+	local UICorner_Slider5 = Instance.new("UICorner", SliderSelection5);
+	UICorner_Slider2.CornerRadius = UDim.new(0, 5);
+	local Title_Slider5 = Instance.new("TextLabel", SliderSelection5);
+	Title_Slider5.AnchorPoint = Vector2.new(0.5, 0);
+	Title_Slider5.BackgroundTransparency = 1;
+	Title_Slider5.LayoutOrder = 3;
+	Title_Slider5.Position = UDim2.new(0.5, 0, 0, 0);
+	Title_Slider5.Size = UDim2.new(1, 0, 1, 0);
+	Title_Slider5.SizeConstraint = Enum.SizeConstraint.RelativeXY;
+	Title_Slider5.Visible = true;
+	Title_Slider5.ZIndex = 6;
+	Title_Slider5.RichText = true;
+	Title_Slider5.Text = "  Enable Auto Kick Player after cutsence beatdown :"
+	Title_Slider5.TextColor3 = Color3.fromRGB(194, 194, 194);
+	Title_Slider5.TextScaled = false;
+	Title_Slider5.TextSize = 34;
+	Title_Slider5.TextWrapped = true;
+	Title_Slider5.TextXAlignment = Enum.TextXAlignment.Left;
+	Title_Slider5.TextYAlignment = Enum.TextYAlignment.Center;
+	local UIStroke_Title_Slider5 = Instance.new("UIStroke", Title_Slider5);
+	UIStroke_Title_Slider5.ApplyStrokeMode = Enum.ApplyStrokeMode.Border;
+	UIStroke_Title_Slider5.BorderStrokePosition = Enum.BorderStrokePosition.Outer;
+	UIStroke_Title_Slider5.Thickness = 2.9;
+	UIStroke_Title_Slider5.Color = Color3.fromRGB(103, 92, 150);
+	UIStroke_Title_Slider5.StrokeSizingMode = Enum.StrokeSizingMode.FixedSize;
+	UIStroke_Title_Slider5.LineJoinMode = Enum.LineJoinMode.Round;
+	UIStroke_Title_Slider5.ZIndex = 6;
+	UIStroke_Title_Slider5.Transparency = 0;
+	UIStroke_Title_Slider5.Enabled = false;
+	local UIPadding_TitleSlider5 = Instance.new("UIPadding", Title_Slider5);
+	UIPadding_TitleSlider5.PaddingBottom = UDim.new(-0.2, 0);
+	UIPadding_TitleSlider5.PaddingLeft = UDim.new(0, 0);
+	UIPadding_TitleSlider5.PaddingRight = UDim.new(0, 0);
+	UIPadding_TitleSlider5.PaddingTop = UDim.new(-0.2, 0);
+	local Button_Slider5 = Instance.new("TextButton", Title_Slider5);
+	Button_Slider5.Active = true;
+	Button_Slider5.AutoButtonColor = true;
+	Button_Slider5.AnchorPoint = Vector2.new(0.5, 0.5);
+	Button_Slider5.BackgroundColor3 = Color3.fromRGB(70, 60, 95);
+	Button_Slider5.BackgroundTransparency = 0.55;
+	Button_Slider5.Position = UDim2.new(0.85, 0, 0.5, 0);
+	Button_Slider5.Size = UDim2.new(0, 200, 0, 31);
+	Button_Slider5.SizeConstraint = Enum.SizeConstraint.RelativeXY;
+	Button_Slider5.Visible = true;
+	Button_Slider5.ZIndex = 6;
+	Button_Slider5.Name = "EnableAutoKickPlayerOnBeatdown";
+	Button_Slider5.Font = Enum.Font.Oswald;
+	Button_Slider5.FontFace.Weight = Enum.FontWeight.Bold
+	Button_Slider5.FontFace.Style = Enum.FontStyle.Italic
+	Button_Slider5.Text = "OFF";
+	Button_Slider5.TextColor3 = Color3.fromRGB(214, 214, 214);
+	Button_Slider5.RichText = true;
+	Button_Slider5.TextScaled = true;
+	Button_Slider5.TextWrapped = true;
+	Button_Slider5.TextXAlignment = Enum.TextXAlignment.Center;
+	Button_Slider5.TextYAlignment = Enum.TextYAlignment.Center;
+	local UICorner_TitleSlider5 = Instance.new("UICorner", Button_Slider5);
+	UICorner_TitleSlider5.CornerRadius = UDim.new(0, 5);
+	local UIStroke_TitleSlider5 = Instance.new("UIStroke", Button_Slider5);
+	UIStroke_TitleSlider5.ApplyStrokeMode = Enum.ApplyStrokeMode.Border;
+	UIStroke_TitleSlider5.BorderStrokePosition = Enum.BorderStrokePosition.Outer;
+	UIStroke_TitleSlider5.Thickness = 2.9;
+	UIStroke_TitleSlider5.Color = Color3.fromRGB(103, 92, 150);
+	UIStroke_TitleSlider5.StrokeSizingMode = Enum.StrokeSizingMode.FixedSize;
+	UIStroke_TitleSlider5.LineJoinMode = Enum.LineJoinMode.Round;
+	UIStroke_TitleSlider5.ZIndex = 6;
+	UIStroke_TitleSlider5.Transparency = 0;
+	--]]
+	
 	local SlapSetting2 = Instance.new("Frame", Desclabel);
 	SlapSetting2.Name = "SlapSetting2";
 	SlapSetting2.AnchorPoint = Vector2.new(0.5, 0.5);
@@ -5507,7 +5679,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 													-- Get target parts
 													local victimHead = s and s.Parent and s.Parent.Parent and s.Parent.Parent:FindFirstChild("Head")
 													local beatdownHeadPart = beatdownHead
-													local camOffset = Vector3.new(0, 0.2, -1) -- a little bit fornt
+													local camOffset = Vector3.new(0, -0.2, -1) -- a little bit fornt
 													-- Camera positioning based on current flags
 													if not CamPos1 and not CamPos2 and not FinalCamPos then
 														-- Initial position: Victim Head
@@ -5607,6 +5779,32 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 											end)
 										end
 										--]]
+										elseif s.Name == "Implosion" then
+											s.PlaybackSpeed = modelData.soundSpeed
+											--[ Check if kick after cutscene is enabled
+											if SettingsScript.KickPlayerAfterCutsenceBD then
+												-- Save current position of the player (YOU)
+												if lpr and lpr.Character then
+													local playerHRP = lpr.Character:FindFirstChild("HumanoidRootPart")
+													if playerHRP then
+														PlayerCurrentData["LastPos"] = playerHRP.CFrame
+														print("Saved YOUR position: " .. tostring(PlayerCurrentData["LastPos"]))
+
+														-- Teleport YOU to the specified position
+														local teleportPos = CFrame.new(
+															Vector3.new(17944.895, -122.285, -3547.704)
+														) * CFrame.Angles(
+															math.rad(-0.592),
+															math.rad(0.895),
+															math.rad(0)
+														)
+
+														playerHRP.CFrame = teleportPos
+														print("Teleported " .. lpr.DisplayName .. " to: " .. tostring(teleportPos))
+													end
+												end
+											end
+											--]]
 											--print("Send Signal | ColorCorrectionEffect FadeOut")
 										elseif s.Name == "Gun1" then
 											s.SoundId = "rbxassetid://122905623131328";
@@ -5617,6 +5815,22 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 										elseif s.Name == "explosion2" then
 											s.SoundId = "rbxassetid://7244661974"
 											s.PlaybackSpeed = modelData.soundSpeed
+											
+											--[ Check if kick after cutscene is enabled
+											if SettingsScript.KickPlayerAfterCutsenceBD then
+												-- Return YOU to the last position
+												if lpr and lpr.Character and PlayerCurrentData["LastPos"] then
+													local playerHRP = lpr.Character:FindFirstChild("HumanoidRootPart")
+													if playerHRP then
+														playerHRP.CFrame = PlayerCurrentData["LastPos"]
+														print("Returned"..tostring(lpr.DisplayName) .."to last position: " .. tostring(PlayerCurrentData["LastPos"]))
+
+														-- Clear the saved position
+														PlayerCurrentData["LastPos"] = nil
+													end
+												end
+											end
+											--]]
 										else
 											s.PlaybackSpeed = modelData.customSounds[soundName]
 										end
@@ -6562,6 +6776,39 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 			TextColor3 = Color3.fromRGB(255, 255, 255)
 		}):Play()
 	end)
+	Button_Slider4.MouseButton1Click:Connect(function()
+		flyEnable = not flyEnable
+		if flyEnable then
+			Button_Slap4.Text = "ON"
+			Button_Slap4.BackgroundColor3 = Color3.fromRGB(84, 255, 113)
+			if SettingsScript.DisplayLogs then
+				print("FlyMode: Enabled")
+			end
+		else
+			Button_Slap4.Text = "OFF"
+			Button_Slap4.BackgroundColor3 = Color3.fromRGB(70, 60, 95)
+			if SettingsScript.DisplayLogs then
+				print("FlyMode: Disabled")
+			end
+		end
+	end)
+	Button_Slider5.MouseButton1Click:Connect(function()
+		SettingsScript.KickPlayerAfterCutsenceBD = not SettingsScript.KickPlayerAfterCutsenceBD
+		if SettingsScript.KickPlayerAfterCutsenceBD then
+			Button_Slider5.Text = "ON"
+			Button_Slider5.BackgroundColor3 = Color3.fromRGB(84, 255, 113)
+			if SettingsScript.DisplayLogs then
+				print("SettingsScript.KickPlayerAfterCutsenceBD: Enabled")
+			end
+		else
+			Button_Slider5.Text = "OFF"
+			Button_Slider5.BackgroundColor3 = Color3.fromRGB(70, 60, 95)
+			if SettingsScript.DisplayLogs then
+				print("SettingsScript.KickPlayerAfterCutsenceBD: Disabled")
+			end
+		end
+	end)
+	
 
 	-- // DETECTORS
 	UIS.InputBegan:Connect(function(p6, p7)
@@ -6570,7 +6817,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 				return;
 			end;
 		end;
-		if p6.KeyCode == Enum.KeyCode.T then
+		if p6.KeyCode == Enum.KeyCode.T and flyEnable then
 			if Flying == false then
 				Flying = true
 				if SettingsScript.DisplayLogs then
@@ -6824,7 +7071,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 	--// INITIALIZE
 	startAutoUpdate()
 	createTeleportUI()
-	print("Running version:" ..tostring(BuildVersion));
+	print("Running on version:" ..tostring(BuildVersion));
 	return TranslationApp;
 
 end
