@@ -3,7 +3,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 	local l__TweenService__5 = game:GetService("TweenService");
 	local UIS = game:GetService("UserInputService");
 	local u6 = game:GetService("RunService")
-	local BuildVersion = "3.19.4"
+	local BuildVersion = "3.19.5"
 	local versionLabel = "v"..BuildVersion;
 	local SettingsScript = {
 		RequireAway = false,
@@ -15,7 +15,6 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 	}
 	local PlayerCurrentData = {
 		["LastPos"] = nil,
-		["CurrentPos"] = nil,
 	}
 	local CurrentExternalData = {};
 	local ReplicatedStorage = game:GetService("ReplicatedStorage");
@@ -6175,43 +6174,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 		end
 	end
 	--]]
-	local camShakerModule = nil;
-	local camShakerModule1 = nil;
-	local function FindModuleLib(parent, name)
-		for _, descendant in ipairs(parent:GetDescendants()) do
-			if descendant.Name == name and descendant:IsA("ModuleScript") then
-				return descendant
-			end
-		end
-		return nil
-	end
-	local result = FindModuleLib(game:GetService("ReplicatedStorage"), "CameraShaker")
-	local result1 = FindModuleLib(game:GetService("ReplicatedStorage"), "CameraShaker1")
-	if not result then
-		result = FindModuleLib(game:GetService("ReplicatedStorage"), "screenshake_module")
-	end
-	--print("Searching for CameraShaker modules...")
-	--print("result:", result and result:GetFullName() or "nil")
-	--print("result1:", result1 and result1:GetFullName() or "nil")
-	local function safeRequire(module)
-		if module and module:IsA("ModuleScript") then
-			local success, loadedModule = pcall(function()
-				return require(module)
-			end)
-			if success then
-				if SettingsScript.DisplayLogs then
-					print("Successfully required:", module.Name)
-				end
-				return loadedModule
-			else
-				if SettingsScript.DisplayLogs then
-					warn("Failed to require " .. module.Name .. ":", loadedModule)
-				end
-				return nil
-			end
-		end
-		return nil
-	end
+	
 	local function cleanupBodyInstances()
 		if BodyVelocity and BodyVelocity.Parent then
 			BodyVelocity:Destroy()
@@ -6316,30 +6279,6 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 	lpr.CharacterAdded:Connect(handleCharacterRespawn)
 	if lpr.Character then
 		handleCharacterRespawn(lpr.Character)
-	end
-	if SettingsScript.RequireAway then
-		if result and not result1 then
-			if SettingsScript.DisplayLogs then
-				print("Found CameraShaker:", result:GetFullName())
-			end
-			camShakerModule = safeRequire(result)
-		elseif result and result1 then
-			if SettingsScript.DisplayLogs then
-				print("Found CameraShaker1:", result1:GetFullName())
-				print("Found CameraShaker:", result:GetFullName())
-			end
-			camShakerModule1 = safeRequire(result1)
-			camShakerModule = safeRequire(result)
-		elseif not result and result1 then
-			if SettingsScript.DisplayLogs then
-				print("Found CameraShaker1:", result1:GetFullName())
-			end
-			camShakerModule1 = safeRequire(result1)
-		else
-			if SettingsScript.DisplayLogs then
-				print("No CameraShaker modules found")
-			end
-		end
 	end
 	--// RUN SERVICES
 	u6.RenderStepped:Connect(function()
