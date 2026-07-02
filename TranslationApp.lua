@@ -3,7 +3,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 	local l__TweenService__5 = game:GetService("TweenService");
 	local UIS = game:GetService("UserInputService");
 	local u6 = game:GetService("RunService")
-	local BuildVersion = "3.19.2"
+	local BuildVersion = "3.19.3"
 	local versionLabel = "v"..BuildVersion;
 	local SettingsScript = {
 		RequireAway = false,
@@ -2166,112 +2166,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 	UIStroke_Settings.Thickness = 4.3;
 	UIStroke_Settings.Transparency = 0.33;
 	UIStroke_Settings.ZIndex = 6;
-	--[
-	local RealTimeClock = nil
-	local ClockFrame = nil
-	local DisplayRealTime = false
-	local Is24HourFormat = false  
-	local function createRealTimeClock()
-		if ClockFrame then return ClockFrame end
-		ClockFrame = Instance.new("Frame", TranslationUI)
-		ClockFrame.Name = "RealTimeClock"
-		ClockFrame.AnchorPoint = Vector2.new(1, 0)
-		ClockFrame.Position = UDim2.new(1, -20, 0, 20)
-		ClockFrame.Size = UDim2.new(0, 150, 0, 50)
-		ClockFrame.BackgroundTransparency = 0.7
-		ClockFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 40)
-		ClockFrame.BorderSizePixel = 0
-		ClockFrame.Visible = false
-		ClockFrame.ZIndex = 6000
-		local UICorner = Instance.new("UICorner", ClockFrame)
-		UICorner.CornerRadius = UDim.new(0, 10)
-		local UIStroke = Instance.new("UIStroke", ClockFrame)
-		UIStroke.Color = Color3.fromRGB(113, 84, 255)
-		UIStroke.Thickness = 2
-		RealTimeClock = Instance.new("TextLabel", ClockFrame)
-		RealTimeClock.Name = "TimeLabel"
-		RealTimeClock.AnchorPoint = Vector2.new(0.5, 0.5)
-		RealTimeClock.Position = UDim2.new(0.5, 0, 0.5, 0)
-		RealTimeClock.Size = UDim2.new(0.9, 0, 0.8, 0)
-		RealTimeClock.BackgroundTransparency = 1
-		RealTimeClock.Text = "00:00"
-		RealTimeClock.TextColor3 = Color3.fromRGB(255, 255, 255)
-		RealTimeClock.TextScaled = true
-		RealTimeClock.Font = Enum.Font.Oswald
-		RealTimeClock.TextWrapped = true
-		return ClockFrame
-	end
-	local function updateClockTime()
-		if not RealTimeClock or not DisplayRealTime then return end
-		local currentTime = os.date("*t")
-		local hour = currentTime.hour
-		local minute = currentTime.min
-		local second = currentTime.sec
-		local ampm = "AM"
-		if Is24HourFormat then
-			RealTimeClock.Text = string.format("%02d:%02d:%02d", hour, minute, second)
-		else
-			if hour >= 12 then
-				ampm = "PM"
-				if hour > 12 then
-					hour = hour - 12
-				end
-			elseif hour == 0 then
-				hour = 12
-			end
-			RealTimeClock.Text = string.format("%02d:%02d:%02d %s", hour, minute, second, ampm)
-		end
-		if hour >= 6 and hour < 18 then
-			RealTimeClock.TextColor3 = Color3.fromRGB(255, 255, 200)
-			ClockFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 60)
-		else
-			RealTimeClock.TextColor3 = Color3.fromRGB(200, 200, 255)
-			ClockFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 40)
-		end
-	end
-	local function startClockLoop()
-		createRealTimeClock() 
-		if not DisplayRealTime then
-			ClockFrame.Visible = false
-			return
-		end
-		ClockFrame.Visible = true
-		updateClockTime()
-		spawn(function()
-			while DisplayRealTime and ClockFrame and ClockFrame.Parent do
-				updateClockTime()
-				wait(1)
-			end
-		end)
-	end
-	local function toggleRealTimeDisplay(enabled)
-		DisplayRealTime = enabled
-
-		if DisplayRealTime then
-			startClockLoop()
-			if SettingsScript.DisplayLogs then
-				print("Real-time clock: Enabled")
-			end
-		else
-			if ClockFrame then
-				ClockFrame.Visible = false
-			end
-			if SettingsScript.DisplayLogs then
-				print("Real-time clock: Disabled")
-			end
-		end
-	end
-	local function toggle24HourFormat(enabled)
-		Is24HourFormat = enabled
-		if DisplayRealTime then
-			updateClockTime()
-			if SettingsScript.DisplayLogs then
-				print("24-hour format: " .. (enabled and "Enabled" or "Disabled"))
-			end
-		end
-	end
-	--]]
-
+	
 	--[ EXTERNAL SETTINGS FEATURE
 	local ExternalSettingsUI = nil
 	local ExternalSettingsFrame = nil
@@ -2472,20 +2367,11 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 			{name = "Disable Anti Exploit", description = "Disables Mostly Anti Expliots.", default = false},
 			{name = "Watermark Rights", description = "Watermark Rights in bottom right, Disabling it will Hide it.", default = true},
 			{name = "Save Data Settings", description = "Enabling it Will Save your Data Settings Preference.", default = true},
-			{name = "Display Real Time", description = "Display Current Time Clock at the Top Right.", default = false},
-			{name = "24-Hour Format", description = "Use 24-hour format (HH:MM:SS) instead of 12-hour (AM/PM)", default = false},
 		}
 		for i, setting in ipairs(settings) do
 			local savedValue = loadExternalSetting(setting.name, setting.default)
 			local isEnabled = savedValue
-			if setting.name == "Display Real Time" then
-				DisplayRealTime = isEnabled
-				if DisplayRealTime then
-					startClockLoop()
-				end
-			elseif setting.name == "24-Hour Format" then
-				Is24HourFormat = isEnabled
-			elseif setting.name == "Allow Requiring ModuleScripts" then
+			if setting.name == "Allow Requiring ModuleScripts" then
 				SettingsScript.RequireAway = isEnabled
 			elseif setting.name == "UI Animations" then
 				SettingsScript.UIAnimations = isEnabled
@@ -2522,11 +2408,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 					toggleButton.BackgroundColor3 = Color3.fromRGB(70, 60, 95)
 					toggleButton.Text = "OFF"
 				end
-				if setting.name == "Display Real Time" then
-					toggleRealTimeDisplay(isEnabled)
-				elseif setting.name == "24-Hour Format" then
-					toggle24HourFormat(isEnabled)
-				elseif setting.name == "Allow Requiring ModuleScripts" then
+				if setting.name == "Allow Requiring ModuleScripts" then
 					SettingsScript.RequireAway = isEnabled
 				elseif setting.name == "UI Animations" then
 					SettingsScript.UIAnimations = isEnabled
