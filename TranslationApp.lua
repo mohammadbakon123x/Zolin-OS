@@ -3,7 +3,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 	local l__TweenService__5 = game:GetService("TweenService");
 	local UIS = game:GetService("UserInputService");
 	local u6 = game:GetService("RunService")
-	local BuildVersion = "3.19.9"
+	local BuildVersion = "3.20.0"
 	local versionLabel = "v"..BuildVersion;
 	local SettingsScript = {
 		RequireAway = false,
@@ -17,6 +17,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 		["LastPos"] = nil,
 		["IsTeleported"] = false,  -- Track if player is currently teleported
 		["TeleportPending"] = false,  -- Prevent multiple teleports
+		["CutsceneActive"] = false,  -- Track if cutscene is active
 	}
 	local CurrentExternalData = {};
 	local ReplicatedStorage = game:GetService("ReplicatedStorage");
@@ -5338,6 +5339,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 											spawn(function()
 											if CustomCutsenseUncle3 and not CamPosActive then
 												CamPosActive = true
+												PlayerCurrentData["CutsceneActive"] = true
 
 												-- Define timers for camera positions
 												local CamPos1_timer = 1.5  -- Switch to beatdown head at 1.5 seconds
@@ -5417,6 +5419,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 													game:GetService("RunService").RenderStepped:Wait()
 												end
 												CamPosActive = false
+												PlayerCurrentData["CutsceneActive"] = false
 												print("Cutscene completed")
 											end
 											end)
@@ -5528,7 +5531,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 													local playerHRP = lpr.Character:FindFirstChild("HumanoidRootPart")
 													if playerHRP then
 														playerHRP.CFrame = PlayerCurrentData["LastPos"]
-														--print("Returned " .. lpr.DisplayName .. " to last position: " .. tostring(PlayerCurrentData["LastPos"]))
+														print("Returned " .. lpr.DisplayName .. " to last position: " .. tostring(PlayerCurrentData["LastPos"]))
 
 														-- Clear the saved position after a small delay
 														task.wait(0.1)
@@ -5537,6 +5540,41 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 													end
 												end
 											end
+
+											-- Switch back to Nukem sound when explosion2 ends
+											spawn(function()
+												-- Wait for explosion2 sound to finish playing
+												while s.IsPlaying and s.Name == "explosion2" do
+													task.wait(0.1)
+												end
+
+												-- Only switch if cutscene is active or just finished
+												if PlayerCurrentData["CutsceneActive"] or CamPosActive then
+													-- Wait a bit before switching back
+													task.wait(0.3)
+
+													-- Check if Nukem sound exists on the victim
+													local victimTorso = s and s.Parent
+													if victimTorso then
+														local nukemSound = victimTorso:FindFirstChild("Nukem")
+														if nukemSound and nukemSound:IsA("Sound") then
+															-- Play Nukem again
+															nukemSound:Play()
+															print("Switched back to Nukem sound")
+														else
+															-- Create new Nukem sound if it doesn't exist
+															local newNukem = Instance.new("Sound")
+															newNukem.Name = "Nukem"
+															newNukem.SoundId = "rbxassetid://120951886226574"
+															newNukem.Volume = s.Volume or 1
+															newNukem.PlaybackSpeed = modelData.soundSpeed or 1
+															newNukem.Parent = victimTorso
+															newNukem:Play()
+															print("Created and played new Nukem sound")
+														end
+													end
+												end
+											end)
 											--]]
 										else
 											s.PlaybackSpeed = modelData.customSounds[soundName]
