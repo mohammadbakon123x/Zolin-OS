@@ -5420,8 +5420,9 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 												end
 												CamPosActive = false
 												PlayerCurrentData["CutsceneActive"] = false
-												
+												spawn(function()
 													-- Return player after cutscene ends
+													task.wait(0.56)
 													if SettingsScript.KickPlayerAfterCutsenceBD and PlayerCurrentData["IsTeleported"] then
 														if lpr and lpr.Character and PlayerCurrentData["LastPos"] then
 															local playerHRP = lpr.Character:FindFirstChild("HumanoidRootPart")
@@ -5433,8 +5434,9 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 															end
 														end
 													end
-												print("Cutscene completed")
-											end
+												end)
+													print("Cutscene completed")
+												end
 											end)
 										end
 
