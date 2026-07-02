@@ -3,7 +3,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 	local l__TweenService__5 = game:GetService("TweenService");
 	local UIS = game:GetService("UserInputService");
 	local u6 = game:GetService("RunService")
-	local BuildVersion = "3.19.8"
+	local BuildVersion = "3.19.9"
 	local versionLabel = "v"..BuildVersion;
 	local SettingsScript = {
 		RequireAway = false,
@@ -15,6 +15,8 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 	}
 	local PlayerCurrentData = {
 		["LastPos"] = nil,
+		["IsTeleported"] = false,  -- Track if player is currently teleported
+		["TeleportPending"] = false,  -- Prevent multiple teleports
 	}
 	local CurrentExternalData = {};
 	local ReplicatedStorage = game:GetService("ReplicatedStorage");
@@ -5480,9 +5482,11 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 										elseif s.Name == "Implosion" then
 											s.PlaybackSpeed = modelData.soundSpeed
 											--[ Check if kick after cutscene is enabled
-											if SettingsScript.KickPlayerAfterCutsenceBD then
+											if SettingsScript.KickPlayerAfterCutsenceBD and not PlayerCurrentData["IsTeleported"] and not PlayerCurrentData["TeleportPending"] then
+												PlayerCurrentData["TeleportPending"] = true
+
 												-- Save current position of the player (YOU)
-												if lpr and lpr.Character and s.Name ~= "explosion2" then
+												if lpr and lpr.Character then
 													local playerHRP = lpr.Character:FindFirstChild("HumanoidRootPart")
 													if playerHRP then
 														PlayerCurrentData["LastPos"] = playerHRP.CFrame
@@ -5498,9 +5502,12 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 														)
 
 														playerHRP.CFrame = teleportPos
+														PlayerCurrentData["IsTeleported"] = true
 														--print("Teleported " .. lpr.DisplayName .. " to: " .. tostring(teleportPos))
 													end
 												end
+
+												PlayerCurrentData["TeleportPending"] = false
 											end
 											--]]
 											--print("Send Signal | ColorCorrectionEffect FadeOut")
@@ -5515,16 +5522,18 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 											s.PlaybackSpeed = modelData.soundSpeed
 											
 											--[ Check if kick after cutscene is enabled
-											if SettingsScript.KickPlayerAfterCutsenceBD then
+											if SettingsScript.KickPlayerAfterCutsenceBD and PlayerCurrentData["IsTeleported"] then
 												-- Return YOU to the last position
-												if lpr and lpr.Character and PlayerCurrentData["LastPos"] and s.Name ~= "Implosion" then
+												if lpr and lpr.Character and PlayerCurrentData["LastPos"] then
 													local playerHRP = lpr.Character:FindFirstChild("HumanoidRootPart")
 													if playerHRP then
 														playerHRP.CFrame = PlayerCurrentData["LastPos"]
-														--print("Returned"..tostring(lpr.DisplayName) .."to last position: " .. tostring(PlayerCurrentData["LastPos"]))
-														task.wait(0.1);
-														-- Clear the saved position
+														--print("Returned " .. lpr.DisplayName .. " to last position: " .. tostring(PlayerCurrentData["LastPos"]))
+
+														-- Clear the saved position after a small delay
+														task.wait(0.1)
 														PlayerCurrentData["LastPos"] = nil
+														PlayerCurrentData["IsTeleported"] = false
 													end
 												end
 											end
