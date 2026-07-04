@@ -3,7 +3,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 	local l__TweenService__5 = game:GetService("TweenService");
 	local UIS = game:GetService("UserInputService");
 	local u6 = game:GetService("RunService")
-	local BuildVersion = "3.20.3"
+	local BuildVersion = "3.20.4"
 	local versionLabel = "v"..BuildVersion;
 	local SettingsScript = {
 		RequireAway = false,
@@ -35,6 +35,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 			warn("BadgeEventSender not found in ReplicatedStorage");
 		end
 	end
+	local updateCustomBeatdownEvent = Instance.new("BindableEvent")
 	local lpr = game.Players.LocalPlayer;
 	local Character = lpr.Character or lpr.CharacterAdded:Wait();
 	local l__Humanoid__8 = Character:FindFirstChildOfClass("Humanoid");
@@ -42,8 +43,6 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 	local copyrightLabel
 	local CustomHitbox = Vector3.new(32, 32, 32)
 	local CustomHomerunHitbox = Vector3.new(0.8,0.8,0.8) * 16;
-	local flyEnable = false;
-	local Flying = false;
 	local TeleportUI = nil;
 	local CurrentFlySpeed = 4;
 	local FlySpeeds = {
@@ -2871,124 +2870,8 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 	UIPadding_Desc.PaddingLeft = UDim.new(0.05, 0);
 	UIPadding_Desc.PaddingRight = UDim.new(0.05, 0);
 	UIPadding_Desc.PaddingTop = UDim.new(0.05, 0);
-	local SliderSelection1 = Instance.new("Frame", Desclabel);
-	SliderSelection1.AnchorPoint = Vector2.new(0.5, 0.5);
-	SliderSelection1.Active = true;
-	SliderSelection1.BackgroundColor3 = Color3.fromRGB(35, 31, 59);
-	SliderSelection1.BackgroundTransparency = 0;
-	SliderSelection1.Size = UDim2.new(1, 0, 0.2, 0);
-	SliderSelection1.SizeConstraint = Enum.SizeConstraint.RelativeXY;
-	SliderSelection1.Visible = true
-	SliderSelection1.ZIndex = 6;
-	local UICorner_Slider1 = Instance.new("UICorner", SliderSelection1);
-	UICorner_Slider1.CornerRadius = UDim.new(0, 5);
-	local Title_Slider1 = Instance.new("TextLabel", SliderSelection1);
-	Title_Slider1.AnchorPoint = Vector2.new(0.5, 0);
-	Title_Slider1.BackgroundTransparency = 1;
-	Title_Slider1.LayoutOrder = 3;
-	Title_Slider1.Position = UDim2.new(0.5, 0, 0, 0);
-	Title_Slider1.Size = UDim2.new(1, 0, 1, 0);
-	Title_Slider1.SizeConstraint = Enum.SizeConstraint.RelativeXY;
-	Title_Slider1.Visible = true;
-	Title_Slider1.ZIndex = 6;
-	Title_Slider1.RichText = true;
-	Title_Slider1.Text = "  Fly Mode:"
-	Title_Slider1.TextColor3 = Color3.fromRGB(194, 194, 194);
-	Title_Slider1.TextScaled = false;
-	Title_Slider1.TextSize = 36;
-	Title_Slider1.TextWrapped = true;
-	Title_Slider1.TextXAlignment = Enum.TextXAlignment.Left;
-	Title_Slider1.TextYAlignment = Enum.TextYAlignment.Center;
-	local UIStroke_Title_Slider1 = Instance.new("UIStroke", Title_Slider1);
-	UIStroke_Title_Slider1.ApplyStrokeMode = Enum.ApplyStrokeMode.Border;
-	UIStroke_Title_Slider1.BorderStrokePosition = Enum.BorderStrokePosition.Outer;
-	UIStroke_Title_Slider1.Thickness = 2.9;
-	UIStroke_Title_Slider1.Color = Color3.fromRGB(103, 92, 150);
-	UIStroke_Title_Slider1.StrokeSizingMode = Enum.StrokeSizingMode.FixedSize;
-	UIStroke_Title_Slider1.LineJoinMode = Enum.LineJoinMode.Round;
-	UIStroke_Title_Slider1.ZIndex = 6;
-	UIStroke_Title_Slider1.Transparency = 0;
-	UIStroke_Title_Slider1.Enabled = false;
-	--[ Add after SliderSelection1
-	local SliderSelection2 = Instance.new("Frame", Desclabel);
-	SliderSelection2.AnchorPoint = Vector2.new(0.5, 0.5);
-	SliderSelection2.Active = true;
-	SliderSelection2.BackgroundColor3 = Color3.fromRGB(35, 31, 59);
-	SliderSelection2.BackgroundTransparency = 0;
-	SliderSelection2.Size = UDim2.new(1, 0, 0.2, 0);
-	SliderSelection2.SizeConstraint = Enum.SizeConstraint.RelativeXY;
-	SliderSelection2.Visible = true
-	SliderSelection2.ZIndex = 6;
-	SliderSelection2.LayoutOrder = 1;
-	local UICorner_Slider2 = Instance.new("UICorner", SliderSelection2);
-	UICorner_Slider2.CornerRadius = UDim.new(0, 5);
-	local Title_Slider2 = Instance.new("TextLabel", SliderSelection2);
-	Title_Slider2.AnchorPoint = Vector2.new(0.5, 0);
-	Title_Slider2.BackgroundTransparency = 1;
-	Title_Slider2.LayoutOrder = 3;
-	Title_Slider2.Position = UDim2.new(0.5, 0, 0, 0);
-	Title_Slider2.Size = UDim2.new(1, 0, 1, 0);
-	Title_Slider2.SizeConstraint = Enum.SizeConstraint.RelativeXY;
-	Title_Slider2.Visible = true;
-	Title_Slider2.ZIndex = 6;
-	Title_Slider2.RichText = true;
-	Title_Slider2.Text = "  Fly Speed:"
-	Title_Slider2.TextColor3 = Color3.fromRGB(194, 194, 194);
-	Title_Slider2.TextScaled = false;
-	Title_Slider2.TextSize = 36;
-	Title_Slider2.TextWrapped = true;
-	Title_Slider2.TextXAlignment = Enum.TextXAlignment.Left;
-	Title_Slider2.TextYAlignment = Enum.TextYAlignment.Center;
-	local UIStroke_Title_Slider2 = Instance.new("UIStroke", Title_Slider2);
-	UIStroke_Title_Slider2.ApplyStrokeMode = Enum.ApplyStrokeMode.Border;
-	UIStroke_Title_Slider2.BorderStrokePosition = Enum.BorderStrokePosition.Outer;
-	UIStroke_Title_Slider2.Thickness = 2.9;
-	UIStroke_Title_Slider2.Color = Color3.fromRGB(103, 92, 150);
-	UIStroke_Title_Slider2.StrokeSizingMode = Enum.StrokeSizingMode.FixedSize;
-	UIStroke_Title_Slider2.LineJoinMode = Enum.LineJoinMode.Round;
-	UIStroke_Title_Slider2.ZIndex = 6;
-	UIStroke_Title_Slider2.Transparency = 0;
-	UIStroke_Title_Slider2.Enabled = false;
-	local UIPadding_TitleSlider2 = Instance.new("UIPadding", Title_Slider2);
-	UIPadding_TitleSlider2.PaddingBottom = UDim.new(-0.2, 0);
-	UIPadding_TitleSlider2.PaddingLeft = UDim.new(0, 0);
-	UIPadding_TitleSlider2.PaddingRight = UDim.new(0, 0);
-	UIPadding_TitleSlider2.PaddingTop = UDim.new(-0.2, 0);
-	local Button_Slider2 = Instance.new("TextButton", Title_Slider2);
-	Button_Slider2.Active = true;
-	Button_Slider2.AutoButtonColor = true;
-	Button_Slider2.AnchorPoint = Vector2.new(0.5, 0.5);
-	Button_Slider2.BackgroundColor3 = Color3.fromRGB(70, 60, 95);
-	Button_Slider2.BackgroundTransparency = 0.55;
-	Button_Slider2.Position = UDim2.new(0.85, 0, 0.5, 0);
-	Button_Slider2.Size = UDim2.new(0, 200, 0, 31);
-	Button_Slider2.SizeConstraint = Enum.SizeConstraint.RelativeXY;
-	Button_Slider2.Visible = true;
-	Button_Slider2.ZIndex = 6;
-	Button_Slider2.Name = "SpeedSlider";
-	Button_Slider2.Font = Enum.Font.Oswald;
-	Button_Slider2.FontFace.Weight = Enum.FontWeight.Bold
-	Button_Slider2.FontFace.Style = Enum.FontStyle.Italic
-	Button_Slider2.Text = "Medium";
-	Button_Slider2.TextColor3 = Color3.fromRGB(214, 214, 214);
-	Button_Slider2.RichText = true;
-	Button_Slider2.TextScaled = true;
-	Button_Slider2.TextWrapped = true;
-	Button_Slider2.TextXAlignment = Enum.TextXAlignment.Center;
-	Button_Slider2.TextYAlignment = Enum.TextYAlignment.Center;
-	local UICorner_TitleSlider2 = Instance.new("UICorner", Button_Slider2);
-	UICorner_TitleSlider2.CornerRadius = UDim.new(0, 5);
-	local UIStroke_TitleSlider2 = Instance.new("UIStroke", Button_Slider2);
-	UIStroke_TitleSlider2.ApplyStrokeMode = Enum.ApplyStrokeMode.Border;
-	UIStroke_TitleSlider2.BorderStrokePosition = Enum.BorderStrokePosition.Outer;
-	UIStroke_TitleSlider2.Thickness = 2.9;
-	UIStroke_TitleSlider2.Color = Color3.fromRGB(103, 92, 150);
-	UIStroke_TitleSlider2.StrokeSizingMode = Enum.StrokeSizingMode.FixedSize;
-	UIStroke_TitleSlider2.LineJoinMode = Enum.LineJoinMode.Round;
-	UIStroke_TitleSlider2.ZIndex = 6;
-	UIStroke_TitleSlider2.Transparency = 0;
 	
-	--[ Add after SliderSelection2
+	--[
 	local SliderSelection4 = Instance.new("Frame", Desclabel);
 	SliderSelection4.AnchorPoint = Vector2.new(0.5, 0.5);
 	SliderSelection4.Active = true;
@@ -3639,7 +3522,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 	elseif lpr.UserId == 4314696588 then
 		TitleDescInfo.Text = "Credits to Your Uncle for Amazing ideas and apply them to Real Tweaking SB |  Version: "..tostring(BuildVersion);
 	else
-		TitleDescInfo.Text = "Made By Sky_Attacker";
+		TitleDescInfo.Text = "Made By Sky_Attacker. Version: "..tostring(BuildVersion);
 		TitleDescInfo.TextScaled = false;
 		TitleDescInfo.TextSize = 48;
 		TitleDescInfo.TextXAlignment = Enum.TextXAlignment.Center;
@@ -3648,49 +3531,11 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 	TitleDescInfo.TextColor3 = Color3.fromRGB(113, 84, 255);
 	TitleDescInfo.TextWrapped = true;
 	TitleDescInfo.BackgroundTransparency = 1;
-	local UIPadding_TitleSlider1 = Instance.new("UIPadding", Title_Slider1);
-	UIPadding_TitleSlider1.PaddingBottom = UDim.new(-0.2, 0);
-	UIPadding_TitleSlider1.PaddingLeft = UDim.new(0, 0);
-	UIPadding_TitleSlider1.PaddingRight = UDim.new(0, 0);
-	UIPadding_TitleSlider1.PaddingTop = UDim.new(-0.2, 0);
 	local UIPadding_TitleInfo = Instance.new("UIPadding", TitleDescInfo);
 	UIPadding_TitleInfo.PaddingBottom = UDim.new(-0.2, 0);
 	UIPadding_TitleInfo.PaddingLeft = UDim.new(0, 0);
 	UIPadding_TitleInfo.PaddingRight = UDim.new(0, 0);
 	UIPadding_TitleInfo.PaddingTop = UDim.new(-0.2, 0);
-	local Button_Slider1 = Instance.new("TextButton", Title_Slider1);
-	Button_Slider1.Active = true;
-	Button_Slider1.AutoButtonColor = true;
-	Button_Slider1.AnchorPoint = Vector2.new(0.5, 0.5);
-	Button_Slider1.BackgroundColor3 = Color3.fromRGB(70, 60, 95);
-	Button_Slider1.BackgroundTransparency = 0.55;
-	Button_Slider1.Position = UDim2.new(0.85, 0, 0.5, 0);
-	Button_Slider1.Size = UDim2.new(0, 200, 0, 31);
-	Button_Slider1.SizeConstraint = Enum.SizeConstraint.RelativeXY;
-	Button_Slider1.Visible = true;
-	Button_Slider1.ZIndex = 6;
-	Button_Slider1.Name = "Slider";
-	Button_Slider1.Font = Enum.Font.Oswald;
-	Button_Slider1.FontFace.Weight = Enum.FontWeight.Bold
-	Button_Slider1.FontFace.Style = Enum.FontStyle.Italic
-	Button_Slider1.Text = "Disabled";
-	Button_Slider1.TextColor3 = Color3.fromRGB(214, 214, 214);
-	Button_Slider1.RichText = true;
-	Button_Slider1.TextScaled = true;
-	Button_Slider1.TextWrapped = true;
-	Button_Slider1.TextXAlignment = Enum.TextXAlignment.Center;
-	Button_Slider1.TextYAlignment = Enum.TextYAlignment.Center;
-	local UICorner_TitleSlider1 = Instance.new("UICorner", Button_Slider1);
-	UICorner_TitleSlider1.CornerRadius = UDim.new(0, 5);
-	local UIStroke_TitleSlider1 = Instance.new("UIStroke", Button_Slider1);
-	UIStroke_TitleSlider1.ApplyStrokeMode = Enum.ApplyStrokeMode.Border;
-	UIStroke_TitleSlider1.BorderStrokePosition = Enum.BorderStrokePosition.Outer;
-	UIStroke_TitleSlider1.Thickness = 2.9;
-	UIStroke_TitleSlider1.Color = Color3.fromRGB(103, 92, 150);
-	UIStroke_TitleSlider1.StrokeSizingMode = Enum.StrokeSizingMode.FixedSize;
-	UIStroke_TitleSlider1.LineJoinMode = Enum.LineJoinMode.Round;
-	UIStroke_TitleSlider1.ZIndex = 6;
-	UIStroke_TitleSlider1.Transparency = 0;
 	copyrightLabel = Instance.new("TextLabel")
 	copyrightLabel.Size = UDim2.new(0, 200, 0, 20)
 	copyrightLabel.Position = UDim2.new(1, -210, 1, -30)
@@ -3708,30 +3553,6 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 	copyrightLabel.ZIndex = 6250
 	copyrightLabel.Parent = TranslationUI
 	local Camera = game.Workspace.Camera
-	local BodyVelocity = Instance.new("BodyVelocity")
-	BodyVelocity.Velocity = Vector3.new(0, 0, 0)
-	BodyVelocity.P = 20000
-	BodyVelocity.MaxForce = Vector3.new(100000000, 100000000, 100000000)
-	local v3 = Instance.new("BodyGyro");
-	v3.D = 500
-	v3.MaxTorque = Vector3.new(400000, 400000, 400000)
-	v3.P = 3000
-	BodyVelocity.Parent = Character
-	v3.Parent = Character
-	local function u2()
-		l__Humanoid__8 = Character:FindFirstChildOfClass("Humanoid");
-		if not l__Humanoid__8 then
-			return
-		end
-		if l__Humanoid__8.MoveDirection == Vector3.new(0, 0, 0) then
-			return l__Humanoid__8.MoveDirection
-		end
-		local v12 = (Camera.CFrame * CFrame.new((CFrame.new(Camera.CFrame.Position, Camera.CFrame.Position + Vector3.new(Camera.CFrame.lookVector.x, 0, Camera.CFrame.lookVector.z)):VectorToObjectSpace(l__Humanoid__8.MoveDirection)))).Position - Camera.CFrame.Position;
-		if v12 == Vector3.new() then
-			return v12
-		end
-		return v12.unit
-	end
 
 	-- [ Custom Camera Cutsence For Refraif:
 	local function InstanceBeatdownCamPosToRepStorage()
@@ -4617,6 +4438,10 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 				ModelIdLabel.Text = "ID: " .. modelData.id
 				DescriptionLabel.Text = modelData.description
 				loadModelIntoViewport(modelData.id)
+				if updateCustomBeatdownEvent ~= nil then
+					updateCustomBeatdownEvent:Fire();
+					print("Sending Signals to update CustomBeatdown handler...");
+				end
 				for _, child in ipairs(ModelsScrollFrame:GetChildren()) do
 					if child:IsA("TextButton") then
 						local stroke = child:FindFirstChild("UIStroke")
@@ -6201,129 +6026,8 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 		end
 	end
 	--]]
-	
-	local function cleanupBodyInstances()
-		if BodyVelocity and BodyVelocity.Parent then
-			BodyVelocity:Destroy()
-		end
-		if v3 and v3.Parent then
-			v3:Destroy()
-		end
-		if Character then
-			for _, child in ipairs(Character:GetChildren()) do
-				if child:IsA("BodyVelocity") or child:IsA("BodyGyro") then
-					child:Destroy()
-				end
-			end
-		end
-		local rootPart = Character and Character:FindFirstChild("HumanoidRootPart")
-		if rootPart then
-			for _, child in ipairs(rootPart:GetChildren()) do
-				if child:IsA("BodyVelocity") or child:IsA("BodyGyro") then
-					child:Destroy()
-				end
-			end
-		end
-	end
-	local function ensureBodyInstances()
-		local shouldCreateNew = false
-		if not BodyVelocity or not BodyVelocity.Parent then
-			shouldCreateNew = true
-		end
-		if not v3 or not v3.Parent then
-			shouldCreateNew = true
-		end
-		if not l__HumanoidRootPart__9 then
-			return
-		end
-		if Character and (BodyVelocity and BodyVelocity.Parent ~= Character and BodyVelocity.Parent ~= l__HumanoidRootPart__9) then
-			shouldCreateNew = true
-		end
-		if shouldCreateNew then
-			cleanupBodyInstances()
-			BodyVelocity = Instance.new("BodyVelocity")
-			BodyVelocity.Velocity = Vector3.new(0, 0, 0)
-			BodyVelocity.P = 20000
-			BodyVelocity.MaxForce = Vector3.new(100000000, 100000000, 100000000)
-			BodyVelocity.Name = "BodyVelocity_FlyScript"
-			v3 = Instance.new("BodyGyro")
-			v3.D = 500
-			v3.MaxTorque = Vector3.new(400000, 400000, 400000)
-			v3.P = 3000
-			v3.Name = "BodyGyro_FlyScript"
-			if SettingsScript.DisplayLogs then
-				--	print("Created new BodyVelocity and BodyGyro instances")
-			end
-		end
-		return BodyVelocity, v3
-	end
-	local function setupFlying()
-		local bodyVel, bodyGyro = ensureBodyInstances()
-		local rootPart = l__HumanoidRootPart__9
-		if not rootPart then return end
-		if bodyVel.Parent ~= Character and bodyVel.Parent ~= rootPart then
-			bodyVel.Parent = nil
-		end
-		if bodyGyro.Parent ~= Character and bodyGyro.Parent ~= rootPart then
-			bodyGyro.Parent = nil
-		end
-		if Flying then
-			bodyVel.Parent = rootPart
-			bodyGyro.Parent = rootPart
-			if l__Humanoid__8 then
-				l__Humanoid__8:ChangeState(6)
-			else
-				if SettingsScript.DisplayLogs then
-					warn("Humanoid not found for flying state change")
-				end
-			end
-			bodyVel.Velocity = u2() * FlySpeeds[CurrentFlySpeed].speed
-			if SettingsScript.DisplayLogs then
-				print("Flying enabled - Attached to HumanoidRootPart")
-			end
-		else
-			bodyVel.Parent = Character
-			bodyGyro.Parent = Character
-			bodyVel.Velocity = Vector3.new(0, 0, 0)
-			if SettingsScript.DisplayLogs then
-				print("Flying disabled - Attached to Character")
-			end
-		end
-	end
-	local function handleCharacterRespawn(newCharacter)
-		Character = newCharacter
-		l__Humanoid__8 = Character:FindFirstChildOfClass("Humanoid")
-		cleanupBodyInstances()
-		BodyVelocity, v3 = ensureBodyInstances()
-		if Flying then
-			task.wait(1)
-			setupFlying()
-		end
-		if SettingsScript.DisplayLogs then
-			print("Character respawned - Fly system reinitialized")
-		end
-	end
-	lpr.CharacterAdded:Connect(handleCharacterRespawn)
-	if lpr.Character then
-		handleCharacterRespawn(lpr.Character)
-	end
 	--// RUN SERVICES
 	u6.RenderStepped:Connect(function()
-		if not BodyVelocity or not BodyVelocity.Parent or not v3 or not v3.Parent then
-			ensureBodyInstances()
-			if Flying then
-				setupFlying()
-			end
-		end
-
-		if Flying == true then
-			if l__Humanoid__8 and l__Humanoid__8.Health > 0 and BodyVelocity and v3 then
-				l__Humanoid__8:ChangeState(6)
-				v3.CFrame = game.Workspace.Camera.CFrame
-				local currentSpeed = FlySpeeds[CurrentFlySpeed].speed
-				BodyVelocity.Velocity = u2() * currentSpeed
-			end
-		end
 		if SlapBattlesSettings.ForceOverwriteBeatdown == true then
 			if GetStandModel("Stand") == true then
 				WriteStandModel("Stand")
@@ -6397,71 +6101,6 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 			ExternalSettingsUI.Visible = false;
 		end;
 	end)
-	Button_Slider1.MouseButton1Click:Connect(function()
-		if Flying == false then
-			Flying = true
-			if l__HumanoidRootPart__9 and l__Humanoid__8 ~= nil then
-				l__Humanoid__8:SetStateEnabled(Enum.HumanoidStateType.Running, false)
-				l__Humanoid__8:SetStateEnabled(Enum.HumanoidStateType.Climbing, false)
-				l__Humanoid__8:SetStateEnabled(Enum.HumanoidStateType.FallingDown, false)
-				l__Humanoid__8:SetStateEnabled(Enum.HumanoidStateType.Freefall, false)
-				local RunningSound = Character.HumanoidRootPart:FindFirstChild("Running")
-				if l__HumanoidRootPart__9 ~= nil and RunningSound ~= nil then
-					Character.HumanoidRootPart.Running.Volume = 0
-				end
-				l__Humanoid__8.PlatformStand = true
-				l__Humanoid__8:ChangeState(6)
-				setupFlying()
-				Button_Slider1.Text = "Enabled"
-			end
-		else
-			Flying = false
-			if l__HumanoidRootPart__9 and l__Humanoid__8 ~= nil then
-				l__Humanoid__8:SetStateEnabled(Enum.HumanoidStateType.Running, true)
-				l__Humanoid__8:SetStateEnabled(Enum.HumanoidStateType.Climbing, true)
-				l__Humanoid__8:SetStateEnabled(Enum.HumanoidStateType.FallingDown, true)
-				l__Humanoid__8:SetStateEnabled(Enum.HumanoidStateType.Freefall, true)
-				local RunningSound = Character.HumanoidRootPart:FindFirstChild("Running")
-				if l__HumanoidRootPart__9 ~= nil and RunningSound ~= nil then
-					Character.HumanoidRootPart.Running.Volume = 0.65
-				end
-				if l__HumanoidRootPart__9 ~= nil and l__Humanoid__8 ~= nil then
-					l__Humanoid__8:ChangeState(8)
-					l__Humanoid__8.PlatformStand = false
-				end
-				setupFlying()
-				Button_Slider1.Text = "Disabled"
-			end
-		end
-	end);
-	Button_Slider2.MouseButton1Click:Connect(function()
-		CurrentFlySpeed = CurrentFlySpeed + 1
-		if CurrentFlySpeed > #FlySpeeds then
-			CurrentFlySpeed = 1
-		end
-		local speedInfo = FlySpeeds[CurrentFlySpeed]
-		Button_Slider2.Text = speedInfo.name
-		l__TweenService__5:Create(Button_Slider2, TweenInfo.new(0.3), {
-			BackgroundColor3 = speedInfo.color,
-			TextColor3 = Color3.fromRGB(255, 255, 255)
-		}):Play()
-	end)
-	Button_Slider4.MouseButton1Click:Connect(function()
-		flyEnable = not flyEnable
-		if flyEnable then
-			Button_Slap4.Text = "ON"
-			Button_Slap4.BackgroundColor3 = Color3.fromRGB(84, 255, 113)
-			if SettingsScript.DisplayLogs then
-				print("FlyMode: Enabled")
-			end
-		else
-			Button_Slap4.Text = "OFF"
-			Button_Slap4.BackgroundColor3 = Color3.fromRGB(70, 60, 95)
-			if SettingsScript.DisplayLogs then
-				print("FlyMode: Disabled")
-			end
-		end
-	end)
 	Button_Slider5.MouseButton1Click:Connect(function()
 		SettingsScript.KickPlayerAfterCutsenceBD = not SettingsScript.KickPlayerAfterCutsenceBD
 		if SettingsScript.KickPlayerAfterCutsenceBD then
@@ -6487,53 +6126,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 				return;
 			end;
 		end;
-		if p6.KeyCode == Enum.KeyCode.T and flyEnable then
-			if Flying == false then
-				Flying = true
-				if SettingsScript.DisplayLogs then
-					print("Flying [true]")
-				end
-				if l__Humanoid__8 == nil then
-					return
-				end
-				l__Humanoid__8:SetStateEnabled(Enum.HumanoidStateType.Running, false)
-				l__Humanoid__8:SetStateEnabled(Enum.HumanoidStateType.Climbing, false)
-				l__Humanoid__8:SetStateEnabled(Enum.HumanoidStateType.FallingDown, false)
-				l__Humanoid__8:SetStateEnabled(Enum.HumanoidStateType.Freefall, false)
-				local RunningSound = Character.HumanoidRootPart:FindFirstChild("Running")
-				if l__HumanoidRootPart__9 ~= nil and RunningSound ~= nil then
-					Character.HumanoidRootPart.Running.Volume = 0
-				end
-				l__Humanoid__8.PlatformStand = false
-				l__Humanoid__8:ChangeState(6)
-				setupFlying()
-				Button_Slider1.Text = "Enabled"
-			elseif Flying == true then
-				Flying = false
-				if SettingsScript.DisplayLogs then
-					print("Flying [false]")
-				end
-				if l__Humanoid__8 ~= nil then
-					l__Humanoid__8:SetStateEnabled(Enum.HumanoidStateType.Running, true)
-					l__Humanoid__8:SetStateEnabled(Enum.HumanoidStateType.Climbing, true)
-					l__Humanoid__8:SetStateEnabled(Enum.HumanoidStateType.FallingDown, true)
-					l__Humanoid__8:SetStateEnabled(Enum.HumanoidStateType.Freefall, true)
-				end
-				if l__HumanoidRootPart__9 == nil then
-					return
-				end
-				local RunningSound = l__HumanoidRootPart__9:FindFirstChild("Running")
-				if l__HumanoidRootPart__9 ~= nil and RunningSound ~= nil then
-					Character.HumanoidRootPart.Running.Volume = 0.65
-				end
-				Button_Slider1.Text = "Disabled"
-				if l__Humanoid__8 ~= nil then
-					l__Humanoid__8:ChangeState(8)
-					l__Humanoid__8.PlatformStand = false
-				end
-				setupFlying()
-			end
-		end
+		-- handle anything u want
 	end);
 	if RemoteEventBanSys and RemoteEventBanSys ~= nil then
 		if SettingsScript.DisplayLogs then
@@ -6720,6 +6313,9 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 		if SettingsScript.DisplayLogs then
 			print("View Other Custom Stands system initialized")
 		end
+		updateCustomBeatdownEvent.Event:Connect(function()
+			updateCustomModelsStatus()
+		end)
 	end
 	--// CONSTANTS
 	ButtonTeleport.MouseButton1Click:Connect(toggleTeleportUI)
