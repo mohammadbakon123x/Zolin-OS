@@ -2883,7 +2883,6 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 	SliderSelection4.ZIndex = 6;
 	SliderSelection4.LayoutOrder = 0;
 	local UICorner_Slider4 = Instance.new("UICorner", SliderSelection4);
-	UICorner_Slider2.CornerRadius = UDim.new(0, 5);
 	local Title_Slider4 = Instance.new("TextLabel", SliderSelection4);
 	Title_Slider4.AnchorPoint = Vector2.new(0.5, 0);
 	Title_Slider4.BackgroundTransparency = 1;
