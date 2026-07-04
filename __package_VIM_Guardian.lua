@@ -9,7 +9,7 @@ function __AppPackage.Install()
     if not ZolinOS then warn("ZolinOS not found"); return end
 
     -- Check if already installed
-    local replicatedWindow = ZolinOS:FindFirstChild("ReplicatedWindow_Sys")
+    local replicatedWindow = ZolinOS:FindFirstChild("ReplicatedWindow")
     if not replicatedWindow then warn("ReplicatedWindow_Sys not found"); return end
     if replicatedWindow:FindFirstChild(AppName) then
         warn(AppName .. " already installed")
