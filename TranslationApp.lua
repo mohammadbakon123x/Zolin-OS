@@ -1245,7 +1245,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 					end)
 				end
 				local function addTopHatToHead(head)
-					if not head then return end
+					if not head then warn("No head is exists !") return end
 					if head.Parent:FindFirstChild("Retopo_PlaneAccessory") then print("Already has a hat.") return end
 					for _, child in ipairs(head.Parent:GetChildren()) do
 						if child.Name == "Retopo_PlaneAccessory" then
