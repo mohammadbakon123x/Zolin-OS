@@ -4723,7 +4723,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 														continue  -- Skip this entire model
 													end
 
-													if v:IsA("BasePart") then
+													if v:IsA("BasePart") and not v:IsDescendantOf(character:FindFirstChild("Stand")) then
 														if v.Name ~= "HumanoidRootPart" then
 														v.Transparency = 1
 														--v.CanCollide = false
@@ -4757,7 +4757,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 
 														if not isInStand then
 															for _, child in pairs(v:GetDescendants()) do
-																if child:IsA("BasePart") then
+																if child:IsA("BasePart") and not v:IsDescendantOf(character:FindFirstChild("Stand")) then
 																	if child.Name ~= "HumanoidRootPart" then
 																	child.Transparency = 1
 																	--child.CanCollide = false
