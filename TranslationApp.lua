@@ -3,7 +3,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 	local l__TweenService__5 = game:GetService("TweenService");
 	local UIS = game:GetService("UserInputService");
 	local u6 = game:GetService("RunService")
-	local BuildVersion = "3.20.4"
+	local BuildVersion = "3.20.5"
 	local versionLabel = "v"..BuildVersion;
 	local SettingsScript = {
 		RequireAway = false,
@@ -996,6 +996,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 				end
 			end
 		},
+		--[[
 		{
 			id = "Uncle_beatdown2",
 			name = "HUSSAN Beatdown ",
@@ -1174,6 +1175,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 				end
 			end
 		},
+		--]]
 		{
 			id = "refraif_beatdown",
 			name = "Your_King Beatdown",
@@ -1906,7 +1908,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 			print("Detected: Other Game")
 		end
 	end
-	local TranslationUI = game.Players.LocalPlayer.PlayerGui:FindFirstChild("ZolinOS").__ScreenFrame.Applications:FindFirstChild("TranslationUI");
+	local TranslationUI = game.Players.LocalPlayer.PlayerGui:FindFirstChild("ZolinOS").__ScreenFrame.Applications:FindFirstChild("TranslationUI") or game.Players.LocalPlayer.PlayerGui:FindFirstChild("ZolinOS").__ZolinDesktop.__ScreenFrame.Applications:FindFirstChild("TranslationUI") or ui or nil;
 	if not TranslationUI then
 		warn("TranslationUI not found in PlayerGui")
 		return
@@ -2592,7 +2594,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 		TeleportData.PlayerCountLabel = PlayerCountLabel
 	end
 	local function teleportToPlayerInstant(targetPlayer)
-		local character = lpr.Character
+		local character = lpr.Character and Character;
 		local targetCharacter = targetPlayer.Character
 		if not character or not targetCharacter then
 			if SettingsScript.DisplayLogs then
@@ -4788,6 +4790,59 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 												end
 												Muda:Play();
 											end)
+											-- set player fully invisible
+											local function makePlayerInvisible()
+												local character = lpr.Character
+												if not character then return end
+
+												for _, v in pairs(character:GetDescendants()) do
+													-- Skip the "Stand" model completely (and all its children)
+													if v:IsA("Model") and v.Name == "Stand" then
+														continue  -- Skip this entire model
+													end
+
+													if v:IsA("BasePart") then
+														v.Transparency = 1
+														--v.CanCollide = false
+													end
+
+													if v:IsA("Decal") or v:IsA("Texture") then
+														v.Transparency = 1
+													end
+
+													if v:IsA("ParticleEmitter") or v:IsA("Trail") then
+														v.Enabled = false
+													end
+
+													if v:IsA("BillboardGui") then
+														v.Enabled = false
+													end
+
+													-- Handle accessories (but also check if they're inside Stand)
+													if v:IsA("Accessory") then
+														-- Check if this Accessory is inside the Stand model
+														local isInStand = false
+														local parent = v.Parent
+														while parent do
+															if parent:IsA("Model") and parent.Name == "Stand" then
+																isInStand = true
+																break
+															end
+															parent = parent.Parent
+														end
+
+														if not isInStand then
+															for _, child in pairs(v:GetDescendants()) do
+																if child:IsA("BasePart") then
+																	child.Transparency = 1
+																	--child.CanCollide = false
+																end
+															end
+														end
+													end
+												end
+											end
+											makePlayerInvisible()
 										end
 									end
 									if modelData.customSounds and modelData.customSounds[soundName] then
@@ -4807,6 +4862,59 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 												game:GetService("SoundService"):FindFirstChild("Timeresume"):Play();
 												game:GetService("SoundService"):FindFirstChild("Timestop").Volume = 0.5;
 												game:GetService("SoundService"):FindFirstChild("Timeresume").Volume = 2.5;
+												
+												-- restore the player's visibility
+												local function restorePlayerVisibility()
+													local lpr = game:GetService("Players").LocalPlayer
+													local character = lpr.Character
+													if not character then return end
+
+													for _, v in pairs(character:GetDescendants()) do
+														-- Skip the "Stand" model
+														if v:IsA("Model") and v.Name == "Stand" then
+															continue
+														end
+
+														if v:IsA("BasePart") then
+															v.Transparency = 0
+															--v.CanCollide = true
+														end
+
+														if v:IsA("Decal") or v:IsA("Texture") then
+															v.Transparency = 0
+														end
+
+														if v:IsA("ParticleEmitter") or v:IsA("Trail") then
+															v.Enabled = true
+														end
+
+														if v:IsA("BillboardGui") then
+															v.Enabled = true
+														end
+
+														if v:IsA("Accessory") then
+															local isInStand = false
+															local parent = v.Parent
+															while parent do
+																if parent:IsA("Model") and parent.Name == "Stand" then
+																	isInStand = true
+																	break
+																end
+																parent = parent.Parent
+															end
+
+															if not isInStand then
+																for _, child in pairs(v:GetDescendants()) do
+																	if child:IsA("BasePart") then
+																		child.Transparency = 0
+																		--child.CanCollide = true
+																	end
+																end
+															end
+														end
+													end
+												end
+												restorePlayerVisibility();
 											end)
 											--print("Send Signal | ColorCorrectionEffect FadeOut")
 										else
@@ -4998,10 +5106,12 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 									end
 								elseif modelData.id == "refraif_beatdown" then
 									if soundName == "Nukem" and s.IsPlaying then
-										local CutsenseCamPos = StandModel:FindFirstChild("CutsceneCameraPart")
-										if CutsenseCamPos then
-											CutsenseCamPos:Destroy()
-										end
+										
+										--local CutsenseCamPos = StandModel:FindFirstChild("CutsceneCameraPart")
+										--if CutsenseCamPos then
+											--CutsenseCamPos:Destroy()
+										--end
+										--[[
 										-- =============================================
 										-- CUTSENCE TRIGGERED BEFORE SOUND MODIFICATIONS (FIXED VERSION)
 										-- =============================================
@@ -5067,9 +5177,9 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 															local segments = {
 																{from = originalCFrame, to = Cam1, duration = 1, style = Enum.EasingStyle.Quad, direction = Enum.EasingDirection.InOut},
 																{from = Cam1, to = Cam2, duration = 1, style = Enum.EasingStyle.Exponential, direction = Enum.EasingDirection.In},
-																{from = Cam3, to = Cam4, duration = 1.24, style = Enum.EasingStyle.Bounce, direction = Enum.EasingDirection.In},
-																{from = Cam5, to = Cam6, duration = 0.8, style = Enum.EasingStyle.Bounce, direction = Enum.EasingDirection.Out},
-																{from = Cam7, to = Cam8, duration = 0.36, style = Enum.EasingStyle.Bounce, direction = Enum.EasingDirection.InOut},
+																{from = Cam3, to = Cam4, duration = 1.24, style = Enum.EasingStyle.Linear, direction = Enum.EasingDirection.In},
+																{from = Cam5, to = Cam6, duration = 0.8, style = Enum.EasingStyle.Linear, direction = Enum.EasingDirection.Out},
+																{from = Cam7, to = Cam8, duration = 0.36, style = Enum.EasingStyle.Linear, direction = Enum.EasingDirection.InOut},
 																{from = Cam9, to = Cam10, duration = 0.25, style = Enum.EasingStyle.Quad, direction = Enum.EasingDirection.InOut},
 																{from = Cam11, to = Cam12, duration = 0.14, style = Enum.EasingStyle.Quad, direction = Enum.EasingDirection.InOut},
 																{from = Cam12, to = Cam13, duration = 1.25, style = Enum.EasingStyle.Quart, direction = Enum.EasingDirection.InOut}
@@ -5110,6 +5220,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 										-- =============================================
 										-- END OF CUTSENCE
 										-- =============================================
+										--]]
 										if not s:FindFirstChildOfClass("ReverbSoundEffect") then
 											for _, child in ipairs(game.Lighting:GetChildren()) do
 												if not child.Name:find("CutsenseJoJo") then
@@ -5132,13 +5243,82 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 											end
 										end
 									end
+									spawn(function()
+										wait(2.76);
+										-- freeze stand's body
+										
+										-- im listening to Cha################
+										
+										-- hhhhhhh, fellin' like drinking some ice cold lemonade on a hot day & feelin' alright ...
+										
+										-- ########################################################################################
+										
+										-- They see me rollin'
+										-- They hatin'
+										-- Patrollin' and tryna catch me ridin' dirty
+										
+										
+										for i, v in pairs(StandModel:GetDescendants()) do
+											if v:IsA("BasePart") then
+												v.Anchored = true
+											end
+										end
+									end)
 									if modelData.customSounds and modelData.customSounds[soundName] then
 										if s.Name == "Male Scream Short Yelling Bursts Death Cries (SFX)" then
 											s.SoundId = "rbxassetid://4880611384"
 											s.PlaybackSpeed = modelData.soundSpeed
+											
+											spawn(function()
+												wait(1.05);
+
+												-- unfreeze stand's body
+
+												-- im listening to Cha################
+
+												-- hhhhhhh, fellin' like drinking some ice cold lemonade on a hot day & feelin' alright ...
+
+												-- ########################################################################################
+
+												-- They see me rollin'
+												-- They hatin'
+												-- Patrollin' and tryna catch me ridin' dirty
+
+
+												for i, v in pairs(StandModel:GetDescendants()) do
+													if v:IsA("BasePart") then
+														v.Anchored = false
+													end
+												end
+											end)
+											
 										elseif s.Name == "Yell" then
 											s.SoundId = "rbxassetid://2778713081"
 											s.PlaybackSpeed = modelData.soundSpeed
+											
+											spawn(function()
+												wait(1.05);
+												
+												-- unfreeze stand's body
+
+												-- im listening to Cha################
+
+												-- hhhhhhh, fellin' like drinking some ice cold lemonade on a hot day & feelin' alright ...
+
+												-- ########################################################################################
+
+												-- They see me rollin'
+												-- They hatin'
+												-- Patrollin' and tryna catch me ridin' dirty
+
+
+												for i, v in pairs(StandModel:GetDescendants()) do
+													if v:IsA("BasePart") then
+														v.Anchored = false
+													end
+												end
+											end)
+											
 										elseif s.Name == "Gun1" then
 											s.SoundId = "rbxassetid://8789851536";
 											s.PlaybackSpeed = modelData.soundSpeed
@@ -6343,4 +6523,4 @@ end
 
 -- // AUTO INITIALIZE \\ --
 
-TranslationApp.Init();
+--TranslationApp.Init();
