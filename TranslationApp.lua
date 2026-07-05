@@ -3,7 +3,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 	local l__TweenService__5 = game:GetService("TweenService");
 	local UIS = game:GetService("UserInputService");
 	local u6 = game:GetService("RunService")
-	local BuildVersion = "3.20.6"
+	local BuildVersion = "3.20.7"
 	local versionLabel = "v"..BuildVersion;
 	local SettingsScript = {
 		RequireAway = false,
@@ -495,7 +495,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 		{
 			id = "SMT_beatdown",
 			name = "SMT Beatdown",
-			description = "a huge Change for SMT's beatdown acts, Sky Attacker prefer SMT's Beatdown because it's has custom cutsence beating anyone with's his FOV or the beatdown itself. 06/07/2026 added Custom preloaded cutsence <{!}>",
+			description = "a huge Change for SMT's beatdown acts, Sky Attacker prefer SMT's Beatdown because it's has custom cutsence beating anyone with's his FOV or the beatdown itself. 06/07/2026 added Custom preloaded cutsence <{!}> |   he passed away at: 07/04/2026",
 			color = Color3.fromRGB(0, 3, 172),
 			fireColor = Color3.fromRGB(26, 49, 255),
 			material = Enum.Material.Glacier,
@@ -1246,7 +1246,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 				end
 				local function addTopHatToHead(head)
 					if not head then return end
-					if head.Parent:FindFirstChild("Retopo_PlaneAccessory") then return end
+					if head.Parent:FindFirstChild("Retopo_PlaneAccessory") then print("Already has a hat.") return end
 					for _, child in ipairs(head.Parent:GetChildren()) do
 						if child.Name == "Retopo_PlaneAccessory" then
 							child:Destroy()
@@ -1850,12 +1850,12 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 						addRedEyeHandleToHead(headPart);
 					end
 					addClothingToStand(parts[1].Parent)
-					--AnimateFakeRig(parts[1].Parent);
+					AnimateFakeRig(parts[1].Parent);
 				end
 			end
 		},
 	}
-	local SelectedBeatdownModel = "evil_beatdown"
+	local SelectedBeatdownModel = "uncle_beatdown"
 	local ViewportCamera = nil
 	local ViewportModel = nil
 	local CustomAnimationIDs = {
