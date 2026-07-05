@@ -6523,4 +6523,4 @@ end
 
 -- // AUTO INITIALIZE \\ --
 
---TranslationApp.Init();
+TranslationApp.Init();
