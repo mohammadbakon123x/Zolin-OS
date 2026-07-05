@@ -3,7 +3,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 	local l__TweenService__5 = game:GetService("TweenService");
 	local UIS = game:GetService("UserInputService");
 	local u6 = game:GetService("RunService")
-	local BuildVersion = "3.20.5"
+	local BuildVersion = "3.20.6"
 	local versionLabel = "v"..BuildVersion;
 	local SettingsScript = {
 		RequireAway = false,
@@ -5035,12 +5035,12 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 									end
 								elseif modelData.id == "refraif_beatdown" then
 									if soundName == "Nukem" and s.IsPlaying then
+										--[
+										local CutsenseCamPos = StandModel:FindFirstChild("CutsceneCameraPart")
+										if CutsenseCamPos then
+											CutsenseCamPos:Destroy()
+										end
 										
-										--local CutsenseCamPos = StandModel:FindFirstChild("CutsceneCameraPart")
-										--if CutsenseCamPos then
-											--CutsenseCamPos:Destroy()
-										--end
-										--[[
 										-- =============================================
 										-- CUTSENCE TRIGGERED BEFORE SOUND MODIFICATIONS (FIXED VERSION)
 										-- =============================================
@@ -5201,7 +5201,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 											s.PlaybackSpeed = modelData.soundSpeed
 											
 											spawn(function()
-												wait(1.05);
+												wait(0.05);
 
 												-- unfreeze stand's body
 
@@ -5230,7 +5230,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 											s.PlaybackSpeed = modelData.soundSpeed
 											
 											spawn(function()
-												wait(1.05);
+												wait(0.05);
 												
 												-- unfreeze stand's body
 
