@@ -2873,84 +2873,6 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 	UIPadding_Desc.PaddingRight = UDim.new(0.05, 0);
 	UIPadding_Desc.PaddingTop = UDim.new(0.05, 0);
 	
-	--[
-	local SliderSelection4 = Instance.new("Frame", Desclabel);
-	SliderSelection4.AnchorPoint = Vector2.new(0.5, 0.5);
-	SliderSelection4.Active = true;
-	SliderSelection4.BackgroundColor3 = Color3.fromRGB(35, 31, 59);
-	SliderSelection4.BackgroundTransparency = 0;
-	SliderSelection4.Size = UDim2.new(1, 0, 0.2, 0);
-	SliderSelection4.SizeConstraint = Enum.SizeConstraint.RelativeXY;
-	SliderSelection4.Visible = true
-	SliderSelection4.ZIndex = 6;
-	SliderSelection4.LayoutOrder = 0;
-	local UICorner_Slider4 = Instance.new("UICorner", SliderSelection4);
-	local Title_Slider4 = Instance.new("TextLabel", SliderSelection4);
-	Title_Slider4.AnchorPoint = Vector2.new(0.5, 0);
-	Title_Slider4.BackgroundTransparency = 1;
-	Title_Slider4.LayoutOrder = 3;
-	Title_Slider4.Position = UDim2.new(0.5, 0, 0, 0);
-	Title_Slider4.Size = UDim2.new(1, 0, 1, 0);
-	Title_Slider4.SizeConstraint = Enum.SizeConstraint.RelativeXY;
-	Title_Slider4.Visible = true;
-	Title_Slider4.ZIndex = 6;
-	Title_Slider4.RichText = true;
-	Title_Slider4.Text = "  Enable FlyMode on keyboard (T) :"
-	Title_Slider4.TextColor3 = Color3.fromRGB(194, 194, 194);
-	Title_Slider4.TextScaled = false;
-	Title_Slider4.TextSize = 36;
-	Title_Slider4.TextWrapped = true;
-	Title_Slider4.TextXAlignment = Enum.TextXAlignment.Left;
-	Title_Slider4.TextYAlignment = Enum.TextYAlignment.Center;
-	local UIStroke_Title_Slider4 = Instance.new("UIStroke", Title_Slider4);
-	UIStroke_Title_Slider4.ApplyStrokeMode = Enum.ApplyStrokeMode.Border;
-	UIStroke_Title_Slider4.BorderStrokePosition = Enum.BorderStrokePosition.Outer;
-	UIStroke_Title_Slider4.Thickness = 2.9;
-	UIStroke_Title_Slider4.Color = Color3.fromRGB(103, 92, 150);
-	UIStroke_Title_Slider4.StrokeSizingMode = Enum.StrokeSizingMode.FixedSize;
-	UIStroke_Title_Slider4.LineJoinMode = Enum.LineJoinMode.Round;
-	UIStroke_Title_Slider4.ZIndex = 6;
-	UIStroke_Title_Slider4.Transparency = 0;
-	UIStroke_Title_Slider4.Enabled = false;
-	local UIPadding_TitleSlider4 = Instance.new("UIPadding", Title_Slider4);
-	UIPadding_TitleSlider4.PaddingBottom = UDim.new(-0.2, 0);
-	UIPadding_TitleSlider4.PaddingLeft = UDim.new(0, 0);
-	UIPadding_TitleSlider4.PaddingRight = UDim.new(0, 0);
-	UIPadding_TitleSlider4.PaddingTop = UDim.new(-0.2, 0);
-	local Button_Slider4 = Instance.new("TextButton", Title_Slider4);
-	Button_Slider4.Active = true;
-	Button_Slider4.AutoButtonColor = true;
-	Button_Slider4.AnchorPoint = Vector2.new(0.5, 0.5);
-	Button_Slider4.BackgroundColor3 = Color3.fromRGB(70, 60, 95);
-	Button_Slider4.BackgroundTransparency = 0.55;
-	Button_Slider4.Position = UDim2.new(0.85, 0, 0.5, 0);
-	Button_Slider4.Size = UDim2.new(0, 200, 0, 31);
-	Button_Slider4.SizeConstraint = Enum.SizeConstraint.RelativeXY;
-	Button_Slider4.Visible = true;
-	Button_Slider4.ZIndex = 6;
-	Button_Slider4.Name = "EnableFlyModeOnKeyboard";
-	Button_Slider4.Font = Enum.Font.Oswald;
-	Button_Slider4.FontFace.Weight = Enum.FontWeight.Bold
-	Button_Slider4.FontFace.Style = Enum.FontStyle.Italic
-	Button_Slider4.Text = "OFF";
-	Button_Slider4.TextColor3 = Color3.fromRGB(214, 214, 214);
-	Button_Slider4.RichText = true;
-	Button_Slider4.TextScaled = true;
-	Button_Slider4.TextWrapped = true;
-	Button_Slider4.TextXAlignment = Enum.TextXAlignment.Center;
-	Button_Slider4.TextYAlignment = Enum.TextYAlignment.Center;
-	local UICorner_TitleSlider4 = Instance.new("UICorner", Button_Slider4);
-	UICorner_TitleSlider4.CornerRadius = UDim.new(0, 5);
-	local UIStroke_TitleSlider4 = Instance.new("UIStroke", Button_Slider4);
-	UIStroke_TitleSlider4.ApplyStrokeMode = Enum.ApplyStrokeMode.Border;
-	UIStroke_TitleSlider4.BorderStrokePosition = Enum.BorderStrokePosition.Outer;
-	UIStroke_TitleSlider4.Thickness = 2.9;
-	UIStroke_TitleSlider4.Color = Color3.fromRGB(103, 92, 150);
-	UIStroke_TitleSlider4.StrokeSizingMode = Enum.StrokeSizingMode.FixedSize;
-	UIStroke_TitleSlider4.LineJoinMode = Enum.LineJoinMode.Round;
-	UIStroke_TitleSlider4.ZIndex = 6;
-	UIStroke_TitleSlider4.Transparency = 0;
-	--]]
 	
 	--[ Add after SliderSelection4
 	local SliderSelection5 = Instance.new("Frame", Desclabel);
@@ -4802,8 +4724,10 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 													end
 
 													if v:IsA("BasePart") then
+														if v.Name ~= "HumanoidRootPart" then
 														v.Transparency = 1
 														--v.CanCollide = false
+														end
 													end
 
 													if v:IsA("Decal") or v:IsA("Texture") then
@@ -4834,8 +4758,10 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 														if not isInStand then
 															for _, child in pairs(v:GetDescendants()) do
 																if child:IsA("BasePart") then
+																	if child.Name ~= "HumanoidRootPart" then
 																	child.Transparency = 1
 																	--child.CanCollide = false
+																	end
 																end
 															end
 														end
@@ -4876,10 +4802,11 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 														end
 
 														if v:IsA("BasePart") then
+															if v.Name ~= "HumanoidRootPart" then
 															v.Transparency = 0
 															--v.CanCollide = true
 														end
-
+													end
 														if v:IsA("Decal") or v:IsA("Texture") then
 															v.Transparency = 0
 														end
@@ -4906,8 +4833,10 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 															if not isInStand then
 																for _, child in pairs(v:GetDescendants()) do
 																	if child:IsA("BasePart") then
+																		if child.Name ~= "HumanoidRootPart" then
 																		child.Transparency = 0
 																		--child.CanCollide = true
+																		end
 																	end
 																end
 															end
@@ -5244,7 +5173,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 										end
 									end
 									spawn(function()
-										wait(2.76);
+										wait(0.76);
 										-- freeze stand's body
 										
 										-- im listening to Cha################
@@ -5260,7 +5189,9 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 										
 										for i, v in pairs(StandModel:GetDescendants()) do
 											if v:IsA("BasePart") then
+												if v.Name ~= "CutsceneCameraPart" then
 												v.Anchored = true
+												end
 											end
 										end
 									end)
@@ -5287,7 +5218,9 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 
 												for i, v in pairs(StandModel:GetDescendants()) do
 													if v:IsA("BasePart") then
+														if v.Name ~= "CutsceneCameraPart" then
 														v.Anchored = false
+														end
 													end
 												end
 											end)
@@ -5314,7 +5247,9 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 
 												for i, v in pairs(StandModel:GetDescendants()) do
 													if v:IsA("BasePart") then
+														if v.Name ~= "CutsceneCameraPart" then
 														v.Anchored = false
+														end
 													end
 												end
 											end)
