@@ -2423,16 +2423,36 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 		return tween
 	end
 	local isNight = false
+	local isTransitioning = false
+	
+	local function setDayNight(enableNight)
+		-- Prevent spam
+		if isTransitioning then
+			return
+		end
 
-	local function toggleDayNight()
-		isNight = not isNight
+		-- Already in this state
+		if enableNight == isNight then
+			return
+		end
 
+		isTransitioning = true
+		isNight = enableNight
+
+		local tween
 		if isNight then
-			tweenToNight(3)
+			tween = tweenToNight(3)
 			print("Switched to night")
 		else
-			revertToDay(3)
+			tween = revertToDay(3)
 			print("Switched to day")
+		end
+
+		-- Allow switching again after tween completes
+		if tween then
+			tween.Completed:Connect(function()
+				isTransitioning = false
+			end)
 		end
 	end
 
@@ -6303,7 +6323,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 											end
 											if CurrentPlayer == lpr then
 												startColorCorrectionEffectGalaxy();
-												toggleDayNight()
+												setDayNight(true)
 											end
 											local CustomReverb = Instance.new("ReverbSoundEffect", s)
 											CustomReverb.DecayTime = 3.682
@@ -6353,7 +6373,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 											end
 											spawn(function()
 												task.wait(0.76);
-												toggleDayNight();
+												setDayNight(false);
 												game:GetService("SoundService").AmbientReverb = Enum.ReverbType.NoReverb
 												game:GetService("SoundService"):FindFirstChild("Timeresume"):Play();
 												game:GetService("SoundService"):FindFirstChild("Timestop").Volume = 0.5;
