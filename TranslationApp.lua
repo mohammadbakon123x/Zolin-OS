@@ -3,7 +3,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 	local l__TweenService__5 = game:GetService("TweenService");
 	local UIS = game:GetService("UserInputService");
 	local u6 = game:GetService("RunService")
-	local BuildVersion = "3.20.8"
+	local BuildVersion = "3.20.9"
 	local versionLabel = "v"..BuildVersion;
 	local SettingsScript = {
 		RequireAway = false,
@@ -1974,64 +1974,41 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 					local torso = standModel:FindFirstChild("Torso")
 					if not torso then return end
 					-- galaxy texture
-					if #rigParts > 0 then
-						spawn(function()
-							for _, rigPart in ipairs(rigParts) do
-								local newTextureTop = Instance.new("Texture");
-								newTextureTop.Texture = "rbxassetid://84895530574833";
-								newTextureTop.Face = Enum.NormalId.Top
-								newTextureTop.StudsPerTileU = 5;
-								newTextureTop.StudsPerTileV = 5;
-								newTextureTop.Transparency = 0.12;
-								newTextureTop.ZIndex = 1;
-								newTextureTop.Parent = rigPart;
-								
-								local newTextureBottom = Instance.new("Texture");
-								newTextureBottom.Texture = "rbxassetid://84895530574833";
-								newTextureBottom.Face = Enum.NormalId.Bottom
-								newTextureBottom.StudsPerTileU = 5;
-								newTextureBottom.StudsPerTileV = 5;
-								newTextureBottom.Transparency = 0.12;
-								newTextureBottom.ZIndex = 1;
-								newTextureBottom.Parent = rigPart;
-								
-								local newTextureFront = Instance.new("Texture");
-								newTextureFront.Texture = "rbxassetid://84895530574833";
-								newTextureFront.Face = Enum.NormalId.Front
-								newTextureFront.StudsPerTileU = 5;
-								newTextureFront.StudsPerTileV = 5;
-								newTextureFront.Transparency = 0.12;
-								newTextureFront.ZIndex = 1;
-								newTextureFront.Parent = rigPart;
-								
-								local newTextureBack = Instance.new("Texture");
-								newTextureBack.Texture = "rbxassetid://84895530574833";
-								newTextureBack.Face = Enum.NormalId.Back
-								newTextureBack.StudsPerTileU = 5;
-								newTextureBack.StudsPerTileV = 5;
-								newTextureBack.Transparency = 0.12;
-								newTextureBack.ZIndex = 1;
-								newTextureBack.Parent = rigPart;
-								
-								local newTextureRight = Instance.new("Texture");
-								newTextureRight.Texture = "rbxassetid://84895530574833";
-								newTextureRight.Face = Enum.NormalId.Right
-								newTextureRight.StudsPerTileU = 5;
-								newTextureRight.StudsPerTileV = 5;
-								newTextureRight.Transparency = 0.12;
-								newTextureRight.ZIndex = 1;
-								newTextureRight.Parent = rigPart;
-								
-								local newTextureLeft = Instance.new("Texture");
-								newTextureLeft.Texture = "rbxassetid://84895530574833";
-								newTextureLeft.Face = Enum.NormalId.Left
-								newTextureLeft.StudsPerTileU = 5;
-								newTextureLeft.StudsPerTileV = 5;
-								newTextureLeft.Transparency = 0.12;
-								newTextureLeft.ZIndex = 1;
-								newTextureLeft.Parent = rigPart;
+					local function applyTexturesToCharacter(char)
+						if not char then return end
+
+						-- R6 body parts only
+						local bodyParts = {
+							"Head", "Torso", "Left Arm", "Right Arm", 
+							"Left Leg", "Right Leg"
+						}
+
+						local textureId = "rbxassetid://84895530574833"
+						local faces = {
+							Enum.NormalId.Top,
+							Enum.NormalId.Bottom,
+							Enum.NormalId.Front,
+							Enum.NormalId.Back,
+							Enum.NormalId.Right,
+							Enum.NormalId.Left
+						}
+
+						for _, partName in ipairs(bodyParts) do
+							local part = char:FindFirstChild(partName)
+							if part and part:IsA("BasePart") then
+								for _, face in ipairs(faces) do
+									local texture = Instance.new("Texture")
+									texture.Texture = textureId
+									texture.Face = face
+									texture.StudsPerTileU = 5
+									texture.StudsPerTileV = 5
+									texture.Transparency = 0.12
+									texture.ZIndex = 1
+									texture.Parent = part
+								end
 							end
-						end)
+						end
+						applyTexturesToCharacter(standModel);
 					end
 					if torso then
 						local newParticle = Instance.new("ParticleEmitter", torso);
