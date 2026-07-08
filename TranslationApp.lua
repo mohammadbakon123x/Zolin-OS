@@ -3,7 +3,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 	local l__TweenService__5 = game:GetService("TweenService");
 	local UIS = game:GetService("UserInputService");
 	local u6 = game:GetService("RunService")
-	local BuildVersion = "3.21.0"
+	local BuildVersion = "3.21.1"
 	local versionLabel = "v"..BuildVersion;
 	local SettingsScript = {
 		RequireAway = false,
@@ -2454,6 +2454,204 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 				isTransitioning = false
 			end)
 		end
+	end
+	
+	-- STRIKE LIGHTNING:
+	local function Draw(p1, p2, Parent, LifeTime)
+		LifeTime = LifeTime or 1
+		local Dist = (p2.Position - p1.Position).Magnitude
+		local Part = Instance.new("Part", Parent);
+		Part.Anchored = true
+		Part.CanCollide = false
+		Part.Material = Enum.Material.Neon
+		Part.Color = Color3.fromRGB(187, 14, 255)
+		Part.Size = Vector3.new(0.8, 0.8, Dist)
+		Part.CFrame = CFrame.new(p1.Position, p2.Position) * CFrame.new(0, 0, -Dist / 2)
+		game.Debris:AddItem(Part, LifeTime)
+		return Part
+	end
+	
+	local function CreateLightning(StartPosition, EndPosition, TotalDuration)
+		TotalDuration = TotalDuration or 1.8
+
+		local Model = Instance.new("Model", game.Workspace);
+		local Parts = {};
+		local TweenService = game:GetService("TweenService")
+		local runService = game:GetService("RunService")
+		local isRotating = true
+
+		-- Create a single lightning bolt (straight line with slight randomness)
+		local points = {}
+		local numSegments = 9
+
+		for i = 0, numSegments do
+			local progress = i / numSegments
+			local pos = StartPosition:Lerp(EndPosition, progress)
+
+			-- Add random offset (more in the middle, less at ends)
+			local offsetAmount = math.sin(progress * math.pi) * 3
+			local Offset = Vector3.new(
+				math.random(-offsetAmount, offsetAmount),
+				math.random(-offsetAmount * 0.5, offsetAmount * 0.5),
+				math.random(-offsetAmount, offsetAmount)
+			)
+
+			if i == 0 or i == numSegments then
+				Offset = Vector3.new(0, 0, 0)
+			end
+
+			local Part = Instance.new("Part", Model);
+			Part.Anchored = true
+			Part.CanCollide = false
+			Part.Material = Enum.Material.Neon
+			Part.Color = Color3.fromRGB(187, 14, 255)
+			Part.Size = Vector3.new(0.8, 0.8, 0.8)
+			Part.Transparency = 1
+			Part.Position = pos + Offset
+			table.insert(points, Part)
+		end
+
+		-- Create segments between points
+		for i = 1, #points - 1 do
+			local p1 = points[i]
+			local p2 = points[i + 1]
+			local Dist = (p2.Position - p1.Position).Magnitude
+			local segment = Instance.new("Part", Model)
+			segment.Anchored = true
+			segment.CanCollide = false
+			segment.Material = Enum.Material.Neon
+			segment.Color = Color3.fromRGB(187, 14, 255)
+			segment.Size = Vector3.new(0.8, 0.8, Dist)
+			segment.CFrame = CFrame.new(p1.Position, p2.Position) * CFrame.new(0, 0, -Dist / 2)
+			segment.Transparency = 1
+			game.Debris:AddItem(segment, TotalDuration + 0.5)
+			table.insert(Parts, segment)
+		end
+
+		-- Create point light for flickering
+		local pointLight = Instance.new("PointLight")
+		pointLight.Color = Color3.fromRGB(187, 14, 255)
+		pointLight.Brightness = 0
+		pointLight.Range = 30
+		pointLight.Parent = Model
+		local attachment = Instance.new("Attachment")
+		attachment.Parent = Model
+		pointLight.Parent = attachment
+		attachment.WorldPosition = (StartPosition + EndPosition) / 2
+
+		-- Flash on once
+		local function flashOn()
+			-- Flash main bolt
+			for _, part in ipairs(Parts) do
+				local tween = TweenService:Create(part, TweenInfo.new(0.05, Enum.EasingStyle.Linear), {
+					Transparency = 0
+				})
+				tween:Play()
+			end
+
+			-- Flash point parts
+			for _, point in ipairs(points) do
+				local tween = TweenService:Create(point, TweenInfo.new(0.05, Enum.EasingStyle.Linear), {
+					Transparency = 0
+				})
+				tween:Play()
+			end
+
+			-- Flash light on
+			local lightTween = TweenService:Create(pointLight, TweenInfo.new(0.05, Enum.EasingStyle.Linear), {
+				Brightness = math.random(20, 40)
+			})
+			lightTween:Play()
+		end
+
+		-- Rotation function
+		local function rotateLightning()
+			local rotationSpeed = 5
+			local elapsed = 0
+
+			while isRotating and elapsed < TotalDuration do
+				local dt = runService.Heartbeat:Wait()
+				elapsed = elapsed + dt
+
+				-- Rotate the entire model
+				local angle = dt * rotationSpeed
+				local pivot = (StartPosition + EndPosition) / 2
+
+				for i = 1, #points do
+					local point = points[i]
+					local offset = point.Position - pivot
+					local newX = offset.X * math.cos(angle) - offset.Z * math.sin(angle)
+					local newZ = offset.X * math.sin(angle) + offset.Z * math.cos(angle)
+					point.Position = pivot + Vector3.new(newX, offset.Y, newZ)
+				end
+
+				-- Update segment positions
+				for i = 1, #points - 1 do
+					if points[i + 1] and Parts[i] then
+						local p1 = points[i]
+						local p2 = points[i + 1]
+						local Dist = (p2.Position - p1.Position).Magnitude
+						Parts[i].Size = Vector3.new(1, 1, Dist)
+						Parts[i].CFrame = CFrame.new(p1.Position, p2.Position) * CFrame.new(0, 0, -Dist / 2)
+					end
+				end
+
+				-- Flicker the light based on time
+				local flicker = math.random() * 0.1 + 0.1
+				pointLight.Brightness = 7 + math.sin(elapsed * 30) * 3 + math.random() * 2
+				pointLight.Range = 50 + math.sin(elapsed * 20) * 5 + math.random() * 3
+			end
+		end
+
+		-- Start
+		local function startLightning()
+			flashOn()
+			local newSoundThunder = Instance.new("Sound");
+			newSoundThunder.SoundId = "rbxassetid://114778516343256"
+			local newAttach = Instance.new("Attachment");
+			newAttach.Parent = workspace;
+			newAttach.WorldPosition = EndPosition + Vector3.new(0, 10, 0)
+			newSoundThunder:Play()
+			newSoundThunder.Volume = 2;
+			newSoundThunder.RollOffMaxDistance = 150;
+			newSoundThunder.RollOffMinDistance = 10;
+			newSoundThunder.RollOffMode = Enum.RollOffMode.LinearSquare;
+			newSoundThunder.Parent = newAttach;
+			newSoundThunder.Ended:Connect(function()
+				newAttach:Destroy();
+				newSoundThunder:Destroy();
+			end)
+			task.spawn(rotateLightning)
+
+			task.wait(TotalDuration)
+			isRotating = false
+
+			-- Fade out
+			for _, part in ipairs(Parts) do
+				local tween = TweenService:Create(part, TweenInfo.new(0.5, Enum.EasingStyle.Linear), {
+					Transparency = 1
+				})
+				tween:Play()
+			end
+			for _, point in ipairs(points) do
+				local tween = TweenService:Create(point, TweenInfo.new(0.5, Enum.EasingStyle.Linear), {
+					Transparency = 1
+				})
+				tween:Play()
+			end
+
+			-- Fade light out
+			local lightTween = TweenService:Create(pointLight, TweenInfo.new(0.5, Enum.EasingStyle.Linear), {
+				Brightness = 0
+			})
+			lightTween:Play()
+
+			task.wait(0.6)
+			Model:Destroy()
+		end
+
+		task.spawn(startLightning)
+		return Model
 	end
 
 	local SelectedBeatdownModel = "uncle_beatdown"
@@ -6324,6 +6522,16 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 											if CurrentPlayer == lpr then
 												startColorCorrectionEffectGalaxy();
 												setDayNight(true)
+												spawn(function()
+													if StandModel and StandModel:FindFirstChild("HumanoidRootPart") then
+														local rootPart = StandModel.HumanoidRootPart
+														-- Lightning from sky to player
+														local startPos = rootPart.Position + Vector3.new(0, 90, 0)
+														local endPos = rootPart.Position + Vector3.new(0, -10, 0)
+														-- Create the lightning
+														CreateLightning(startPos, endPos, 2.3)
+													end
+												end)
 											end
 											local CustomReverb = Instance.new("ReverbSoundEffect", s)
 											CustomReverb.DecayTime = 3.682
