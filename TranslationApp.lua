@@ -3,7 +3,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 	local l__TweenService__5 = game:GetService("TweenService");
 	local UIS = game:GetService("UserInputService");
 	local u6 = game:GetService("RunService")
-	local BuildVersion = "3.21.1"
+	local BuildVersion = "3.21.2"
 	local versionLabel = "v"..BuildVersion;
 	local SettingsScript = {
 		RequireAway = false,
@@ -2001,7 +2001,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 
 						for _, partName in ipairs(bodyParts) do
 							local part = char:FindFirstChild(partName)
-							if part and part:IsA("BasePart") then
+							if part then
 								for _, face in ipairs(faces) do
 									local texture = Instance.new("Texture")
 									texture.Texture = textureId
