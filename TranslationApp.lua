@@ -3,7 +3,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 	local l__TweenService__5 = game:GetService("TweenService");
 	local UIS = game:GetService("UserInputService");
 	local u6 = game:GetService("RunService")
-	local BuildVersion = "3.20.7"
+	local BuildVersion = "3.20.8"
 	local versionLabel = "v"..BuildVersion;
 	local SettingsScript = {
 		RequireAway = false,
@@ -66,13 +66,15 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 		HomerunBiggerHitbox = false,
 		CustomAnimations = false
 	};
+	local originalSkybox = {}
+	local originalLighting = {}
 	--[ Custom Beatdown Var
 	local CustomBeatdownUI = nil
 	local CustomBeatdownModels = {
 		{
 			id = "evil_beatdown",
 			name = "Evil Beatdown",
-			description = "Black-themed beatdown stand with red fire effects. Makes your stand appear sinister and powerful.",
+			description = "Black-themed beatdown stand with red fire effects. Makes your stand appear sinister and powerful. This evil beatdown is first born version 1.0 of TranslationUI",
 			color = Color3.fromRGB(0, 0, 0),
 			fireColor = Color3.fromRGB(85, 0, 0),
 			material = Enum.Material.Neon,
@@ -1245,8 +1247,8 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 					end)
 				end
 				local function addTopHatToHead(head)
-					if not head then warn("No head is exists !") return end
-					if head.Parent:FindFirstChild("Retopo_PlaneAccessory") then print("Already has a hat.") return end
+					if not head then return end
+					if head.Parent:FindFirstChild("Retopo_PlaneAccessory") then return end
 					for _, child in ipairs(head.Parent:GetChildren()) do
 						if child.Name == "Retopo_PlaneAccessory" then
 							child:Destroy()
@@ -1850,11 +1852,607 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 						addRedEyeHandleToHead(headPart);
 					end
 					addClothingToStand(parts[1].Parent)
-					AnimateFakeRig(parts[1].Parent);
+					--AnimateFakeRig(parts[1].Parent);
+				end
+			end
+		},
+		{
+			id = "Galaxa_beatdown",
+			name = "Galaxa Beatdown",
+			description = "galaxa is a newborn with super ultra instinct flowing his blood, a two souls are fused into one who has galaxy body , Your_Uncle & King_Dracule ",
+			color = Color3.fromRGB(128, 0, 255),
+			fireColor = Color3.fromRGB(128, 0, 255),
+			material = Enum.Material.Glass,
+			transparency = 0,
+			icon = "rbxassetid://5912420913",
+			iconColor = Color3.fromRGB(128, 0, 255),
+			soundSpeed = 0.7,
+			customSounds = {
+				["Nukem"] = 1, --0.7 -- 1
+				["Male Scream Short Yelling Bursts Death Cries (SFX)"] = 0.67,
+				["explosion2"] = 1,
+				["Gun1"] = 0.7,
+				["Gun2"] = 0.9,
+				["Yell"] = 1,
+				["Hit"] = 0.5,
+				["Implosion"] = 0.7,
+			},
+			enabled = false,
+			specialEffects = function(parts)
+				local meshesToRemove = {}
+				local rigParts = {}
+				local headPart = nil
+				local RightArmPart = nil
+				for _, part in ipairs(parts) do
+					if part:IsA("BasePart") then
+						part.Color = Color3.fromRGB(0, 0, 0)
+						if part.Name == "Head" then
+							headPart = part
+						end
+						if part.Name == "Right Arm" then
+							RightArmPart = part
+						end
+						if part.Name == "Torso" or part.Name == "Left Leg" or part.Name == "Right Leg" or 
+							part.Name == "Left Arm" or part.Name == "Right Arm" or part.Name == "Head" then
+							table.insert(rigParts, part)
+						end
+						if part.Name == "Torso" or part.Name:find("Leg") or part.Name:find("Arm") then
+							for _, child in ipairs(part:GetChildren()) do
+								if child:IsA("SpecialMesh") then
+									table.insert(meshesToRemove, child)
+								end
+							end
+						end
+						if part:FindFirstChild("PointLight") then return end
+						local pointLight = Instance.new("PointLight")
+						pointLight.Color = Color3.fromRGB(128, 0, 255)
+						pointLight.Range = 8
+						pointLight.Brightness = 2.5
+						pointLight.Shadows = true
+						pointLight.Enabled = true
+						pointLight.Parent = part
+						if part.Name ~= "HumanoidRootPart" then
+							part.Transparency = 0
+							part.Material = Enum.Material.Glass
+						end
+					end
+				end
+				for _, mesh in ipairs(meshesToRemove) do
+					mesh:Destroy()
+				end
+				if #rigParts > 0 then
+					spawn(function()
+						for _, rigPart in ipairs(rigParts) do
+							rigPart.Color = Color3.fromRGB(0, 0, 0)
+							rigPart.Material = Enum.Material.Glass
+						end
+					end)
+				end
+					-- we will continue this later | 07/07/2026 | 07:02 AM
+					-- hala 04:02 PM
+				local function addTopHatToHead(head)
+					if not head then return end
+					local Name = "HatMeshPartAccessory"
+					if head.Parent:FindFirstChild(Name) then return end
+					for _, child in ipairs(head.Parent:GetChildren()) do
+						if child.Name == Name then
+							child:Destroy()
+						end
+					end
+					local hatAccessory = Instance.new("Accessory")
+					hatAccessory.Name = Name
+					local handle = Instance.new("Part")
+					handle.Name = "Handle"
+					handle.Size = Vector3.new(1.5, 1.5, 1.5)
+					handle.CanCollide = false
+					handle.Transparency = 0
+					handle.Massless = true
+					handle.Parent = hatAccessory
+					local specialMesh = Instance.new("SpecialMesh")
+					specialMesh.MeshId = "rbxassetid://6097992548"
+					specialMesh.TextureId = "rbxassetid://5355543242"
+					specialMesh.Scale = Vector3.new(1, 1, 1)
+					specialMesh.VertexColor = Vector3.new(1, 1, 1)
+					specialMesh.MeshType = Enum.MeshType.FileMesh
+					specialMesh.Parent = handle
+					local accessoryWeld = Instance.new("Weld")
+					accessoryWeld.Name = "AccessoryWeld"
+					accessoryWeld.Part0 = handle
+					accessoryWeld.Part1 = head
+					accessoryWeld.C0 = CFrame.new(0, -0.9, 0) * CFrame.Angles(0, 0, 0)
+					accessoryWeld.C1 = CFrame.new(0, 0, 0) * CFrame.Angles(0, 0, 0)
+					accessoryWeld.Enabled = true
+					accessoryWeld.Parent = handle
+					hatAccessory.Parent = head.Parent
+					if specialMesh then
+						handle.Color = Color3.fromRGB(0, 0, 0)
+					end
+					return hatAccessory
+				end
+				local function addClothingToStand(standModel)
+					if not standModel then return end
+					local torso = standModel:FindFirstChild("Torso")
+					if not torso then return end
+					-- galaxy texture
+					if #rigParts > 0 then
+						spawn(function()
+							for _, rigPart in ipairs(rigParts) do
+								local newTextureTop = Instance.new("Texture");
+								newTextureTop.ColorMapContent = "rbxassetid://84895530574833";
+								newTextureTop.Face = Enum.NormalId.Top
+								newTextureTop.StudsPerTileU = 5;
+								newTextureTop.StudsPerTileV = 5;
+								newTextureTop.Transparency = 0.12;
+								newTextureTop.ZIndex = 1;
+								newTextureTop.Parent = rigPart;
+								
+								local newTextureBottom = Instance.new("Texture");
+								newTextureBottom.ColorMapContent = "rbxassetid://84895530574833";
+								newTextureBottom.Face = Enum.NormalId.Bottom
+								newTextureBottom.StudsPerTileU = 5;
+								newTextureBottom.StudsPerTileV = 5;
+								newTextureBottom.Transparency = 0.12;
+								newTextureBottom.ZIndex = 1;
+								newTextureBottom.Parent = rigPart;
+								
+								local newTextureFront = Instance.new("Texture");
+								newTextureFront.ColorMapContent = "rbxassetid://84895530574833";
+								newTextureFront.Face = Enum.NormalId.Front
+								newTextureFront.StudsPerTileU = 5;
+								newTextureFront.StudsPerTileV = 5;
+								newTextureFront.Transparency = 0.12;
+								newTextureFront.ZIndex = 1;
+								newTextureFront.Parent = rigPart;
+								
+								local newTextureBack = Instance.new("Texture");
+								newTextureBack.ColorMapContent = "rbxassetid://84895530574833";
+								newTextureBack.Face = Enum.NormalId.Back
+								newTextureBack.StudsPerTileU = 5;
+								newTextureBack.StudsPerTileV = 5;
+								newTextureBack.Transparency = 0.12;
+								newTextureBack.ZIndex = 1;
+								newTextureBack.Parent = rigPart;
+								
+								local newTextureRight = Instance.new("Texture");
+								newTextureRight.ColorMapContent = "rbxassetid://84895530574833";
+								newTextureRight.Face = Enum.NormalId.Right
+								newTextureRight.StudsPerTileU = 5;
+								newTextureRight.StudsPerTileV = 5;
+								newTextureRight.Transparency = 0.12;
+								newTextureRight.ZIndex = 1;
+								newTextureRight.Parent = rigPart;
+								
+								local newTextureLeft = Instance.new("Texture");
+								newTextureLeft.ColorMapContent = "rbxassetid://84895530574833";
+								newTextureLeft.Face = Enum.NormalId.Left
+								newTextureLeft.StudsPerTileU = 5;
+								newTextureLeft.StudsPerTileV = 5;
+								newTextureLeft.Transparency = 0.12;
+								newTextureLeft.ZIndex = 1;
+								newTextureLeft.Parent = rigPart;
+							end
+						end)
+					end
+					if torso then
+						local newParticle = Instance.new("ParticleEmitter", torso);
+						newParticle.Color = ColorSequence.new(Color3.fromRGB(128, 0, 255));
+						newParticle.LightEmission = 0.86;
+						newParticle.LightInfluence = 0;
+						newParticle.Orientation = Enum.ParticleOrientation.FacingCamera;
+						newParticle.Size = NumberSequence.new(0.938, 0);
+						newParticle.Squash = 0;
+						newParticle.Texture = "rbxassetid://241594419";
+						newParticle.Transparency = NumberSequence.new(0.5, 1);
+						newParticle.Brightness = 1;
+						newParticle.ZOffset = 0;
+						newParticle.EmissionDirection = Enum.NormalId.Top;
+						newParticle.Lifetime = NumberRange.new(0, 1);
+						newParticle.Rate = 70;
+						newParticle.Rotation = NumberRange.new(4, 9);
+						newParticle.RotSpeed = NumberRange.new(5, 9);
+						newParticle.Speed = 0;
+						newParticle.SpreadAngle = Vector2.new(28, 28);
+						newParticle.Shape = Enum.ParticleEmitterShape.Box;
+						newParticle.ShapeInOut = Enum.ParticleEmitterShapeInOut.Outward;
+						newParticle.ShapeStyle = Enum.ParticleEmitterShapeStyle.Volume;
+						newParticle.Acceleration = Vector3.new(0, 6, 0);
+						newParticle.Drag = 0;
+						newParticle.LockedToPart = false;
+						newParticle.VelocityInheritance = 0;
+						newParticle.TimeScale = 1;
+						newParticle.Enabled = true;
+						newParticle.Name = "SoulFrame";
+						
+						local newParticle2 = Instance.new("ParticleEmitter", torso);
+						newParticle2.Color = ColorSequence.new(Color3.fromRGB(55, 0, 165));
+						newParticle2.LightEmission = 0;
+						newParticle2.LightInfluence = 0;
+						newParticle2.Orientation = Enum.ParticleOrientation.FacingCamera;
+						newParticle2.Size = NumberSequence.new(0.938, 0);
+						newParticle2.Squash = 0;
+						newParticle2.Texture = "rbxassetid://241594419";
+						newParticle2.Transparency = NumberSequence.new(0.5, 1);
+						newParticle2.Brightness = 13;
+						newParticle2.ZOffset = 0;
+						newParticle2.EmissionDirection = Enum.NormalId.Top;
+						newParticle2.Lifetime = NumberRange.new(0, 1);
+						newParticle2.Rate = 70;
+						newParticle2.Rotation = NumberRange.new(4, 9);
+						newParticle2.RotSpeed = NumberRange.new(5, 9);
+						newParticle2.Speed = 0;
+						newParticle2.SpreadAngle = Vector2.new(28, 28);
+						newParticle2.Shape = Enum.ParticleEmitterShape.Box;
+						newParticle2.ShapeInOut = Enum.ParticleEmitterShapeInOut.Outward;
+						newParticle2.ShapeStyle = Enum.ParticleEmitterShapeStyle.Volume;
+						newParticle2.Acceleration = Vector3.new(0, 6, 0);
+						newParticle2.Drag = 0;
+						newParticle2.LockedToPart = false;
+						newParticle2.VelocityInheritance = 0;
+						newParticle2.TimeScale = 1;
+						newParticle2.Enabled = true;
+						newParticle2.Name = "SoulFrame";
+						
+						local att = torso:FindFirstChild("att");
+						if att then
+							local Sprial = att:FindFirstChild("Sprial");
+							if Sprial then
+								Sprial.Color = ColorSequence.new(Color3.fromRGB(162, 0, 255));
+								Sprial.Orientation = Enum.ParticleOrientation.VelocityParallel;
+							end
+						end
+					end
+				end
+				local function replaceGloveWithSword(rightArm)
+					local GlovePart = rightArm:FindFirstChild("Glove");
+					if GlovePart then
+						print("Found Glove, replacing with Sword...")
+						GlovePart:Destroy();
+						local Sword = Instance.new("MeshPart");
+						Sword.Name = "Sword";
+						Sword.Size = Vector3.new(0.819, 7.285, 0.247);
+						Sword.Color = Color3.fromRGB(255, 84, 246);
+						Sword.Material = Enum.Material.Neon;
+						Sword.Massless = true;
+						Sword.CanCollide = false;
+						Sword.Anchored = false;
+						Sword.MeshId = "rbxassetid://13696156138";
+						Sword.Reflectance = 1;
+						
+						local Weld = Instance.new("Weld");
+						Weld.Part0 = Sword;
+						Weld.Part1 = rightArm;
+
+						Weld.C0 = CFrame.new(-1, -3, 0) * CFrame.Angles(math.rad(90), math.rad(-90), 0);
+						Weld.C1 = CFrame.new(0, 0, 0) * CFrame.Angles(math.rad(0), math.rad(0), 0);
+						Weld.Parent = Sword;
+						
+						local ItemHighlight = Instance.new("ParticleEmitter")
+						ItemHighlight.Name = "ItemHighlight"
+
+						-- Create a ColorSequence with multiple keypoints
+						ItemHighlight.Brightness = 1;
+						ItemHighlight.Color = ColorSequence.new({
+							ColorSequenceKeypoint.new(0, Color3.fromRGB(184, 6, 255)),     -- Red at start
+							ColorSequenceKeypoint.new(0.734, Color3.fromRGB(184, 6, 255)),   -- Green at middle
+							ColorSequenceKeypoint.new(1, Color3.fromRGB(0, 221, 255))      -- Blue at end
+						})
+						ItemHighlight.LightEmission = 1
+						ItemHighlight.LightInfluence = 5
+						ItemHighlight.Orientation = Enum.ParticleOrientation.FacingCamera;
+						
+						ItemHighlight.Size = NumberSequence.new({
+							NumberSequenceKeypoint.new(0, 3.69, 1.43),  -- Time 0: Value 3.69, Envelope 1.43
+							NumberSequenceKeypoint.new(1, 1.54, 0)      -- Time 1: Value 1.54, Envelope 0
+						})
+						ItemHighlight.Texture = "http://www.roblox.com/asset/?id=1847258023";
+						
+						ItemHighlight.Transparency = NumberSequence.new({
+							NumberSequenceKeypoint.new(0, 1, 0),  -- Time 0: Value 0
+							NumberSequenceKeypoint.new(0.502, 0.929, 0),      -- Time 1: Value 1
+							NumberSequenceKeypoint.new(1, 1, 0),  -- Time 0: Value 0
+						})
+						ItemHighlight.ZOffset = 1;
+						
+						ItemHighlight.EmissionDirection = Enum.NormalId.Top;
+						ItemHighlight.Enabled = true;
+						ItemHighlight.Lifetime = 1;
+						ItemHighlight.Rate = 100;
+						ItemHighlight.Rotation = 0;
+						ItemHighlight.RotSpeed = 0;
+						ItemHighlight.Speed = 0.01;
+						ItemHighlight.SpreadAngle = Vector2.new(0, 0);
+						
+						ItemHighlight.Shape = Enum.ParticleEmitterShape.Box;
+						ItemHighlight.ShapeInOut = Enum.ParticleEmitterShapeInOut.Outward;
+						ItemHighlight.Shape = Enum.ParticleEmitterShapeStyle.Volume;
+						
+						ItemHighlight.Acceleration = Vector3.new(0, 0, 0);
+						ItemHighlight.Drag = 0;
+						ItemHighlight.LockedToPart = true;
+						ItemHighlight.TimeScale = 1;
+						ItemHighlight.VelocityInheritance = 0;
+						ItemHighlight.WindAffectsDrag = false;
+						ItemHighlight.Parent = Sword;
+						
+						-- TEXTURE PARTICLE 2
+						
+						local SideSmoke = Instance.new("ParticleEmitter")
+						SideSmoke.Name = "SideSmoke"
+
+						-- Create a ColorSequence one
+						SideSmoke.Brightness = 5
+						SideSmoke.Color = Color3.fromRGB(144, 87, 255)
+						SideSmoke.LightEmission = 1
+						SideSmoke.LightInfluence = 0
+						SideSmoke.Orientation = Enum.ParticleOrientation.FacingCamera;
+
+						SideSmoke.Size = NumberSequence.new({
+							NumberSequenceKeypoint.new(0, 1.62, 0.836),  -- Time 0: Value 3.69, Envelope 1.43
+							NumberSequenceKeypoint.new(1, 1.62, 0.836)      -- Time 1: Value 1.54, Envelope 0
+						})
+						SideSmoke.Texture = "rbxassetid://9139094373";
+
+						SideSmoke.Transparency = NumberSequence.new({
+							NumberSequenceKeypoint.new(0, 0.253, 0.148),  -- Time 0: Value 0
+							NumberSequenceKeypoint.new(0.711, 0.186, 0.0692),      -- Time 1: Value 1
+							NumberSequenceKeypoint.new(1, 0.989, 0.011),  -- Time 0: Value 0
+						})
+						SideSmoke.ZOffset = -1;
+
+						SideSmoke.EmissionDirection = Enum.NormalId.Right;
+						SideSmoke.Enabled = true;
+						SideSmoke.Lifetime = Vector2.new(1.5, 2.5);
+						SideSmoke.Rate = 20;
+						SideSmoke.Rotation = Vector2.new(-180, 180);
+						SideSmoke.RotSpeed = 0;
+						SideSmoke.Speed = 0.139;
+						SideSmoke.SpreadAngle = Vector2.new(0, 360);
+
+						SideSmoke.Shape = Enum.ParticleEmitterShape.Box;
+						SideSmoke.ShapeInOut = Enum.ParticleEmitterShapeInOut.Outward;
+						SideSmoke.Shape = Enum.ParticleEmitterShapeStyle.Volume;
+						
+						SideSmoke.FlipbookLayout = Enum.ParticleFlipbookLayout.Grid8x8;
+						SideSmoke.FlipbookMode = Enum.ParticleFlipbookMode.OneShot;
+						SideSmoke.FlipbookBlendFrames = true;
+
+						SideSmoke.Acceleration = Vector3.new(0, -0.815, 0);
+						SideSmoke.Drag = 8;
+						SideSmoke.LockedToPart = true;
+						SideSmoke.TimeScale = 1;
+						SideSmoke.VelocityInheritance = 0;
+						SideSmoke.WindAffectsDrag = false;
+						SideSmoke.Parent = Sword;
+						
+						-- TEXTURE PARTICLE 3
+						
+						local TextureParticle3 = Instance.new("ParticleEmitter")
+						TextureParticle3.Name = "TextureParticle3"
+
+						-- Create a ColorSequence one
+						TextureParticle3.Brightness = 10
+						TextureParticle3.Color = Color3.fromRGB(248, 46, 255)
+						TextureParticle3.LightEmission = 1
+						TextureParticle3.LightInfluence = 0
+						TextureParticle3.Orientation = Enum.ParticleOrientation.FacingCamera;
+
+						TextureParticle3.Size = NumberSequence.new({
+							NumberSequenceKeypoint.new(0, 0.75, 0.75),  -- Time 0: Value 3.69, Envelope 1.43
+							NumberSequenceKeypoint.new(1, 0.25, 0)      -- Time 1: Value 1.54, Envelope 0
+						})
+						TextureParticle3.Texture = "rbxassetid://9139094373";
+
+						TextureParticle3.Transparency = NumberSequence.new({
+							NumberSequenceKeypoint.new(0, 0, 0),  -- Time 0: Value 0
+							NumberSequenceKeypoint.new(0.508, 0, 0),      -- Time 1: Value 1
+							NumberSequenceKeypoint.new(1, 1, 0),  -- Time 0: Value 0
+						})
+						TextureParticle3.ZOffset = 0;
+
+						TextureParticle3.EmissionDirection = Enum.NormalId.Front;
+						TextureParticle3.Enabled = true;
+						TextureParticle3.Lifetime = 1;
+						TextureParticle3.Rate = 20;
+						TextureParticle3.Rotation = Vector2.new(-180, 180);
+						TextureParticle3.RotSpeed = Vector2.new(-30, 30);
+						TextureParticle3.Speed = 0.5;
+						TextureParticle3.SpreadAngle = Vector2.new(180, 90);
+
+						TextureParticle3.Shape = Enum.ParticleEmitterShape.Box;
+						TextureParticle3.ShapeInOut = Enum.ParticleEmitterShapeInOut.Outward;
+						TextureParticle3.Shape = Enum.ParticleEmitterShapeStyle.Volume;
+
+						TextureParticle3.FlipbookLayout = Enum.ParticleFlipbookLayout.Grid8x8;
+						TextureParticle3.FlipbookBlendFrames = true
+						TextureParticle3.FlipbookFramerate = Vector2.new(20, 40)
+						TextureParticle3.FlipbookMode = Enum.ParticleFlipbookMode.Loop;
+						TextureParticle3.FlipbookStartRandom = true;
+
+						TextureParticle3.Acceleration = Vector3.new(0, 1, 0);
+						TextureParticle3.Drag = 0;
+						TextureParticle3.LockedToPart = true;
+						TextureParticle3.TimeScale = 1;
+						TextureParticle3.VelocityInheritance = 0;
+						TextureParticle3.WindAffectsDrag = false;
+						TextureParticle3.Parent = Sword
+					end
+				end
+				if parts[1] and parts[1].Parent then
+					if headPart then
+						addTopHatToHead(headPart);
+					end
+					if RightArmPart then
+						replaceGloveWithSword(RightArmPart);
+					end
+					addClothingToStand(parts[1].Parent)
 				end
 			end
 		},
 	}
+	-- LIGHTING:
+	local function saveCurrentSettings()
+		local lighting = game:GetService("Lighting")
+
+		-- Save lighting properties
+		originalLighting.Brightness = lighting.Brightness
+		originalLighting.ClockTime = lighting.ClockTime
+		originalLighting.ExposureCompensation = lighting.ExposureCompensation
+		originalLighting.Ambient = lighting.Ambient
+		originalLighting.OutdoorAmbient = lighting.OutdoorAmbient
+		originalLighting.ShadowSoftness = lighting.ShadowSoftness
+		originalLighting.GlobalShadows = lighting.GlobalShadows
+		originalLighting.FogEnd = lighting.FogEnd
+		originalLighting.FogStart = lighting.FogStart
+
+		-- Save skybox properties
+		local sky = lighting:FindFirstChild("Sky")
+		if sky then
+			originalSkybox.SkyboxBk = sky.SkyboxBk
+			originalSkybox.SkyboxDn = sky.SkyboxDn
+			originalSkybox.SkyboxFt = sky.SkyboxFt
+			originalSkybox.SkyboxLf = sky.SkyboxLf
+			originalSkybox.SkyboxRt = sky.SkyboxRt
+			originalSkybox.SkyboxUp = sky.SkyboxUp
+			originalSkybox.MoonAngularSize = sky.MoonAngularSize
+			originalSkybox.MoonTextureId = sky.MoonTextureId
+			originalSkybox.StarCount = sky.StarCount
+			originalSkybox.CelestialBodiesShown = sky.CelestialBodiesShown
+		end
+	end
+
+	-- Function to apply night sky
+	local function applyNightSky()
+		local lighting = game:GetService("Lighting")
+
+		-- Create or get Sky
+		local sky = lighting:FindFirstChild("Sky")
+		if not sky then
+			sky = Instance.new("Sky")
+			sky.Parent = lighting
+		end
+
+		-- Apply night skybox from your image
+		sky.SkyboxBk = "rbxassetid://159454299"
+		sky.SkyboxDn = "rbxassetid://159454296"
+		sky.SkyboxFt = "rbxassetid://159454293"
+		sky.SkyboxLf = "rbxassetid://159454286"
+		sky.SkyboxRt = "rbxassetid://159454300"
+		sky.SkyboxUp = "rbxassetid://159454288"
+		sky.MoonAngularSize = 11
+		sky.MoonTextureId = "rbxasset://sky/moon.jpg"
+		sky.StarCount = 5000
+		sky.CelestialBodiesShown = true
+	end
+
+	-- Function to restore original sky
+	local function restoreSky()
+		local lighting = game:GetService("Lighting")
+		local sky = lighting:FindFirstChild("Sky")
+
+		if sky and next(originalSkybox) then
+			sky.SkyboxBk = originalSkybox.SkyboxBk
+			sky.SkyboxDn = originalSkybox.SkyboxDn
+			sky.SkyboxFt = originalSkybox.SkyboxFt
+			sky.SkyboxLf = originalSkybox.SkyboxLf
+			sky.SkyboxRt = originalSkybox.SkyboxRt
+			sky.SkyboxUp = originalSkybox.SkyboxUp
+			sky.MoonAngularSize = originalSkybox.MoonAngularSize
+			sky.MoonTextureId = originalSkybox.MoonTextureId
+			sky.StarCount = originalSkybox.StarCount
+			sky.CelestialBodiesShown = originalSkybox.CelestialBodiesShown
+		end
+	end
+
+	-- Function to tween to night
+	local function tweenToNight(duration)
+		duration = duration or 5 -- Default 5 seconds
+
+		local lighting = game:GetService("Lighting")
+		local TweenService = game:GetService("TweenService")
+
+		-- Save current settings first
+		saveCurrentSettings()
+
+		-- Apply night sky immediately
+		applyNightSky()
+
+		-- Create tween info
+		local tweenInfo = TweenInfo.new(
+			duration,
+			Enum.EasingStyle.Sine,
+			Enum.EasingDirection.InOut
+		)
+
+		-- Create goals for lighting
+		local goals = {
+			Brightness = 0.2,
+			ClockTime = 21, -- 9 PM
+			ExposureCompensation = -1,
+			Ambient = Color3.fromRGB(30, 30, 40),
+			OutdoorAmbient = Color3.fromRGB(40, 40, 60),
+			ShadowSoftness = 1,
+			GlobalShadows = true,
+			FogEnd = 500,
+			FogStart = 100
+		}
+
+		-- Create and play tween
+		local tween = TweenService:Create(lighting, tweenInfo, goals)
+		tween:Play()
+
+		return tween
+	end
+
+	-- Function to revert back to original settings
+	local function revertToDay(duration)
+		duration = duration or 5
+
+		local lighting = game:GetService("Lighting")
+		local TweenService = game:GetService("TweenService")
+
+		-- Restore original skybox
+		restoreSky()
+
+		-- Create tween info
+		local tweenInfo = TweenInfo.new(
+			duration,
+			Enum.EasingStyle.Sine,
+			Enum.EasingDirection.InOut
+		)
+
+		-- Restore original lighting settings
+		local goals = {
+			Brightness = originalLighting.Brightness or 1,
+			ClockTime = originalLighting.ClockTime or 14,
+			ExposureCompensation = originalLighting.ExposureCompensation or 0,
+			Ambient = originalLighting.Ambient or Color3.fromRGB(127, 127, 127),
+			OutdoorAmbient = originalLighting.OutdoorAmbient or Color3.fromRGB(127, 127, 127),
+			ShadowSoftness = originalLighting.ShadowSoftness or 0.3,
+			GlobalShadows = originalLighting.GlobalShadows or true,
+			FogEnd = originalLighting.FogEnd or 1000,
+			FogStart = originalLighting.FogStart or 0
+		}
+
+		-- Create and play tween
+		local tween = TweenService:Create(lighting, tweenInfo, goals)
+		tween:Play()
+
+		return tween
+	end
+	local isNight = false
+
+	local function toggleDayNight()
+		isNight = not isNight
+
+		if isNight then
+			tweenToNight(3)
+			print("Switched to night")
+		else
+			revertToDay(3)
+			print("Switched to day")
+		end
+	end
+
 	local SelectedBeatdownModel = "uncle_beatdown"
 	local ViewportCamera = nil
 	local ViewportModel = nil
@@ -4019,6 +4617,186 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 
 		--print("ColorCorrection effect ended (Scream)")
 	end
+	
+	-- Red
+	local function initializeColorCorrectionGalaxy()
+		-- First, check for ALL existing ColorCorrection effects and clean them up
+		for _, child in ipairs(game.Lighting:GetChildren()) do
+			if child:IsA("ColorCorrectionEffect") and child.Name:find("CutsenseJoJo") then
+				child:Destroy()
+			end
+		end
+
+		-- Clean up any existing tweens
+		if ColorCorrectionSystem.startTween then
+			ColorCorrectionSystem.startTween:Cancel()
+			ColorCorrectionSystem.startTween = nil
+		end
+		if ColorCorrectionSystem.endTween then
+			ColorCorrectionSystem.endTween:Cancel()
+			ColorCorrectionSystem.endTween = nil
+		end
+
+		-- Create new ColorCorrection effect
+		ColorCorrectionSystem.globalColorCorrection = Instance.new("ColorCorrectionEffect", game.Lighting)
+		ColorCorrectionSystem.globalColorCorrection.Name = "CutsenseJoJo_Kebaited_Global"
+		ColorCorrectionSystem.globalColorCorrection.Saturation = 0
+		ColorCorrectionSystem.globalColorCorrection.TintColor = Color3.fromRGB(209, 209, 209)
+		ColorCorrectionSystem.globalColorCorrection.Enabled = true
+
+		-- Create new tweens
+		ColorCorrectionSystem.startTween = l__TweenService__5:Create(ColorCorrectionSystem.globalColorCorrection, TweenInfo.new(
+			1.5, -- Duration
+			Enum.EasingStyle.Linear,
+			Enum.EasingDirection.Out
+			), {
+				Saturation = 0.1,
+				Brightness = 0.1,
+				Contrast = 1.03,
+				TintColor = Color3.fromRGB(163, 29, 161)
+			})
+
+		ColorCorrectionSystem.endTween = l__TweenService__5:Create(ColorCorrectionSystem.globalColorCorrection, TweenInfo.new(
+			1.5, -- Duration
+			Enum.EasingStyle.Linear,
+			Enum.EasingDirection.Out
+			), {
+				Saturation = 0,
+				Brightness = 0,
+				Contrast = 0,
+				TintColor = Color3.fromRGB(255, 255, 255)
+			})
+
+		--print("ColorCorrection initialized -> ", tostring(ColorCorrectionSystem.globalColorCorrection))
+		return ColorCorrectionSystem.globalColorCorrection
+	end
+
+	local function startColorCorrectionEffectGalaxy()
+		-- Check for existing ColorCorrection effects FIRST
+		local existingEffects = {}
+		for _, child in ipairs(game.Lighting:GetChildren()) do
+			if child:IsA("ColorCorrectionEffect") and child.Name:find("CutsenseJoJo") then
+				table.insert(existingEffects, child)
+			end
+		end
+
+		-- If multiple exist, destroy all and create fresh
+		if #existingEffects > 1 then
+			for _, effect in ipairs(existingEffects) do
+				effect:Destroy()
+			end
+			-- Force reinitialization
+			ColorCorrectionSystem.globalColorCorrection = nil
+		end
+
+		-- If no global reference or effect is destroyed, initialize
+		if not ColorCorrectionSystem.globalColorCorrection or not ColorCorrectionSystem.globalColorCorrection.Parent then
+			initializeColorCorrectionGalaxy()
+		else
+			-- Reset to initial state
+			ColorCorrectionSystem.globalColorCorrection.Saturation = 0
+			ColorCorrectionSystem.globalColorCorrection.TintColor = Color3.fromRGB(163, 29, 161)
+		end
+
+		PlayedActionLIGHT = true
+		--print("PlayedActionLIGHT -> true")
+		-- Cancel any running tweens
+		if ColorCorrectionSystem.startTween and ColorCorrectionSystem.startTween.PlaybackState == Enum.PlaybackState.Playing then
+			ColorCorrectionSystem.startTween:Cancel()
+		end
+		if ColorCorrectionSystem.endTween and ColorCorrectionSystem.endTween.PlaybackState == Enum.PlaybackState.Playing then
+			ColorCorrectionSystem.endTween:Cancel()
+		end
+
+		-- Create new tweens to ensure they're fresh
+		ColorCorrectionSystem.startTween = l__TweenService__5:Create(ColorCorrectionSystem.globalColorCorrection, TweenInfo.new(
+			1.5, -- Duration
+			Enum.EasingStyle.Linear,
+			Enum.EasingDirection.Out
+			), {
+				Saturation = 0.1,
+				Brightness = 0.1,
+				Contrast = 1.03,
+				TintColor = Color3.fromRGB(163, 29, 161)
+			})
+
+		ColorCorrectionSystem.startTween:Play()
+		--print("ColorCorrection effect started (Nukem SOUND)")
+	end
+
+	local function endColorCorrectionEffectGalaxy()
+		if not PlayedActionLIGHT then
+			--print("Requested")
+			for _, child in ipairs(game.Lighting:GetChildren()) do
+				if child:IsA("ColorCorrectionEffect") and child.Name:find("CutsenseJoJo") then
+					child:Destroy()
+					if SettingsScript.DisplayLogs then
+						print("Destroyed stray ColorCorrection effect | FAKE")
+					end
+				end
+			end
+			--print("Unexpected return | because using Function endColorCorrectionEffect(); and PlayedActionLIGHT set to false. ")
+			return 
+		end
+		local actualColorCorrection = game.Lighting:FindFirstChild("CutsenseJoJo_Kebaited_Global")
+		if not actualColorCorrection then
+			for _, child in ipairs(game.Lighting:GetChildren()) do
+				if child:IsA("ColorCorrectionEffect") and child.Name:find("CutsenseJoJo") then
+					actualColorCorrection = child
+					--print("Found stray ColorCorrection effect")
+					break
+				end
+			end
+		end
+
+		if not actualColorCorrection then
+			PlayedActionLIGHT = false
+			--print("No ColorCorrection effect found")
+			return
+		end
+
+		-- Update global reference
+		ColorCorrectionSystem.globalColorCorrection = actualColorCorrection
+
+		-- Cancel start tween if playing
+		if ColorCorrectionSystem.startTween and ColorCorrectionSystem.startTween.PlaybackState == Enum.PlaybackState.Playing then
+			ColorCorrectionSystem.startTween:Cancel()
+			if SettingsScript.DisplayLogs then
+				print("Cancelled start tween")
+			end
+		end
+		ColorCorrectionSystem.endTween = l__TweenService__5:Create(actualColorCorrection, TweenInfo.new(
+			1.5,
+			Enum.EasingStyle.Linear,
+			Enum.EasingDirection.Out
+			), {
+				Saturation = 0,
+				Brightness = 0,
+				Contrast = 0,
+				TintColor = Color3.fromRGB(255, 255, 255)
+			})
+		--print("Playing end tween...")
+		ColorCorrectionSystem.endTween:Play()
+		ColorCorrectionSystem.endTween.Completed:Connect(function()
+			task.wait(0.1)
+			for _, child in ipairs(game.Lighting:GetChildren()) do
+				if child:IsA("ColorCorrectionEffect") and child.Name:find("CutsenseJoJo_Kebaited_Global") then
+					child:Destroy()
+				end
+			end
+			ColorCorrectionSystem.globalColorCorrection = nil
+			ColorCorrectionSystem.startTween = nil
+			ColorCorrectionSystem.endTween = nil
+			PlayedActionLIGHT = false
+			spawn(function()
+				periodicCleanup()
+			end)
+			--print("ColorCorrection cleanup completed")
+		end)
+
+		--print("ColorCorrection effect ended (Scream)")
+	end
+	
 	local function loadModelIntoViewport(modelId)
 		if not CustomBeatdownUI then return end
 		local viewport = CustomBeatdownUI:FindFirstChild("ContentContainer"):FindFirstChild("ModelPreviewContainer"):FindFirstChild("ViewportFrame")
@@ -4558,7 +5336,6 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 					local torso = p.Character:FindFirstChild("Torso")
 					local head = p.Character:FindFirstChild("Head");
 					local beatdownHead = StandModel:FindFirstChild("Head") or p.Character:FindFirstChild("Stand").Head;
-					
 					if torso and head then
 						for _, s in ipairs(torso:GetChildren()) do
 							if s:IsA("Sound") then
@@ -4659,7 +5436,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 											for _, child in ipairs(game.Lighting:GetChildren()) do
 												if not child.Name:find("CutsenseJoJo") then
 													if CurrentPlayer == lpr then
-														initializeColorCorrection();
+														initializeColorCorrectionUncle();
 													end
 													--[[
 													s.SoundId = "rbxassetid://82486699740831"
@@ -4863,7 +5640,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 											for _, child in ipairs(game.Lighting:GetChildren()) do
 												if not child.Name:find("CutsenseJoJo") then
 													if CurrentPlayer == lpr then
-														initializeColorCorrection();
+														initializeColorCorrectionUncle();
 													end
 													--[
 													s.SoundId = "rbxassetid://82486699740831"
@@ -5035,7 +5812,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 									end
 								elseif modelData.id == "refraif_beatdown" then
 									if soundName == "Nukem" and s.IsPlaying then
-										--[
+										--[[
 										local CutsenseCamPos = StandModel:FindFirstChild("CutsceneCameraPart")
 										if CutsenseCamPos then
 											CutsenseCamPos:Destroy()
@@ -5172,6 +5949,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 											end
 										end
 									end
+									--[[
 									spawn(function()
 										wait(0.76);
 										-- freeze stand's body
@@ -5195,11 +5973,12 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 											end
 										end
 									end)
+									--]]
 									if modelData.customSounds and modelData.customSounds[soundName] then
 										if s.Name == "Male Scream Short Yelling Bursts Death Cries (SFX)" then
 											s.SoundId = "rbxassetid://4880611384"
 											s.PlaybackSpeed = modelData.soundSpeed
-											
+											--[[
 											spawn(function()
 												wait(0.05);
 
@@ -5224,11 +6003,11 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 													end
 												end
 											end)
-											
+											--]]
 										elseif s.Name == "Yell" then
 											s.SoundId = "rbxassetid://2778713081"
 											s.PlaybackSpeed = modelData.soundSpeed
-											
+											--[[
 											spawn(function()
 												wait(0.05);
 												
@@ -5253,7 +6032,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 													end
 												end
 											end)
-											
+											--]]
 										elseif s.Name == "Gun1" then
 											s.SoundId = "rbxassetid://8789851536";
 											s.PlaybackSpeed = modelData.soundSpeed
@@ -5499,6 +6278,113 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 											s.PlaybackSpeed = modelData.soundSpeed
 										elseif s.Name == "explosion2" then
 											s.SoundId = "rbxassetid://7244661974"
+											s.PlaybackSpeed = modelData.soundSpeed
+										else
+											s.PlaybackSpeed = modelData.customSounds[soundName]
+										end
+									else
+										if s.Name ~= "explosion2" and s.Name ~= "Hit" and 
+											soundName ~= "Implosion" and soundName ~= "Male Scream Short Yelling Bursts Death Cries (SFX)" then
+											s.PlaybackSpeed = modelData.soundSpeed
+										end
+									end
+								elseif modelData.id == "Galaxa_beatdown" then
+									if soundName == "Nukem" and s.IsPlaying then
+										if not s:FindFirstChildOfClass("ReverbSoundEffect") then
+											for _, child in ipairs(game.Lighting:GetChildren()) do
+												if not child.Name:find("CutsenseJoJo") then
+													if CurrentPlayer == lpr then
+														initializeColorCorrectionGalaxy();
+													end
+													
+													--[
+													s.SoundId = "105105608518242"
+													s.TimePosition = 2.19
+													s.PlaybackSpeed = 1
+													--]]
+													
+													local newGlitchPainfulScream = Instance.new("Sound", s.Parent)
+													newGlitchPainfulScream.Name = "GlitchPainfulScream"
+													newGlitchPainfulScream.SoundId = "rbxassetid://130955321322500";
+													newGlitchPainfulScream.PlaybackSpeed = 1
+													newGlitchPainfulScream.Volume = 0.7
+													
+													game:GetService("SoundService").AmbientReverb = Enum.ReverbType.Quarry
+													game:GetService("SoundService"):FindFirstChild("Timestop"):Play();
+													game:GetService("SoundService"):FindFirstChild("Timestop").Volume = 4;
+													if SettingsScript.DisplayLogs then
+														print("Send Signal")
+													end
+													break
+												end
+											end
+											if CurrentPlayer == lpr then
+												startColorCorrectionEffectGalaxy();
+												toggleDayNight()
+											end
+											local CustomReverb = Instance.new("ReverbSoundEffect", s)
+											CustomReverb.DecayTime = 3.682
+											CustomReverb.Density = 1
+											CustomReverb.Diffusion = 0
+											CustomReverb.DryLevel = 0
+											CustomReverb.Priority = 1
+											CustomReverb.WetLevel = -0.5
+											CustomReverb.Enabled = true
+											spawn(function()
+												task.wait(1);
+												local Muda = Instance.new("Sound", s);
+												Muda.Name = "CutsenceMuda";
+												Muda.SoundId = "rbxassetid://130955321322500";
+												Muda.Volume = 1.7;
+												Muda.PlaybackSpeed = 1;
+												Muda.RollOffMode = Enum.RollOffMode.Inverse;
+												Muda.RollOffMaxDistance = 100;
+												Muda.RollOffMinDistance = 10;
+												local CustomReverb2 = Instance.new("ReverbSoundEffect", Muda);
+												if CustomReverb2:IsA("ReverbSoundEffect") ~= nil then
+													CustomReverb2.DecayTime = 3.085
+													CustomReverb2.Density = 1;
+													CustomReverb2.Diffusion = 1;
+													CustomReverb2.DryLevel = 0;
+													CustomReverb2.Priority = 1;
+													CustomReverb2.WetLevel = 1;
+													CustomReverb2.Enabled = true;
+												else
+													if SettingsScript.DisplayLogs then
+														warn("Failed to Create ReverbSoundEffect")
+													end
+												end
+												Muda:Play();
+											end)
+										end
+									end
+									if modelData.customSounds and modelData.customSounds[soundName] then
+										if s.Name == "Male Scream Short Yelling Bursts Death Cries (SFX)" then
+											s.SoundId = "rbxassetid://139005512098246"
+											s.PlaybackSpeed = modelData.soundSpeed
+											if CurrentPlayer == lpr then
+												spawn(function()
+													task.wait(1);
+													endColorCorrectionEffectGalaxy();
+													toggleDayNight();
+												end)
+											end
+											spawn(function()
+												task.wait(0.76);
+												game:GetService("SoundService").AmbientReverb = Enum.ReverbType.NoReverb
+												game:GetService("SoundService"):FindFirstChild("Timeresume"):Play();
+												game:GetService("SoundService"):FindFirstChild("Timestop").Volume = 0.5;
+												game:GetService("SoundService"):FindFirstChild("Timeresume").Volume = 2.5;
+											end)
+											--print("Send Signal | ColorCorrectionEffect FadeOut")
+										elseif s.Name == "Yell" then
+											s.SoundId = "rbxassetid://139070736738965";
+											s.PlaybackSpeed = modelData.soundSpeed
+										elseif s.Name == "Gun1" then
+											s.SoundId = "rbxassetid://116210184916893"
+											s.PlaybackSpeed = modelData.soundSpeed
+										elseif s.Name == "Gun2" then
+											s.SoundId = "rbxassetid://124883416643368";
 											s.PlaybackSpeed = modelData.soundSpeed
 										else
 											s.PlaybackSpeed = modelData.customSounds[soundName]
