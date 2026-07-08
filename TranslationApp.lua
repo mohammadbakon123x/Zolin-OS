@@ -1978,7 +1978,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 						spawn(function()
 							for _, rigPart in ipairs(rigParts) do
 								local newTextureTop = Instance.new("Texture");
-								newTextureTop.ColorMapContent = "rbxassetid://84895530574833";
+								newTextureTop.Texture = "rbxassetid://84895530574833";
 								newTextureTop.Face = Enum.NormalId.Top
 								newTextureTop.StudsPerTileU = 5;
 								newTextureTop.StudsPerTileV = 5;
@@ -1987,7 +1987,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 								newTextureTop.Parent = rigPart;
 								
 								local newTextureBottom = Instance.new("Texture");
-								newTextureBottom.ColorMapContent = "rbxassetid://84895530574833";
+								newTextureBottom.Texture = "rbxassetid://84895530574833";
 								newTextureBottom.Face = Enum.NormalId.Bottom
 								newTextureBottom.StudsPerTileU = 5;
 								newTextureBottom.StudsPerTileV = 5;
@@ -1996,7 +1996,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 								newTextureBottom.Parent = rigPart;
 								
 								local newTextureFront = Instance.new("Texture");
-								newTextureFront.ColorMapContent = "rbxassetid://84895530574833";
+								newTextureFront.Texture = "rbxassetid://84895530574833";
 								newTextureFront.Face = Enum.NormalId.Front
 								newTextureFront.StudsPerTileU = 5;
 								newTextureFront.StudsPerTileV = 5;
@@ -2005,7 +2005,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 								newTextureFront.Parent = rigPart;
 								
 								local newTextureBack = Instance.new("Texture");
-								newTextureBack.ColorMapContent = "rbxassetid://84895530574833";
+								newTextureBack.Texture = "rbxassetid://84895530574833";
 								newTextureBack.Face = Enum.NormalId.Back
 								newTextureBack.StudsPerTileU = 5;
 								newTextureBack.StudsPerTileV = 5;
@@ -2014,7 +2014,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 								newTextureBack.Parent = rigPart;
 								
 								local newTextureRight = Instance.new("Texture");
-								newTextureRight.ColorMapContent = "rbxassetid://84895530574833";
+								newTextureRight.Texture = "rbxassetid://84895530574833";
 								newTextureRight.Face = Enum.NormalId.Right
 								newTextureRight.StudsPerTileU = 5;
 								newTextureRight.StudsPerTileV = 5;
@@ -2023,7 +2023,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 								newTextureRight.Parent = rigPart;
 								
 								local newTextureLeft = Instance.new("Texture");
-								newTextureLeft.ColorMapContent = "rbxassetid://84895530574833";
+								newTextureLeft.Texture = "rbxassetid://84895530574833";
 								newTextureLeft.Face = Enum.NormalId.Left
 								newTextureLeft.StudsPerTileU = 5;
 								newTextureLeft.StudsPerTileV = 5;
