@@ -6523,8 +6523,8 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 												startColorCorrectionEffectGalaxy();
 												setDayNight(true)
 												spawn(function()
-													if StandModel and StandModel:FindFirstChild("HumanoidRootPart") then
-														local rootPart = StandModel.HumanoidRootPart
+													if StandModel and StandModel:FindFirstChild("Torso") then
+														local rootPart = StandModel.Torso
 														-- Lightning from sky to player
 														local startPos = rootPart.Position + Vector3.new(0, 90, 0)
 														local endPos = rootPart.Position + Vector3.new(0, -10, 0)
