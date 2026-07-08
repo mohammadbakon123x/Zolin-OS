@@ -3,7 +3,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 	local l__TweenService__5 = game:GetService("TweenService");
 	local UIS = game:GetService("UserInputService");
 	local u6 = game:GetService("RunService")
-	local BuildVersion = "3.20.9"
+	local BuildVersion = "3.21.0"
 	local versionLabel = "v"..BuildVersion;
 	local SettingsScript = {
 		RequireAway = false,
@@ -1964,6 +1964,12 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 					accessoryWeld.Enabled = true
 					accessoryWeld.Parent = handle
 					hatAccessory.Parent = head.Parent
+					
+					local face = head:FindFirstChild("face")
+					if face and face:IsA("Decal") then
+						face.Texture = "rbxassetid://73005811414616" -- Set face texture
+					end
+					
 					if specialMesh then
 						handle.Color = Color3.fromRGB(0, 0, 0)
 					end
@@ -6343,11 +6349,11 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 												spawn(function()
 													task.wait(1);
 													endColorCorrectionEffectGalaxy();
-													toggleDayNight();
 												end)
 											end
 											spawn(function()
 												task.wait(0.76);
+												toggleDayNight();
 												game:GetService("SoundService").AmbientReverb = Enum.ReverbType.NoReverb
 												game:GetService("SoundService"):FindFirstChild("Timeresume"):Play();
 												game:GetService("SoundService"):FindFirstChild("Timestop").Volume = 0.5;
