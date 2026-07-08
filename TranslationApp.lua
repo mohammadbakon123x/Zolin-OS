@@ -6529,7 +6529,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 														local startPos = rootPart.Position + Vector3.new(0, 90, 0)
 														local endPos = rootPart.Position + Vector3.new(0, -10, 0)
 														-- Create the lightning
-														CreateLightning(startPos, endPos, 2.3)
+														CreateLightning(startPos, endPos, 3.5)
 													end
 												end)
 											end
