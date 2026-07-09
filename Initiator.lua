@@ -1,4 +1,5 @@
 local v1 = {};
+v1.ver = "1.3.1" -- versionOS
 
 -- ============================================
 -- HELPER FUNCTIONS
@@ -1079,7 +1080,7 @@ local function createChunk10()
 
 	local ZolinVersion = Instance.new("StringValue")
 	ZolinVersion.Name = "ZolinVersion"
-	ZolinVersion.Value = "1.2.2"
+	ZolinVersion.Value = v1.ver;
 	BuildVersion = ZolinVersion.Value
 	ZolinVersion.Parent = DeviceTree
 
@@ -1100,18 +1101,22 @@ local function createChunk10()
 	local moreOptionsVolStyle = Instance.new("BindableEvent")
 	moreOptionsVolStyle.Name = "moreOptionsVolStyle"
 	moreOptionsVolStyle.Parent = Remotes
-	
+
 	local updateZolinLauncher = Instance.new("BindableEvent")
 	updateZolinLauncher.Name = "updateZolinLauncher"
 	updateZolinLauncher.Parent = Remotes
-	
+
 	local contactDirHWupdateEvent = Instance.new("BindableEvent")
 	contactDirHWupdateEvent.Name = "contactDirHWupdateEvent"
 	contactDirHWupdateEvent.Parent = Remotes
-	
+
 	local ContextMenuEvent = Instance.new("BindableEvent")
 	ContextMenuEvent.Name = "ContextMenuEvent"
 	ContextMenuEvent.Parent = Remotes
+
+	local sendnotificationEvent = Instance.new("BindableEvent")
+	sendnotificationEvent.Name = "SendNotificationEvent"
+	sendnotificationEvent.Parent = Remotes
 end
 
 -- ============================================
@@ -1149,7 +1154,7 @@ local function createChunk11()
 	ExampleWindow_UI.Parent = ExampleWindow
 
 	createUICorner(ExampleWindow_UI, "UICorner_ExampleWindow_UI", UDim.new(0, 25))
-	
+
 	local PreviewAppInfoZL_ExampleWindow = Instance.new("Frame")
 	PreviewAppInfoZL_ExampleWindow.Name = "PreviewAppInfoZL"
 	PreviewAppInfoZL_ExampleWindow.AnchorPoint = Vector2.new(0.5, 0.5)
@@ -2206,9 +2211,9 @@ end
 local function createChunk21()
 	local ReplicatedIcons = nil
 	if not MainUI:FindFirstChild("ReplicatedIcons") then
-	ReplicatedIcons = Instance.new("Folder")
-	ReplicatedIcons.Name = "ReplicatedIcons"
-	ReplicatedIcons.Parent = MainUI
+		ReplicatedIcons = Instance.new("Folder")
+		ReplicatedIcons.Name = "ReplicatedIcons"
+		ReplicatedIcons.Parent = MainUI
 	else
 		ReplicatedIcons = MainUI:FindFirstChild("ReplicatedIcons")
 	end
@@ -2272,7 +2277,7 @@ local function createChunk21()
 	UITextSizeConstraint_AppName.Parent = AppName
 	UITextSizeConstraint_AppName.MaxTextSize = 30
 	UITextSizeConstraint_AppName.MinTextSize = 1
-	
+
 	local OutlineFrameHighlight = Instance.new("Frame");
 	OutlineFrameHighlight.Name = "OutlineFrameHighlight";
 	OutlineFrameHighlight.Size = UDim2.new(1.272, 0, 1.439, 0);
@@ -2284,7 +2289,7 @@ local function createChunk21()
 	OutlineFrameHighlight.Parent = AppIconTemplate;
 	createUICorner(OutlineFrameHighlight, "UICorner1", UDim.new(0.1, 0));
 	createUIStroke(OutlineFrameHighlight, "UIStroke", Color3.fromRGB(0, 112, 231), 5.5, 0.58, 1)
-	
+
 	local UIAspectRatioConstraint18 = Instance.new("UIAspectRatioConstraint")
 	UIAspectRatioConstraint18.Parent = OutlineFrameHighlight
 	UIAspectRatioConstraint18.AspectRatio = 0.915
@@ -2298,13 +2303,13 @@ end
 local function createChunk22()
 	local ReplicatedWindow_Sys 
 	if not MainUI:FindFirstChild("ReplicatedWindow_Sys") then
-	ReplicatedWindow_Sys = Instance.new("Folder")
-	ReplicatedWindow_Sys.Name = "ReplicatedWindow_Sys"
-	ReplicatedWindow_Sys.Parent = MainUI
+		ReplicatedWindow_Sys = Instance.new("Folder")
+		ReplicatedWindow_Sys.Name = "ReplicatedWindow_Sys"
+		ReplicatedWindow_Sys.Parent = MainUI
 	else
 		ReplicatedWindow_Sys = MainUI:FindFirstChild("ReplicatedWindow_Sys")
 	end
-	
+
 	local ExampleWindow = Instance.new("Frame")
 	ExampleWindow.Name = "ExampleWindowV2"
 	ExampleWindow.AnchorPoint = Vector2.new(0.5, 0.5)
@@ -2330,7 +2335,7 @@ local function createChunk22()
 	ExampleWindow_UI.Visible = true
 	ExampleWindow_UI.Active = true
 	ExampleWindow_UI.Parent = ExampleWindow
-	
+
 	local TileInfo = Instance.new("Frame")
 	TileInfo.Name = "TileInfo"
 	TileInfo.AnchorPoint = Vector2.new(0.5, 0.5)
@@ -2342,15 +2347,15 @@ local function createChunk22()
 	TileInfo.Visible = true
 	TileInfo.Active = true
 	TileInfo.Parent = ExampleWindow
-	
+
 	local UIAspectRatioConstraint19 = Instance.new("UIAspectRatioConstraint")
 	UIAspectRatioConstraint19.Parent = TileInfo
 	UIAspectRatioConstraint19.AspectRatio = 41.274
 	UIAspectRatioConstraint19.AspectType = Enum.AspectType.FitWithinMaxSize
 	UIAspectRatioConstraint19.DominantAxis = Enum.DominantAxis.Width
-	
+
 	createUICorner(TileInfo, "UICorner", UDim.new(0, 2));
-	
+
 	local AppIcon = Instance.new("ImageLabel");
 	AppIcon.Name = "AppIcon";
 	AppIcon.BackgroundTransparency = 1;
@@ -2359,13 +2364,13 @@ local function createChunk22()
 	AppIcon.ZIndex = TileInfo.ZIndex + 1;
 	AppIcon.ScaleType = Enum.ScaleType.Fit;
 	AppIcon.Parent = TileInfo;
-	
+
 	local UIAspectRatioConstraint20 = Instance.new("UIAspectRatioConstraint");
 	UIAspectRatioConstraint20.Parent = AppIcon;
 	UIAspectRatioConstraint20.AspectRatio = 1;
 	UIAspectRatioConstraint20.AspectType = Enum.AspectType.FitWithinMaxSize;
 	UIAspectRatioConstraint20.DominantAxis = Enum.DominantAxis.Width;
-	
+
 	local AppName = Instance.new("TextLabel");
 	AppName.Name = "AppName";
 	AppName.Parent = TileInfo;
@@ -2378,18 +2383,18 @@ local function createChunk22()
 	AppName.TextColor3 = Color3.fromRGB(0, 0, 0);
 	AppName.Font = Enum.Font.SourceSansBold;
 	AppName.TextXAlignment = Enum.TextXAlignment.Left;
-	
+
 	local UITextSizeConstraint = Instance.new("UITextSizeConstraint");
 	UITextSizeConstraint.MaxTextSize = 23;
 	UITextSizeConstraint.MinTextSize = 1;
 	UITextSizeConstraint.Parent = AppName;
-	
+
 	local UIAspectRatioConstraint2 = Instance.new("UIAspectRatioConstraint");
 	UIAspectRatioConstraint2.Parent = AppName;
 	UIAspectRatioConstraint2.AspectRatio = 5.146;
 	UIAspectRatioConstraint2.AspectType = Enum.AspectType.FitWithinMaxSize;
 	UIAspectRatioConstraint2.DominantAxis = Enum.DominantAxis.Width;
-	
+
 	local TileBar = Instance.new("Frame")
 	TileBar.Name = "Tilebar"
 	TileBar.AnchorPoint = Vector2.new(0.5, 0.5)
@@ -2401,15 +2406,15 @@ local function createChunk22()
 	TileBar.Visible = true
 	TileBar.Active = true
 	TileBar.Parent = ExampleWindow
-	
+
 	local UIAspectRatioConstraint20 = Instance.new("UIAspectRatioConstraint")
 	UIAspectRatioConstraint20.Parent = TileBar
 	UIAspectRatioConstraint20.AspectRatio = 40.989
 	UIAspectRatioConstraint20.AspectType = Enum.AspectType.FitWithinMaxSize
 	UIAspectRatioConstraint20.DominantAxis = Enum.DominantAxis.Width
-	
+
 	createUICorner(TileBar, "UICorner", UDim.new(0, 2));
-	
+
 	local UIListLayout = Instance.new("UIListLayout")
 	UIListLayout.Parent = TileBar
 	UIListLayout.SortOrder = Enum.SortOrder.LayoutOrder
@@ -2417,7 +2422,7 @@ local function createChunk22()
 	UIListLayout.VerticalAlignment = Enum.VerticalAlignment.Top
 	UIListLayout.HorizontalAlignment = Enum.HorizontalAlignment.Right
 	UIListLayout.Padding = UDim.new(0, 0)
-	
+
 	local Exit = Instance.new("ImageButton");
 	Exit.Name = "Exit";
 	Exit.AnchorPoint = Vector2.new(0.5, 0.5)
@@ -2430,13 +2435,13 @@ local function createChunk22()
 	Exit.ScaleType = Enum.ScaleType.Fit;
 	Exit.BackgroundColor3 = Color3.fromRGB(255, 0, 0);
 	Exit.LayoutOrder = 1;
-	
+
 	local UIAspectRatioConstraint21 = Instance.new("UIAspectRatioConstraint");
 	UIAspectRatioConstraint21.Parent = Exit;
 	UIAspectRatioConstraint21.AspectRatio = 1.538;
 	UIAspectRatioConstraint21.AspectType = Enum.AspectType.FitWithinMaxSize;
 	UIAspectRatioConstraint21.DominantAxis = Enum.DominantAxis.Width;
-	
+
 	local Min = Instance.new("ImageButton");
 	Min.Name = "Min";
 	Min.AnchorPoint = Vector2.new(0.5, 0.5)
@@ -2456,7 +2461,7 @@ local function createChunk22()
 	UIAspectRatioConstraint22.AspectRatio = 1.538;
 	UIAspectRatioConstraint22.AspectType = Enum.AspectType.FitWithinMaxSize;
 	UIAspectRatioConstraint22.DominantAxis = Enum.DominantAxis.Width;
-	
+
 	local Max = Instance.new("ImageButton");
 	Max.Name = "Max";
 	Max.AnchorPoint = Vector2.new(0.5, 0.5)
@@ -2476,7 +2481,7 @@ local function createChunk22()
 	UIAspectRatioConstraint23.AspectRatio = 1.538;
 	UIAspectRatioConstraint23.AspectType = Enum.AspectType.FitWithinMaxSize;
 	UIAspectRatioConstraint23.DominantAxis = Enum.DominantAxis.Width;
-	
+
 end
 
 local function createChunk23()
@@ -2638,7 +2643,7 @@ local function createChunk24()
 	UIListLayout3.VerticalAlignment = Enum.VerticalAlignment.Bottom;
 	UIListLayout3.HorizontalAlignment = Enum.HorizontalAlignment.Center;
 	PowerList.Parent = StartMenuFrame;
-	
+
 	--AppButtonTemplate
 	local AppButtonTemplate = Instance.new("TextButton");
 	AppButtonTemplate.Name = "AppButtonTemplate";
@@ -2698,7 +2703,7 @@ function v1.Init()
 
 	__ScreenFrame = MainUI:FindFirstChild("__ScreenFrame")
 	__ZolinDesktop = MainUI:FindFirstChild("__ZolinDesktop")
-	
+
 	if not __ScreenFrame and not __ZolinDesktop then
 		__ScreenFrame = Instance.new("Frame")
 		__ScreenFrame.Name = "__ScreenFrame"
@@ -2711,7 +2716,7 @@ function v1.Init()
 		__ScreenFrame.Active = true
 		__ScreenFrame.Visible = true
 		__ScreenFrame.Parent = MainUI
-		
+
 		__ZolinDesktop = Instance.new("Frame")
 		__ZolinDesktop.Name = "__ZolinDesktop"
 		__ZolinDesktop.AnchorPoint = Vector2.new(0.5, 0.5)
@@ -2723,8 +2728,8 @@ function v1.Init()
 		__ZolinDesktop.Active = true
 		__ZolinDesktop.Visible = false
 		__ZolinDesktop.Parent = MainUI
-		
-		
+
+
 		__DesktopScreenFrame = Instance.new("Frame")
 		__DesktopScreenFrame.Name = "__ScreenFrame"
 		__DesktopScreenFrame.AnchorPoint = Vector2.new(0.5, 0.5)
@@ -2785,7 +2790,7 @@ function v1.Init()
 		task.spawn(function() createChunk23() end)
 		task.wait()
 		task.spawn(function() createChunk24() end)
-		
+
 		print("ZolinOS UI initialized | Version: " ..tostring(BuildVersion));
 	end
 end
