@@ -3,7 +3,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 	local l__TweenService__5 = game:GetService("TweenService");
 	local UIS = game:GetService("UserInputService");
 	local u6 = game:GetService("RunService")
-	local BuildVersion = "3.21.5"
+	local BuildVersion = "3.21.6"
 	local versionLabel = "v"..BuildVersion;
 	local SettingsScript = {
 		RequireAway = false,
@@ -1965,7 +1965,9 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 						end
 					end
 				end
-				local function replaceGloveWithSword(rightArm)
+				local function replaceGloveWithSword(standModel)
+					local rightArm = standModel:FindFirstChild("Right Arm");
+					if not rightArm then return end
 					local GlovePart = rightArm:FindFirstChild("Glove");
 					if GlovePart then
 						print("Found Glove, replacing with Sword...")
