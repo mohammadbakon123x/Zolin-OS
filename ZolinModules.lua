@@ -1589,6 +1589,10 @@ function ZolinModules.AppManager(dependencies)
 					end
 				end
 			end
+			-- attempt to destroy the app, using the same logic as AnimationManager with endConnection method
+			if ZolinModules.Mode == "Mobile" then
+				AnimationManager.AnimateWindow(p3, "Close", "Destroy");
+			end;
 			print("App closed: " .. p3)
 			if ZolinModules.Mode == "Mobile" then
 			AppManager.RemovePreview(p3)
