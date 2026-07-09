@@ -1,3 +1,4 @@
+
 -- ZolinModules (Complete Combined ModuleScript)
 local ZolinModules = {}
 ZolinModules.Mode = "Mobile"  --| Mobile | default - | Desktop | beta
@@ -17,7 +18,7 @@ ZolinModules.AppUrls = {
 local openBuiltInModules = {}
 local RunningApps = {}
 local BackgroundApps = {}
-local ActiveApp = nil
+local ActiveApp = nil	
 
 local currentVolume = 0.5
 local currentNotificationVolume = 0.5
@@ -60,12 +61,6 @@ local monitorLoopRunning = false
 local backButtonDebounce = false
 local BACK_BUTTON_COOLDOWN = 0.3
 
-
-local function cleanupManager(manager)
-	if manager and manager.Cleanup then
-		pcall(manager.Cleanup)
-	end
-end
 
 -- ============================================
 -- HELPER: Get MainUI
@@ -186,7 +181,6 @@ function ZolinModules.AnimationManager()
 
 		local window = target
 		local windowKey = tostring(window)  -- Unique identifier for the window
-
 		-- Check if this window is already animating
 		if animatingWindows[windowKey] then
 			-- Already animating, ignore this call
@@ -1128,6 +1122,7 @@ function ZolinModules.AppManager(dependencies)
 			end
 		end
 		--]]
+		
 		-- Check if this app should use ZolinModules launch type (built-in module)
 		local launchType = ZolinModules.AppLaunchType and ZolinModules.AppLaunchType[p1]
 		if launchType == "ZolinModules" then
@@ -1558,7 +1553,7 @@ function ZolinModules.AppManager(dependencies)
 			local isSystem = AppManager.IsSystemApp(p3)
 			if isSystem and ActiveApp == p3 then
 				if ZolinModules.Mode == "Mobile" then
-				AnimationManager.AnimateWindow(p3, "Close")
+				AnimationManager.AnimateWindow(p3, "Close", "Destroy")
 				end
 			end
 			if ZolinModules.Mode == "Desktop" then
@@ -4218,7 +4213,7 @@ function ZolinModules.ZolinListener()
 	local CloseAllAppsEvent = Remotes:FindFirstChild("CloseAllApps")
 	local updateZolinLauncherEvent = Remotes:FindFirstChild("updateZolinLauncher")
 	local contactDirHWupdateEvent = Remotes:FindFirstChild("contactDirHWupdateEvent")
-	
+	local SendNotificationEvent = Remotes:FindFirstChild("SendNotificationEvent")
 	local modules = ZolinModules.GetAll()
 	local AppManager = modules.AppManager
 	local VolumeStyleOptions = modules.VolumeStyleOptions
@@ -4258,6 +4253,13 @@ function ZolinModules.ZolinListener()
 		print("ZolinListener: updateZolinLauncherEvent fired")
 		end)
 		print("ZolinListener: updateZolinLauncherEvent connected")
+	end
+	
+	if SendNotificationEvent then
+		SendNotificationEvent.Event:Connect(function(...)
+			ZolinModules.SendNotification(...)
+		end)
+		print("ZolinListener: SendNotificationEvent connected")
 	end
 	
 	-- ===== contactDirHWupdateEvent =====
@@ -5964,7 +5966,7 @@ function ZolinModules.ZolinInstaller()
 				title = "Uninstaller",
 				description = data.appName .. " has been uninstalled."
 			})
-
+			
 			-- Clear pending data
 			pendingUninstall = { appName = nil, entry = nil, appFrame = nil, appDataEntry = nil, isRunning = false }
 
