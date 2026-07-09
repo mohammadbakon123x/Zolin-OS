@@ -2143,7 +2143,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 					end
 				end
 				for _, part in ipairs(parts) do
-					if part:IsA("BasePart") then
+					if part:IsA("BasePart") or (part:IsA("Part") and part.Name ~= "HumanoidRootPart") then
 						part.Color = Color3.fromRGB(0, 0, 0)
 						for _, face in ipairs(faces) do
 							local faceName = tostring(face):match("%.(.+)$") or tostring(face)
