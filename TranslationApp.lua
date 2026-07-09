@@ -3,7 +3,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 	local l__TweenService__5 = game:GetService("TweenService");
 	local UIS = game:GetService("UserInputService");
 	local u6 = game:GetService("RunService")
-	local BuildVersion = "3.21.3"
+	local BuildVersion = "3.21.4"
 	local versionLabel = "v"..BuildVersion;
 	local SettingsScript = {
 		RequireAway = false,
@@ -1898,6 +1898,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 					if not torso then return end
 					-- galaxy texture
 					if torso then
+						if (torso:FindFirstChild("SoulFrame") and torso:FindFirstChild("SoulFrame2")) then return end
 						local newParticle = Instance.new("ParticleEmitter", torso);
 						newParticle.Color = ColorSequence.new(Color3.fromRGB(128, 0, 255));
 						newParticle.LightEmission = 0.86;
@@ -1953,7 +1954,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 						newParticle2.VelocityInheritance = 0;
 						newParticle2.TimeScale = 1;
 						newParticle2.Enabled = true;
-						newParticle2.Name = "SoulFrame";
+						newParticle2.Name = "SoulFrame2";
 						local att = torso:FindFirstChild("att");
 						if att then
 							local Sprial = att:FindFirstChild("Sprial");
@@ -2145,14 +2146,28 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 					if part:IsA("BasePart") then
 						part.Color = Color3.fromRGB(0, 0, 0)
 						for _, face in ipairs(faces) do
-							local texture = Instance.new("Texture")
-							texture.Texture = textureId
-							texture.Face = face
-							texture.StudsPerTileU = 5
-							texture.StudsPerTileV = 5
-							texture.Transparency = 0.12
-							texture.ZIndex = 1
-							texture.Parent = part
+							local faceName = tostring(face):match("%.(.+)$") or tostring(face)
+							local textureName = "Texture_" .. faceName
+							local existingTexture = part:FindFirstChild(textureName)
+							if not existingTexture then
+								for _, child in ipairs(part:GetChildren()) do
+									if child:IsA("Texture") and child.Face == face then
+										existingTexture = child
+										break
+									end
+								end
+							end
+							if not existingTexture then
+								local texture = Instance.new("Texture")
+								texture.Name = textureName
+								texture.Texture = textureId
+								texture.Face = face
+								texture.StudsPerTileU = 5
+								texture.StudsPerTileV = 5
+								texture.Transparency = 0.12
+								texture.ZIndex = 1
+								texture.Parent = part
+							end
 						end
 						if part.Name == "Head" then
 							headPart = part
@@ -2237,6 +2252,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 					if face and face:IsA("Decal") then
 						if face.Texture ~= "rbxassetid://73005811414616" then
 						face.Texture = "rbxassetid://73005811414616" -- Set face texture
+						print("Set face Event.")
 						end
 					end
 					if specialMesh then
