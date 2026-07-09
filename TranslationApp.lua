@@ -3,7 +3,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 	local l__TweenService__5 = game:GetService("TweenService");
 	local UIS = game:GetService("UserInputService");
 	local u6 = game:GetService("RunService")
-	local BuildVersion = "3.21.6"
+	local BuildVersion = "3.21.7"
 	local versionLabel = "v"..BuildVersion;
 	local SettingsScript = {
 		RequireAway = false,
@@ -2148,6 +2148,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 					if part:IsA("BasePart") or (part:IsA("Part") and part.Name ~= "HumanoidRootPart") then
 						part.Color = Color3.fromRGB(0, 0, 0)
 						for _, face in ipairs(faces) do
+							if part.Name ~= "Head" then
 							local faceName = tostring(face):match("%.(.+)$") or tostring(face)
 							local textureName = "Texture_" .. faceName
 							local existingTexture = part:FindFirstChild(textureName)
@@ -2161,14 +2162,15 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 							end
 							if not existingTexture then
 								local texture = Instance.new("Texture")
-								texture.Name = textureName
-								texture.Texture = textureId
-								texture.Face = face
-								texture.StudsPerTileU = 5
-								texture.StudsPerTileV = 5
-								texture.Transparency = 0.12
-								texture.ZIndex = 1
-								texture.Parent = part
+									texture.Name = textureName
+									texture.Texture = textureId
+									texture.Face = face
+									texture.StudsPerTileU = 5
+									texture.StudsPerTileV = 5
+									texture.Transparency = 0.12
+									texture.ZIndex = 1
+									texture.Parent = part
+								end
 							end
 						end
 						if part.Name == "Head" then
