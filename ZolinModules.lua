@@ -1555,6 +1555,10 @@ function ZolinModules.AppManager(dependencies)
 				if ZolinModules.Mode == "Mobile" then
 				AnimationManager.AnimateWindow(p3, "Close", "Destroy")
 				end
+			elseif not isSystem and ActiveApp == p3 then
+				if ZolinModules.Mode == "Mobile" then
+				AnimationManager.AnimateWindow(p3, "Close", "Destroy")
+				end
 			end
 			if ZolinModules.Mode == "Desktop" then
 			ZolinModules.ZIndexManagerInstance.Unregister(app)
