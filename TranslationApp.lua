@@ -6512,7 +6512,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 													newGlitchPainfulScream.Name = "GlitchPainfulScream"
 													newGlitchPainfulScream.SoundId = "rbxassetid://130955321322500";
 													newGlitchPainfulScream.PlaybackSpeed = 1
-													newGlitchPainfulScream.Volume = 0.7
+													newGlitchPainfulScream.Volume = 0.15
 													
 													game:GetService("SoundService").AmbientReverb = Enum.ReverbType.Quarry
 													game:GetService("SoundService"):FindFirstChild("Timestop"):Play();
