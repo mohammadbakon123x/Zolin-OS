@@ -2117,6 +2117,7 @@ local function createChunk18()
 	-- Package queue: [Name] = URL
 	local __packageQueue = {
 		Changelogs = "https://raw.githubusercontent.com/mohammadbakon123x/Zolin-OS/refs/heads/main/__package_Changelogs.lua",
+		MemoryDisplay = "https://raw.githubusercontent.com/mohammadbakon123x/Zolin-OS/refs/heads/main/__package_MemoryDisplayApp.lua",
 	}
 
 	-- Create a StringValue for each package
@@ -2159,7 +2160,7 @@ local function createChunk19()
 	Wallpaper.Position = UDim2.new(0.5, 0, 0.5, 0)
 	Wallpaper.Size = UDim2.new(1, 0, 1, 0)
 	Wallpaper.BackgroundTransparency = 0
-	Wallpaper.Image = "rbxassetid://2387794684"
+	Wallpaper.Image = "rbxassetid://14098940223" --"rbxassetid://2387794684" default
 	Wallpaper.ScaleType = Enum.ScaleType.Stretch
 	Wallpaper.ZIndex = 2
 	Wallpaper.ClipsDescendants = false
