@@ -9,7 +9,20 @@ function ZolinApp.Init(ui, launchArgs, appFolder)
 
 	-- Get the changelog text from the Data folder
 	local dataFolder = appFolder and appFolder:FindFirstChild("Data")
-	local changelogText = ""
+	local changelogText = [[
+v1.12 (Current Version | 06/17/2026):
+• Added ZolinInstaller
+• Fixed bugs and improved performance
+• New Zolin Modifier app
+
+v1.11 (06/15/2026):
+• Added Music Player
+• Improved AI in PlayAsAI
+
+v1.10 (06/10/2026):
+• Initial release of ZolinOS
+• System apps: Settings, Wallpaper
+]]
 	if dataFolder then
 		local textVal = dataFolder:FindFirstChild("ChangelogText")
 		if textVal then
