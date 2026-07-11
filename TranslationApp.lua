@@ -2676,7 +2676,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 	end
 	local TranslationUI = game.Players.LocalPlayer.PlayerGui:FindFirstChild("ZolinOS").__ScreenFrame.Applications:FindFirstChild(AppName) or game.Players.LocalPlayer.PlayerGui:FindFirstChild("ZolinOS").__ZolinDesktop.__ScreenFrame.Applications:FindFirstChild(AppName) or ui or nil;
 	if not TranslationUI then
-		warn("TranslationUI not found in PlayerGui")
+		warn(tostring(AppName).." not found in PlayerGui")
 		return
 	end
 	local MainFrame = TranslationUI:WaitForChild("MainFrame");
@@ -2722,6 +2722,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 	ButtonCustomBeatdown.TextYAlignment = Enum.TextYAlignment.Center
 	ButtonCustomBeatdown.TextXAlignment = Enum.TextXAlignment.Left
 	ButtonCustomBeatdown.TextWrapped = true
+	ButtonCustomBeatdown.LayoutOrder = 1
 	local UICorner_ButtonCustomBeatdown = Instance.new("UICorner", ButtonCustomBeatdown)
 	UICorner_ButtonCustomBeatdown.CornerRadius = UDim.new(0.15, 0)
 	local UIPaddding_ButtonCustomBeatdown = Instance.new("UIPadding", ButtonCustomBeatdown)
@@ -2770,6 +2771,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 	ButtonSettings.TextYAlignment = Enum.TextYAlignment.Center;
 	ButtonSettings.TextXAlignment = Enum.TextXAlignment.Left;
 	ButtonSettings.TextWrapped = true;
+	ButtonSettings.LayoutOrder = 0;
 	local UICorner_ButtonSettings = Instance.new("UICorner", ButtonSettings);
 	UICorner_ButtonSettings	.CornerRadius = UDim.new(0.15, 0);
 	local UIPaddding_ButtonSettings = Instance.new("UIPadding", ButtonSettings);
