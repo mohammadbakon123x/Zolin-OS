@@ -1,16 +1,14 @@
 local TranslationApp = {}
+-- Library Stands
 function TranslationApp.Init(ui, launchArgs, appFolder)
+	local AppName = "Library Stands"
 	local l__TweenService__5 = game:GetService("TweenService");
 	local UIS = game:GetService("UserInputService");
 	local u6 = game:GetService("RunService")
-	local BuildVersion = "3.21.7"
+	local BuildVersion = "3.21.8"
 	local versionLabel = "v"..BuildVersion;
 	local SettingsScript = {
-		RequireAway = false,
 		DisplayLogs = true,
-		UIAnimation = false,
-		AntiExploit = false,
-		SaveDataSettings = false,
 		KickPlayerAfterCutsenceBD = false,
 	}
 	local PlayerCurrentData = {
@@ -21,38 +19,15 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 		["ReturnTimer"] = nil,
 		["Init"] = false,
 	}
-	local CurrentExternalData = {};
 	local ReplicatedStorage = game:GetService("ReplicatedStorage");
-	local RemotesServerEvents = ReplicatedStorage:WaitForChild("HiddenRemoteEventSignals", 0.79);
-	local RemoteEventBanSys = nil
-	local BadgeEventSender = nil
-	if RemotesServerEvents then
-		RemoteEventBanSys = RemotesServerEvents:FindFirstChild("SendSignSparklesEvent");
-		BadgeEventSender = RemotesServerEvents:FindFirstChild("_SendBdServiceEvent");
-	else
-		if SettingsScript.DisplayLogs then
-			warn("RemoteEventBanSys not found in ReplicatedStorage");
-			warn("BadgeEventSender not found in ReplicatedStorage");
-		end
-	end
 	local updateCustomBeatdownEvent = Instance.new("BindableEvent")
 	local lpr = game.Players.LocalPlayer;
 	local Character = lpr.Character or lpr.CharacterAdded:Wait();
 	local l__Humanoid__8 = Character:FindFirstChildOfClass("Humanoid");
 	local l__HumanoidRootPart__9 = Character:WaitForChild("HumanoidRootPart", 5);
 	local copyrightLabel
-	local CustomHitbox = Vector3.new(32, 32, 32)
-	local CustomHomerunHitbox = Vector3.new(0.8,0.8,0.8) * 16;
+	local CustomHitbox = Vector3.new(32, 32, 32) -- beatdown custom hitbox size
 	local TeleportUI = nil;
-	local CurrentFlySpeed = 4;
-	local FlySpeeds = {
-		{name = "Slowest", speed = 40, color = Color3.fromRGB(58, 61, 126)},     -- 1
-		{name = "Very Slow", speed = 78, color = Color3.fromRGB(100, 100, 255)},   -- 2
-		{name = "Slow", speed = 117, color = Color3.fromRGB(150, 150, 255)},       -- 3
-		{name = "Medium", speed = 280, color = Color3.fromRGB(200, 200, 255)},     -- 4
-		{name = "Fast", speed = 500, color = Color3.fromRGB(255, 200, 150)},       -- 5
-		{name = "Fastest", speed = 838, color = Color3.fromRGB(255, 100, 100)}     -- 6
-	};
 	local TeleportData = {
 		UpdateInterval = 5,
 		LastUpdate = 0,
@@ -63,8 +38,6 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 	local SlapBattlesSettings = {
 		ForceOverwriteBeatdown = false,
 		BiggerHitbox = false,
-		HomerunBiggerHitbox = false,
-		CustomAnimations = false
 	};
 	local originalSkybox = {}
 	local originalLighting = {}
@@ -2661,11 +2634,6 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 	local SelectedBeatdownModel = "uncle_beatdown"
 	local ViewportCamera = nil
 	local ViewportModel = nil
-	local CustomAnimationIDs = {
-		attacker_anim = "132032204528406",
-		idle_anim = "105461688584555", 
-		slap_anim = "94416144644689"
-	}
 	local ViewOtherCustomStands = {
 		Enabled = false, -- Default enabled
 		FriendStandsOnly = true, -- Option to only see friends' custom stands
@@ -2689,11 +2657,6 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 		startTween = nil,
 		endTween = nil,
 	}
-	local ALLOWED_ARGS = {
-		["UnbanPlayer"] = true,
-		["BanPlayer"] = true
-	}
-	local OriginalAnimationIDs = {};
 	local Button_Slap1
 	--]]
 	local GameDetection = {
@@ -2711,7 +2674,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 			print("Detected: Other Game")
 		end
 	end
-	local TranslationUI = game.Players.LocalPlayer.PlayerGui:FindFirstChild("ZolinOS").__ScreenFrame.Applications:FindFirstChild("TranslationUI") or game.Players.LocalPlayer.PlayerGui:FindFirstChild("ZolinOS").__ZolinDesktop.__ScreenFrame.Applications:FindFirstChild("TranslationUI") or ui or nil;
+	local TranslationUI = game.Players.LocalPlayer.PlayerGui:FindFirstChild("ZolinOS").__ScreenFrame.Applications:FindFirstChild(AppName) or game.Players.LocalPlayer.PlayerGui:FindFirstChild("ZolinOS").__ZolinDesktop.__ScreenFrame.Applications:FindFirstChild(AppName) or ui or nil;
 	if not TranslationUI then
 		warn("TranslationUI not found in PlayerGui")
 		return
@@ -2836,56 +2799,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 	ImageLabel_ButtonSettings.Image = "rbxassetid://5912368763";
 	ImageLabel_ButtonSettings.ImageColor3 = Color3.fromRGB(48, 48, 48);
 	ImageLabel_ButtonSettings.ScaleType = Enum.ScaleType.Fit;
-
-	local ButtonExternalSettings = Instance.new("TextButton", SideButtons)
-	ButtonExternalSettings.AnchorPoint = Vector2.new(0.05, 0.5)
-	ButtonExternalSettings.AutoButtonColor = true
-	ButtonExternalSettings.Active = true
-	ButtonExternalSettings.BackgroundColor3 = Color3.fromRGB(38, 38, 38)
-	ButtonExternalSettings.BackgroundTransparency = 0.3
-	ButtonExternalSettings.Name = "ButtonExternalSettings"
-	ButtonExternalSettings.Size = UDim2.new(0.42, 0, 0.3, 0)
-	ButtonExternalSettings.SizeConstraint = Enum.SizeConstraint.RelativeYY
-	ButtonExternalSettings.ZIndex = 6
-	ButtonExternalSettings.Visible = true
-	ButtonExternalSettings.Font = Enum.Font.Oswald
-	ButtonExternalSettings.Text = ""
-	ButtonExternalSettings.TextColor3 = Color3.fromRGB(255, 255, 189)
-	ButtonExternalSettings.TextScaled = true
-	ButtonExternalSettings.TextSize = 14
-	ButtonExternalSettings.TextYAlignment = Enum.TextYAlignment.Center
-	ButtonExternalSettings.TextXAlignment = Enum.TextXAlignment.Left
-	ButtonExternalSettings.TextWrapped = true
-	ButtonExternalSettings.LayoutOrder = 3
-	local UICorner_ButtonExternalSettings = Instance.new("UICorner", ButtonExternalSettings)
-	UICorner_ButtonExternalSettings.CornerRadius = UDim.new(0.15, 0)
-	local UIPaddding_ButtonExternalSettings = Instance.new("UIPadding", ButtonExternalSettings)
-	UIPaddding_ButtonExternalSettings.PaddingLeft = UDim.new(0.05, 0)
-	UIPaddding_ButtonExternalSettings.PaddingRight = UDim.new(0.05, 0)
-	UIPaddding_ButtonExternalSettings.PaddingTop = UDim.new(0, 0)
-	UIPaddding_ButtonExternalSettings.PaddingBottom = UDim.new(0, 0)
-	local UIStroke_ButtonExternalSettings = Instance.new("UIStroke", ButtonExternalSettings)
-	UIStroke_ButtonExternalSettings.Color = Color3.fromRGB(157, 157, 157)
-	UIStroke_ButtonExternalSettings.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
-	UIStroke_ButtonExternalSettings.Thickness = 3
-	UIStroke_ButtonExternalSettings.LineJoinMode = Enum.LineJoinMode.Round
-	UIStroke_ButtonExternalSettings.StrokeSizingMode = Enum.StrokeSizingMode.FixedSize
-	UIStroke_ButtonExternalSettings.BorderStrokePosition = Enum.BorderStrokePosition.Outer
-	UIStroke_ButtonExternalSettings.ZIndex = 6
-	UIStroke_ButtonExternalSettings.Transparency = 0
-	local ImageLabel_ButtonExternalSettings = Instance.new("ImageLabel", ButtonExternalSettings)
-	ImageLabel_ButtonExternalSettings.AnchorPoint = Vector2.new(1, 0.5)
-	ImageLabel_ButtonExternalSettings.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-	ImageLabel_ButtonExternalSettings.BackgroundTransparency = 1
-	ImageLabel_ButtonExternalSettings.BorderColor3 = Color3.fromRGB(27, 42, 53)
-	ImageLabel_ButtonExternalSettings.Position = UDim2.new(1, 0, 0.5, 0)
-	ImageLabel_ButtonExternalSettings.Size = UDim2.new(1, 0, 0.7, 0)
-	ImageLabel_ButtonExternalSettings.SizeConstraint = Enum.SizeConstraint.RelativeYY
-	ImageLabel_ButtonExternalSettings.ZIndex = 2
-	ImageLabel_ButtonExternalSettings.Visible = true
-	ImageLabel_ButtonExternalSettings.Image = "rbxassetid://113257385064264" -- You can change this icon
-	ImageLabel_ButtonExternalSettings.ImageColor3 = Color3.fromRGB(113, 84, 255)
-	ImageLabel_ButtonExternalSettings.ScaleType = Enum.ScaleType.Fit
+	
 	--[
 	local ButtonTeleport = Instance.new("TextButton", SideButtons)
 	ButtonTeleport.AnchorPoint = Vector2.new(0.05, 0.5)
@@ -2975,317 +2889,6 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 	UIStroke_Settings.Transparency = 0.33;
 	UIStroke_Settings.ZIndex = 6;
 	
-	--[ EXTERNAL SETTINGS FEATURE
-	local ExternalSettingsUI = nil
-	local ExternalSettingsFrame = nil
-	local function saveExternalSetting(name, value)
-		CurrentExternalData[name] = value
-		if SettingsScript.DisplayLogs then
-			print("Saved setting: " .. name .. " = " .. tostring(value))
-		end
-	end
-	local function loadExternalSetting(name, defaultValue)
-		local savedValue = CurrentExternalData[name]
-		if savedValue ~= nil then
-			return savedValue
-		end
-		return defaultValue
-	end
-	local function saveAllExternalSettings()
-		if SettingsScript.DisplayLogs then
-			print("Saving all external settings...")
-		end
-		if SettingsScript.SaveDataSettings then
-			local DataStoreService = game:GetService("DataStoreService")
-			local success, errorMessage = pcall(function()
-				local settingsStore = DataStoreService:GetDataStore("ExternalSettings_" .. lpr.UserId)
-				settingsStore:SetAsync("settings", CurrentExternalData)
-			end)
-			if success then
-				if SettingsScript.DisplayLogs then
-					print("Settings saved to DataStore")
-				end
-			else
-				warn("Failed to save settings to DataStore:", errorMessage)
-			end
-		end
-	end
-	local function createExternalSettingsUI()
-		if ExternalSettingsUI then return ExternalSettingsUI end
-		ExternalSettingsUI = Instance.new("Frame", MainFrame)
-		ExternalSettingsUI.Name = "ExternalSettingsUI"
-		ExternalSettingsUI.AnchorPoint = Vector2.new(0.5, 0.5)
-		ExternalSettingsUI.BackgroundTransparency = 0.15
-		ExternalSettingsUI.BackgroundColor3 = Color3.fromRGB(17, 17, 38)
-		ExternalSettingsUI.Active = true
-		ExternalSettingsUI.BorderColor3 = Color3.fromRGB(41, 27, 53)
-		ExternalSettingsUI.LayoutOrder = 3
-		ExternalSettingsUI.Position = UDim2.new(0.5, 0, 0.5, 0)
-		ExternalSettingsUI.Size = UDim2.new(0.7, 0, 0.65, 0)
-		ExternalSettingsUI.SizeConstraint = Enum.SizeConstraint.RelativeXY
-		ExternalSettingsUI.ZIndex = 6
-		ExternalSettingsUI.Visible = false
-		ExternalSettingsUI.ClipsDescendants = true
-		local UICorner_ExternalSettings = Instance.new("UICorner", ExternalSettingsUI)
-		UICorner_ExternalSettings.CornerRadius = UDim.new(0, 10)
-		local UIPadding_ExternalSettings = Instance.new("UIPadding", ExternalSettingsUI)
-		UIPadding_ExternalSettings.PaddingBottom = UDim.new(0.025, 0)
-		UIPadding_ExternalSettings.PaddingLeft = UDim.new(0.02, 0)
-		UIPadding_ExternalSettings.PaddingRight = UDim.new(0.02, 0)
-		UIPadding_ExternalSettings.PaddingTop = UDim.new(0.025, 0)
-		local UIStroke_ExternalSettings = Instance.new("UIStroke", ExternalSettingsUI)
-		UIStroke_ExternalSettings.Color = Color3.fromRGB(85, 93, 255)
-		UIStroke_ExternalSettings.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
-		UIStroke_ExternalSettings.BorderStrokePosition = Enum.BorderStrokePosition.Outer
-		UIStroke_ExternalSettings.LineJoinMode = Enum.LineJoinMode.Round
-		UIStroke_ExternalSettings.StrokeSizingMode = Enum.StrokeSizingMode.FixedSize
-		UIStroke_ExternalSettings.Thickness = 4.3
-		UIStroke_ExternalSettings.Transparency = 0.33
-		UIStroke_ExternalSettings.ZIndex = 6
-		local Title = Instance.new("TextLabel", ExternalSettingsUI)
-		Title.Name = "Title"
-		Title.AnchorPoint = Vector2.new(0.5, 0)
-		Title.BackgroundTransparency = 1
-		Title.Position = UDim2.new(0.5, 0, 0, 0)
-		Title.Size = UDim2.new(1, 0, 0.1, 0)
-		Title.Font = Enum.Font.Oswald
-		Title.Text = "EXTERNAL SETTINGS"
-		Title.TextColor3 = Color3.fromRGB(113, 84, 255)
-		Title.TextScaled = true
-		Title.TextWrapped = true
-		Title.TextXAlignment = Enum.TextXAlignment.Center
-		Title.ZIndex = 6
-		ExternalSettingsFrame = Instance.new("ScrollingFrame", ExternalSettingsUI)
-		ExternalSettingsFrame.Name = "ExternalSettingsFrame"
-		ExternalSettingsFrame.AnchorPoint = Vector2.new(0.5, 0)
-		ExternalSettingsFrame.BackgroundTransparency = 1
-		ExternalSettingsFrame.Position = UDim2.new(0.5, 0, 0.11, 0)
-		ExternalSettingsFrame.Size = UDim2.new(0.95, 0, 1, 0)
-		ExternalSettingsFrame.CanvasSize = UDim2.new(0, 0, 0, 0)
-		ExternalSettingsFrame.AutomaticCanvasSize = Enum.AutomaticSize.Y
-		ExternalSettingsFrame.ScrollBarThickness = 6
-		ExternalSettingsFrame.ScrollBarImageColor3 = Color3.fromRGB(182, 146, 244)
-		ExternalSettingsFrame.ClipsDescendants = true
-		ExternalSettingsFrame.ZIndex = 6
-		ExternalSettingsFrame.ScrollingDirection = Enum.ScrollingDirection.Y
-		local SettingsListLayout = Instance.new("UIListLayout", ExternalSettingsFrame)
-		SettingsListLayout.Padding = UDim.new(0.02, 0)
-		SettingsListLayout.FillDirection = Enum.FillDirection.Vertical
-		SettingsListLayout.SortOrder = Enum.SortOrder.LayoutOrder
-		local SettingsPadding = Instance.new("UIPadding", ExternalSettingsFrame)
-		SettingsPadding.PaddingLeft = UDim.new(0.02, 0)
-		SettingsPadding.PaddingRight = UDim.new(0.02, 0)
-		SettingsPadding.PaddingTop = UDim.new(0.02, 0)
-		SettingsPadding.PaddingBottom = UDim.new(0.02, 0)
-		local CloseButton = Instance.new("TextButton", ExternalSettingsUI)
-		CloseButton.Name = "CloseButton"
-		CloseButton.AnchorPoint = Vector2.new(0.5, 1)
-		CloseButton.Position = UDim2.new(0.5, 0, 1, -5)
-		CloseButton.Size = UDim2.new(0.4, 0, 0.08, 0)
-		CloseButton.BackgroundColor3 = Color3.fromRGB(70, 60, 95)
-		CloseButton.BackgroundTransparency = 0.3
-		CloseButton.Text = "X"
-		CloseButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-		CloseButton.TextScaled = true
-		CloseButton.Font = Enum.Font.Oswald
-		CloseButton.ZIndex = 6
-
-		local UICorner_Close = Instance.new("UICorner", CloseButton)
-		UICorner_Close.CornerRadius = UDim.new(0, 5)
-		local UIStroke_Close = Instance.new("UIStroke", CloseButton)
-		UIStroke_Close.Color = Color3.fromRGB(113, 84, 255)
-		UIStroke_Close.Thickness = 2
-		CloseButton.MouseButton1Click:Connect(function()
-			if SettingsScript.SaveDataSettings then
-				saveAllExternalSettings()
-			end
-			ExternalSettingsUI.Visible = false
-		end)
-		CloseButton.MouseEnter:Connect(function()
-			CloseButton.BackgroundColor3 = Color3.fromRGB(85, 75, 110)
-		end)
-		CloseButton.MouseLeave:Connect(function()
-			CloseButton.BackgroundColor3 = Color3.fromRGB(70, 60, 95)
-		end)
-		return ExternalSettingsUI
-	end
-	local function createExternalSettingOption(name, description, defaultState)
-		local optionFrame = Instance.new("Frame")
-		optionFrame.Name = name .. "Option"
-		optionFrame.Size = UDim2.new(1, 0, 0, 70)
-		optionFrame.BackgroundColor3 = Color3.fromRGB(35, 31, 59)
-		optionFrame.BackgroundTransparency = 0
-		optionFrame.ZIndex = 6
-		local UICorner_Option = Instance.new("UICorner", optionFrame)
-		UICorner_Option.CornerRadius = UDim.new(0, 5)
-		local UIStroke_Option = Instance.new("UIStroke", optionFrame)
-		UIStroke_Option.Color = Color3.fromRGB(85, 93, 255)
-		UIStroke_Option.Thickness = 2
-		local Title = Instance.new("TextLabel", optionFrame)
-		Title.Name = "Title"
-		Title.Size = UDim2.new(0.7, 0, 0.4, 0)
-		Title.Position = UDim2.new(0.03, 0, 0.1, 0)
-		Title.BackgroundTransparency = 1
-		Title.Text = name
-		Title.TextColor3 = Color3.fromRGB(255, 255, 255)
-		Title.TextScaled = true
-		Title.TextXAlignment = Enum.TextXAlignment.Left
-		Title.Font = Enum.Font.Oswald
-		Title.ZIndex = 6
-		local Desc = Instance.new("TextLabel", optionFrame)
-		Desc.Name = "Description"
-		Desc.Size = UDim2.new(0.7, 0, 0.4, 0)
-		Desc.Position = UDim2.new(0.03, 0, 0.5, 0)
-		Desc.BackgroundTransparency = 1
-		Desc.Text = description
-		Desc.TextColor3 = Color3.fromRGB(180, 180, 180)
-		Desc.TextScaled = true
-		Desc.TextXAlignment = Enum.TextXAlignment.Left
-		Desc.Font = Enum.Font.Gotham
-		Desc.TextSize = 12
-		Desc.ZIndex = 6
-		local ToggleButton = Instance.new("TextButton", optionFrame)
-		ToggleButton.Name = "Toggle"
-		ToggleButton.Size = UDim2.new(0.2, 0, 0.6, 0)
-		ToggleButton.Position = UDim2.new(0.77, 0, 0.2, 0)
-		ToggleButton.BackgroundColor3 = defaultState and Color3.fromRGB(84, 255, 113) or Color3.fromRGB(70, 60, 95)
-		ToggleButton.BackgroundTransparency = 0.3
-		ToggleButton.Text = defaultState and "ON" or "OFF"
-		ToggleButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-		ToggleButton.TextScaled = true
-		ToggleButton.Font = Enum.Font.Oswald
-		ToggleButton.ZIndex = 6
-		local UICorner_Toggle = Instance.new("UICorner", ToggleButton)
-		UICorner_Toggle.CornerRadius = UDim.new(0, 5)
-		local UIStroke_Toggle = Instance.new("UIStroke", ToggleButton)
-		UIStroke_Toggle.Color = Color3.fromRGB(113, 84, 255)
-		UIStroke_Toggle.Thickness = 2
-		return optionFrame, ToggleButton
-	end
-	local function addExternalSettingsToUI()
-		if not ExternalSettingsFrame then return end
-		for _, child in ipairs(ExternalSettingsFrame:GetChildren()) do
-			if child:IsA("Frame") then
-				child:Destroy()
-			end
-		end
-		local settings = {
-			{name = "UI Animations", description = "Play UI Animations. Enabling It May reduce Performance.", default = false},
-			{name = "Disable Anti Exploit", description = "Disables Mostly Anti Expliots.", default = false},
-			{name = "Watermark Rights", description = "Watermark Rights in bottom right, Disabling it will Hide it.", default = true},
-			{name = "Save Data Settings", description = "Enabling it Will Save your Data Settings Preference.", default = true},
-		}
-		for i, setting in ipairs(settings) do
-			local savedValue = loadExternalSetting(setting.name, setting.default)
-			local isEnabled = savedValue
-			if setting.name == "UI Animations" then
-				SettingsScript.UIAnimations = isEnabled
-			elseif setting.name == "Disable Anti Exploit" then
-				SettingsScript.AntiExploit = isEnabled
-			elseif setting.name == "Watermark Rights" then
-				if copyrightLabel and copyrightLabel:IsA("TextLabel") then
-					copyrightLabel.Visible = isEnabled
-				end
-			elseif setting.name == "Save Data Settings" then
-				SettingsScript.SaveDataSettings = isEnabled
-			end
-			local optionFrame, toggleButton = createExternalSettingOption(
-				setting.name, 
-				setting.description, 
-				isEnabled
-			)
-			optionFrame.LayoutOrder = i
-			optionFrame.Parent = ExternalSettingsFrame
-			if isEnabled then
-				toggleButton.BackgroundColor3 = Color3.fromRGB(84, 255, 113)
-				toggleButton.Text = "ON"
-			else
-				toggleButton.BackgroundColor3 = Color3.fromRGB(70, 60, 95)
-				toggleButton.Text = "OFF"
-			end
-			toggleButton.MouseButton1Click:Connect(function()
-				isEnabled = not isEnabled
-				saveExternalSetting(setting.name, isEnabled)
-				if isEnabled then
-					toggleButton.BackgroundColor3 = Color3.fromRGB(84, 255, 113)
-					toggleButton.Text = "ON"
-				else
-					toggleButton.BackgroundColor3 = Color3.fromRGB(70, 60, 95)
-					toggleButton.Text = "OFF"
-				end
-				if setting.name == "UI Animations" then
-					SettingsScript.UIAnimations = isEnabled
-				elseif setting.name == "Disable Anti Exploit" then
-					SettingsScript.AntiExploit = isEnabled
-				elseif setting.name == "Watermark Rights" then
-					if copyrightLabel and copyrightLabel:IsA("TextLabel") then
-						copyrightLabel.Visible = isEnabled
-					end
-				elseif setting.name == "Save Data Settings" then
-					SettingsScript.SaveDataSettings = isEnabled
-				end
-				if SettingsScript.DisplayLogs then
-					print(setting.name .. ": " .. (isEnabled and "Enabled" or "Disabled"))
-				end
-			end)
-			toggleButton.MouseEnter:Connect(function()
-				if isEnabled then
-					toggleButton.BackgroundColor3 = Color3.fromRGB(100, 255, 130)
-				else
-					toggleButton.BackgroundColor3 = Color3.fromRGB(85, 75, 110)
-				end
-			end)
-			toggleButton.MouseLeave:Connect(function()
-				if isEnabled then
-					toggleButton.BackgroundColor3 = Color3.fromRGB(84, 255, 113)
-				else
-					toggleButton.BackgroundColor3 = Color3.fromRGB(70, 60, 95)
-				end
-			end)
-		end
-	end
-	local function toggleExternalSettingsUI()
-		createExternalSettingsUI()
-		ExternalSettingsUI.Visible = not ExternalSettingsUI.Visible
-		if Settings.Visible then
-			Settings.Visible = false
-		end
-		if TeleportData.TeleportUI and TeleportData.TeleportUI.Visible then
-			TeleportData.TeleportUI.Visible = false
-		end
-		if CustomBeatdownUI and CustomBeatdownUI.Visible then
-			CustomBeatdownUI.Visible = false
-		end
-		if ExternalSettingsUI.Visible then
-			addExternalSettingsToUI()
-			ExternalSettingsUI.ZIndex = 6
-			if SettingsScript.DisplayLogs then
-				print("External Settings opened")
-			end
-		else
-			if SettingsScript.SaveDataSettings then
-				saveAllExternalSettings()
-			end
-		end
-	end
-	local function initializeSavedSettings()
-		if SettingsScript.DisplayLogs then
-			print("Initializing external settings...")
-		end
-		local DataStoreService = game:GetService("DataStoreService")
-		local success, data = pcall(function()
-			local settingsStore = DataStoreService:GetDataStore("ExternalSettings_" .. lpr.UserId)
-			return settingsStore:GetAsync("settings")
-		end)
-		if success and data then
-			CurrentExternalData = data
-			if SettingsScript.DisplayLogs then
-				print("Settings loaded from DataStore")
-			end
-		end
-	end
-
-	--]]
 	local function isFriend(Friend)
 		if Friend == lpr then return end
 		local success, isFriends = pcall(function()
@@ -3629,9 +3232,6 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 		if CustomBeatdownUI ~= nil and CustomBeatdownUI.Visible then
 			CustomBeatdownUI.Visible = false;
 		end
-		if ExternalSettingsUI ~= nil and ExternalSettingsUI.Visible then
-			ExternalSettingsUI.Visible = false;
-		end;
 		if TeleportData.TeleportUI.Visible then
 			updatePlayerList2()
 		end
@@ -3675,7 +3275,6 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 	UIPadding_Desc.PaddingLeft = UDim.new(0.05, 0);
 	UIPadding_Desc.PaddingRight = UDim.new(0.05, 0);
 	UIPadding_Desc.PaddingTop = UDim.new(0.05, 0);
-	
 	
 	--[ Add after SliderSelection4
 	local SliderSelection5 = Instance.new("Frame", Desclabel);
@@ -3765,70 +3364,6 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 	SlapSetting2.BackgroundTransparency = 0;
 	SlapSetting2.Size = UDim2.new(1, 0, 0.2, 0);
 	SlapSetting2.SizeConstraint = Enum.SizeConstraint.RelativeXY;
-	--[
-	local SliderSelection3 = Instance.new("Frame", Desclabel);
-	SliderSelection3.AnchorPoint = Vector2.new(0.5, 0.5);
-	SliderSelection3.Active = true;
-	SliderSelection3.BackgroundColor3 = Color3.fromRGB(35, 31, 59);
-	SliderSelection3.BackgroundTransparency = 0;
-	SliderSelection3.Size = UDim2.new(1, 0, 0.2, 0);
-	SliderSelection3.SizeConstraint = Enum.SizeConstraint.RelativeXY;
-	SliderSelection3.Visible = true
-	SliderSelection3.ZIndex = 6;
-	SliderSelection3.LayoutOrder = 4;
-	local UICorner_Slider3 = Instance.new("UICorner", SliderSelection3);
-	UICorner_Slider3.CornerRadius = UDim.new(0, 5);
-	local Title_Slider3 = Instance.new("TextLabel", SliderSelection3);
-	Title_Slider3.AnchorPoint = Vector2.new(0.5, 0);
-	Title_Slider3.BackgroundTransparency = 1;
-	Title_Slider3.LayoutOrder = 3;
-	Title_Slider3.Position = UDim2.new(0.5, 0, 0, 0);
-	Title_Slider3.Size = UDim2.new(1, 0, 1, 0);
-	Title_Slider3.SizeConstraint = Enum.SizeConstraint.RelativeXY;
-	Title_Slider3.Visible = true;
-	Title_Slider3.ZIndex = 6;
-	Title_Slider3.RichText = true;
-	Title_Slider3.Text = " Ban System [Not Tested]:"
-	Title_Slider3.TextColor3 = Color3.fromRGB(194, 194, 194);
-	Title_Slider3.TextScaled = false;
-	Title_Slider3.TextSize = 24;
-	Title_Slider3.TextWrapped = true;
-	Title_Slider3.TextXAlignment = Enum.TextXAlignment.Left;
-	Title_Slider3.TextYAlignment = Enum.TextYAlignment.Center;
-	local Button_Slider_3 = Instance.new("TextBox", Title_Slider3);
-	Button_Slider_3.Active = true;
-	Button_Slider_3.AnchorPoint = Vector2.new(0.5, 0.5);
-	Button_Slider_3.BackgroundColor3 = Color3.fromRGB(70, 60, 95);
-	Button_Slider_3.BackgroundTransparency = 0.55;
-	Button_Slider_3.Position = UDim2.new(0.85, 0, 0.5, 0);
-	Button_Slider_3.Size = UDim2.new(0, 200, 0, 31);
-	Button_Slider_3.SizeConstraint = Enum.SizeConstraint.RelativeXY;
-	Button_Slider_3.Visible = true;
-	Button_Slider_3.ZIndex = 6;
-	Button_Slider_3.Name = "Slider";
-	Button_Slider_3.Font = Enum.Font.Oswald;
-	Button_Slider_3.FontFace.Weight = Enum.FontWeight.Bold
-	Button_Slider_3.FontFace.Style = Enum.FontStyle.Italic
-	Button_Slider_3.PlaceholderText = "Enter UserId to Unban or Ban";
-	Button_Slider_3.Text = "Enter UserId to Unban or Ban";
-	Button_Slider_3.TextColor3 = Color3.fromRGB(214, 214, 214);
-	Button_Slider_3.RichText = true;
-	Button_Slider_3.TextScaled = false;
-	Button_Slider_3.TextSize = 18;
-	Button_Slider_3.TextWrapped = true;
-	Button_Slider_3.TextXAlignment = Enum.TextXAlignment.Center;
-	Button_Slider_3.TextYAlignment = Enum.TextYAlignment.Center;
-	local UICorner_ButtonSlap3 = Instance.new("UICorner", Button_Slider_3);
-	UICorner_ButtonSlap3.CornerRadius = UDim.new(0, 5);
-	local UIStroke_ButtonSlap3 = Instance.new("UIStroke", Button_Slider_3);
-	UIStroke_ButtonSlap3.ApplyStrokeMode = Enum.ApplyStrokeMode.Border;
-	UIStroke_ButtonSlap3.BorderStrokePosition = Enum.BorderStrokePosition.Outer;
-	UIStroke_ButtonSlap3.Thickness = 2.9;
-	UIStroke_ButtonSlap3.Color = Color3.fromRGB(103, 92, 150);
-	UIStroke_ButtonSlap3.StrokeSizingMode = Enum.StrokeSizingMode.FixedSize;
-	UIStroke_ButtonSlap3.LineJoinMode = Enum.LineJoinMode.Round;
-	UIStroke_ButtonSlap3.Transparency = 0;
-	--]]
 	if GameDetection.IsSlapBattles then
 		SlapSetting2.Visible = true;
 		Button_Slider_3.Visible = true;
@@ -3892,220 +3427,8 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 	UIStroke_ButtonSlap2.StrokeSizingMode = Enum.StrokeSizingMode.FixedSize;
 	UIStroke_ButtonSlap2.LineJoinMode = Enum.LineJoinMode.Round;
 	UIStroke_ButtonSlap2.Transparency = 0;
-	local SlapSetting3 = Instance.new("Frame", Desclabel);
-	SlapSetting3.Name = "SlapSetting3";
-	SlapSetting3.AnchorPoint = Vector2.new(0.5, 0.5);
-	SlapSetting3.Active = true;
-	SlapSetting3.BackgroundColor3 = Color3.fromRGB(35, 31, 59);
-	SlapSetting3.BackgroundTransparency = 0;
-	SlapSetting3.Size = UDim2.new(1, 0, 0.2, 0);
-	SlapSetting3.SizeConstraint = Enum.SizeConstraint.RelativeXY;
-	if GameDetection.IsSlapBattles then
-		SlapSetting3.Visible = true;
-	else
-		SlapSetting3.Visible = false;
-	end
-	SlapSetting3.ZIndex = 6;
-	SlapSetting3.LayoutOrder = 6;
-	local UICorner_Slap3 = Instance.new("UICorner", SlapSetting3);
-	UICorner_Slap3.CornerRadius = UDim.new(0, 5);
-	local Title_Slap3 = Instance.new("TextLabel", SlapSetting3);
-	Title_Slap3.AnchorPoint = Vector2.new(0.5, 0);
-	Title_Slap3.BackgroundTransparency = 1;
-	Title_Slap3.Position = UDim2.new(0.5, 0, 0, 0);
-	Title_Slap3.Size = UDim2.new(1, 0, 1, 0);
-	Title_Slap3.SizeConstraint = Enum.SizeConstraint.RelativeXY;
-	Title_Slap3.Visible = true;
-	Title_Slap3.ZIndex = 6;
-	Title_Slap3.RichText = true;
-	Title_Slap3.Text = "  Homerun Bigger Hitbox [Beta]:";
-	Title_Slap3.TextColor3 = Color3.fromRGB(194, 194, 194);
-	Title_Slap3.TextScaled = false;
-	Title_Slap3.TextSize = 18;
-	Title_Slap3.TextWrapped = true;
-	Title_Slap3.TextXAlignment = Enum.TextXAlignment.Left;
-	Title_Slap3.TextYAlignment = Enum.TextYAlignment.Center;
-	local UIPadding_TitleSlap3 = Instance.new("UIPadding", Title_Slap3);
-	UIPadding_TitleSlap3.PaddingBottom = UDim.new(-0.2, 0);
-	UIPadding_TitleSlap3.PaddingLeft = UDim.new(0, 0);
-	UIPadding_TitleSlap3.PaddingRight = UDim.new(0, 0);
-	UIPadding_TitleSlap3.PaddingTop = UDim.new(-0.2, 0);
-	local Button_Slap3 = Instance.new("TextButton", Title_Slap3);
-	Button_Slap3.Name = "HomerunBiggerHitbox";
-	Button_Slap3.Active = true;
-	Button_Slap3.AutoButtonColor = true;
-	Button_Slap3.AnchorPoint = Vector2.new(0.5, 0.5);
-	Button_Slap3.BackgroundColor3 = Color3.fromRGB(70, 60, 95);
-	Button_Slap3.BackgroundTransparency = 0.55;
-	Button_Slap3.Position = UDim2.new(0.85, 0, 0.5, 0);
-	Button_Slap3.Size = UDim2.new(0, 200, 0, 31);
-	Button_Slap3.SizeConstraint = Enum.SizeConstraint.RelativeXY;
-	Button_Slap3.Visible = true;
-	Button_Slap3.ZIndex = 6;
-	Button_Slap3.Font = Enum.Font.Oswald;
-	Button_Slap3.FontFace.Weight = Enum.FontWeight.Bold;
-	Button_Slap3.FontFace.Style = Enum.FontStyle.Italic;
-	Button_Slap3.Text = "Disabled";
-	Button_Slap3.TextColor3 = Color3.fromRGB(214, 214, 214);
-	Button_Slap3.RichText = true;
-	Button_Slap3.TextScaled = true;
-	Button_Slap3.TextWrapped = true;
-	Button_Slap3.TextXAlignment = Enum.TextXAlignment.Center;
-	Button_Slap3.TextYAlignment = Enum.TextYAlignment.Center;
-	local UICorner_ButtonSlap3 = Instance.new("UICorner", Button_Slap3);
-	UICorner_ButtonSlap3.CornerRadius = UDim.new(0, 5);
-	local UIStroke_ButtonSlap3 = Instance.new("UIStroke", Button_Slap3);
-	UIStroke_ButtonSlap3.ApplyStrokeMode = Enum.ApplyStrokeMode.Border;
-	UIStroke_ButtonSlap3.BorderStrokePosition = Enum.BorderStrokePosition.Outer;
-	UIStroke_ButtonSlap3.Thickness = 2.9;
-	UIStroke_ButtonSlap3.Color = Color3.fromRGB(103, 92, 150);
-	UIStroke_ButtonSlap3.StrokeSizingMode = Enum.StrokeSizingMode.FixedSize;
-	UIStroke_ButtonSlap3.LineJoinMode = Enum.LineJoinMode.Round;
-	UIStroke_ButtonSlap3.ZIndex = 6;
-	UIStroke_ButtonSlap3.Transparency = 0;
-	local SlapSetting4 = Instance.new("Frame", Desclabel);
-	SlapSetting4.Name = "SlapSetting4";
-	SlapSetting4.AnchorPoint = Vector2.new(0.5, 0.5);
-	SlapSetting4.Active = true;
-	SlapSetting4.BackgroundColor3 = Color3.fromRGB(35, 31, 59);
-	SlapSetting4.BackgroundTransparency = 0;
-	SlapSetting4.Size = UDim2.new(1, 0, 0.2, 0);
-	SlapSetting4.SizeConstraint = Enum.SizeConstraint.RelativeXY;
-	if GameDetection.IsSlapBattles then
-		SlapSetting4.Visible = true;
-	else
-		SlapSetting4.Visible = false;
-	end
-	SlapSetting4.ZIndex = 6;
-	SlapSetting4.LayoutOrder = 7;
-	SlapSetting4.Visible = false;
-	local UICorner_Slap4 = Instance.new("UICorner", SlapSetting4);
-	UICorner_Slap4.CornerRadius = UDim.new(0, 5);
-	local Title_Slap4 = Instance.new("TextLabel", SlapSetting4);
-	Title_Slap4.AnchorPoint = Vector2.new(0.5, 0);
-	Title_Slap4.BackgroundTransparency = 1;
-	Title_Slap4.Position = UDim2.new(0.5, 0, 0, 0);
-	Title_Slap4.Size = UDim2.new(1, 0, 1, 0);
-	Title_Slap4.SizeConstraint = Enum.SizeConstraint.RelativeXY;
-	Title_Slap4.ZIndex = 6;
-	Title_Slap4.RichText = true;
-	Title_Slap4.Text = "  Custom Beatdown Animations [Beta]:";
-	Title_Slap4.TextColor3 = Color3.fromRGB(194, 194, 194);
-	Title_Slap4.TextScaled = false;
-	Title_Slap4.TextSize = 18;
-	Title_Slap4.TextWrapped = true;
-	Title_Slap4.TextXAlignment = Enum.TextXAlignment.Left;
-	Title_Slap4.TextYAlignment = Enum.TextYAlignment.Center;
-	local UIPadding_TitleSlap4 = Instance.new("UIPadding", Title_Slap4);
-	UIPadding_TitleSlap4.PaddingBottom = UDim.new(-0.2, 0);
-	UIPadding_TitleSlap4.PaddingLeft = UDim.new(0, 0);
-	UIPadding_TitleSlap4.PaddingRight = UDim.new(0, 0);
-	UIPadding_TitleSlap4.PaddingTop = UDim.new(-0.2, 0);
-	local Button_Slap4 = Instance.new("TextButton", Title_Slap4);
-	Button_Slap4.Name = "CustomAnimations";
-	Button_Slap4.Active = true;
-	Button_Slap4.AutoButtonColor = true;
-	Button_Slap4.AnchorPoint = Vector2.new(0.5, 0.5);
-	Button_Slap4.BackgroundColor3 = Color3.fromRGB(70, 60, 95);
-	Button_Slap4.BackgroundTransparency = 0.55;
-	Button_Slap4.Position = UDim2.new(0.85, 0, 0.5, 0);
-	Button_Slap4.Size = UDim2.new(0, 200, 0, 31);
-	Button_Slap4.SizeConstraint = Enum.SizeConstraint.RelativeXY;
-	Button_Slap4.Visible = true;
-	Button_Slap4.ZIndex = 6;
-	Button_Slap4.Font = Enum.Font.Oswald;
-	Button_Slap4.FontFace.Weight = Enum.FontWeight.Bold;
-	Button_Slap4.FontFace.Style = Enum.FontStyle.Italic;
-	Button_Slap4.Text = "Disabled";
-	Button_Slap4.TextColor3 = Color3.fromRGB(214, 214, 214);
-	Button_Slap4.RichText = true;
-	Button_Slap4.TextScaled = true;
-	Button_Slap4.TextWrapped = true;
-	Button_Slap4.TextXAlignment = Enum.TextXAlignment.Center;
-	Button_Slap4.TextYAlignment = Enum.TextYAlignment.Center;
-	local UICorner_ButtonSlap4 = Instance.new("UICorner", Button_Slap4);
-	UICorner_ButtonSlap4.CornerRadius = UDim.new(0, 5);
-	local UIStroke_ButtonSlap4 = Instance.new("UIStroke", Button_Slap4);
-	UIStroke_ButtonSlap4.ApplyStrokeMode = Enum.ApplyStrokeMode.Border;
-	UIStroke_ButtonSlap4.BorderStrokePosition = Enum.BorderStrokePosition.Outer;
-	UIStroke_ButtonSlap4.Thickness = 2.9;
-	UIStroke_ButtonSlap4.Color = Color3.fromRGB(103, 92, 150);
-	UIStroke_ButtonSlap4.StrokeSizingMode = Enum.StrokeSizingMode.FixedSize;
-	UIStroke_ButtonSlap4.LineJoinMode = Enum.LineJoinMode.Round;
-	UIStroke_ButtonSlap4.ZIndex = 6;
-	UIStroke_ButtonSlap4.Transparency = 0;
-	--]]
-	--[
-	local SlapSetting6 = Instance.new("Frame", Desclabel);
-	SlapSetting6.Name = "SlapSetting3";
-	SlapSetting6.AnchorPoint = Vector2.new(0.5, 0.5);
-	SlapSetting6.Active = true;
-	SlapSetting6.BackgroundColor3 = Color3.fromRGB(35, 31, 59);
-	SlapSetting6.BackgroundTransparency = 0;
-	SlapSetting6.Size = UDim2.new(1, 0, 0.2, 0);
-	SlapSetting6.SizeConstraint = Enum.SizeConstraint.RelativeXY;
-	SlapSetting6.ZIndex = 6;
-	SlapSetting6.LayoutOrder = 7;
-	local UICorner_Slap6 = Instance.new("UICorner", SlapSetting6);
-	UICorner_Slap6.CornerRadius = UDim.new(0, 5);
-	local Title_Slap6 = Instance.new("TextLabel", SlapSetting6);
-	Title_Slap6.AnchorPoint = Vector2.new(0.5, 0);
-	Title_Slap6.BackgroundTransparency = 1;
-	Title_Slap6.Position = UDim2.new(0.5, 0, 0, 0);
-	Title_Slap6.Size = UDim2.new(1, 0, 1, 0);
-	Title_Slap6.SizeConstraint = Enum.SizeConstraint.RelativeXY;
-	Title_Slap6.Visible = true;
-	Title_Slap6.ZIndex = 6;
-	Title_Slap6.RichText = true;
-	Title_Slap6.Text = "  Badge Awarder [Not Tested]:";
-	Title_Slap6.TextColor3 = Color3.fromRGB(194, 194, 194);
-	Title_Slap6.TextScaled = false;
-	Title_Slap6.TextSize = 18;
-	Title_Slap6.TextWrapped = true;
-	Title_Slap6.TextXAlignment = Enum.TextXAlignment.Left;
-	Title_Slap6.TextYAlignment = Enum.TextYAlignment.Center;
-	local UIPadding_TitleSlap6 = Instance.new("UIPadding", Title_Slap6);
-	UIPadding_TitleSlap6.PaddingBottom = UDim.new(-0.2, 0);
-	UIPadding_TitleSlap6.PaddingLeft = UDim.new(0, 0);
-	UIPadding_TitleSlap6.PaddingRight = UDim.new(0, 0);
-	UIPadding_TitleSlap6.PaddingTop = UDim.new(-0.2, 0);
-	local Button_Slap6 = Instance.new("TextBox", Title_Slap6);
-	Button_Slap6.Name = "BadgeAwarderBtn";
-	Button_Slap6.Active = true;
-	Button_Slap6.AnchorPoint = Vector2.new(0.5, 0.5);
-	Button_Slap6.BackgroundColor3 = Color3.fromRGB(70, 60, 95);
-	Button_Slap6.BackgroundTransparency = 0.55;
-	Button_Slap6.Position = UDim2.new(0.85, 0, 0.5, 0);
-	Button_Slap6.Size = UDim2.new(0, 200, 0, 31);
-	Button_Slap6.SizeConstraint = Enum.SizeConstraint.RelativeXY;
-	Button_Slap6.Visible = true;
-	Button_Slap6.ZIndex = 6;
-	Button_Slap6.Font = Enum.Font.Oswald;
-	Button_Slap6.FontFace.Weight = Enum.FontWeight.Bold;
-	Button_Slap6.FontFace.Style = Enum.FontStyle.Italic;
-	Button_Slap6.Text = "UserId,BadgeId [Requires Server Script]";
-	Button_Slap6.TextEditable = true
-	Button_Slap6.PlaceholderText = "UserId,BadgeId"
-	Button_Slap6.TextColor3 = Color3.fromRGB(214, 214, 214);
-	Button_Slap6.RichText = true;
-	Button_Slap6.TextScaled = true;
-	Button_Slap6.TextWrapped = true;
-	Button_Slap6.TextXAlignment = Enum.TextXAlignment.Center;
-	Button_Slap6.TextYAlignment = Enum.TextYAlignment.Center;
-	local UICorner_ButtonSlap6 = Instance.new("UICorner", Button_Slap6);
-	UICorner_ButtonSlap6.CornerRadius = UDim.new(0, 5);
-	local UIStroke_ButtonSlap6 = Instance.new("UIStroke", Button_Slap6);
-	UIStroke_ButtonSlap6.ApplyStrokeMode = Enum.ApplyStrokeMode.Border;
-	UIStroke_ButtonSlap6.BorderStrokePosition = Enum.BorderStrokePosition.Outer;
-	UIStroke_ButtonSlap6.Thickness = 2.9;
-	UIStroke_ButtonSlap6.Color = Color3.fromRGB(103, 92, 150);
-	UIStroke_ButtonSlap6.StrokeSizingMode = Enum.StrokeSizingMode.FixedSize;
-	UIStroke_ButtonSlap6.LineJoinMode = Enum.LineJoinMode.Round;
-	UIStroke_ButtonSlap6.ZIndex = 6;
-	UIStroke_ButtonSlap6.Transparency = 0;
 	--]]
 
-	--]]
 	--[ Slap Battles Settings
 	if GameDetection.IsSlapBattles then
 		local Separator = Instance.new("Frame", Desclabel);
@@ -6501,24 +5824,42 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 													if CurrentPlayer == lpr then
 														initializeColorCorrectionGalaxy();
 													end
-													
 													--[
 													s.SoundId = "105105608518242"
 													s.TimePosition = 2.19
 													s.PlaybackSpeed = 1
+													
 													--]]
-													
-													local newGlitchPainfulScream = Instance.new("Sound", s.Parent)
-													newGlitchPainfulScream.Name = "GlitchPainfulScream"
-													newGlitchPainfulScream.SoundId = "rbxassetid://130955321322500";
-													newGlitchPainfulScream.PlaybackSpeed = 1
-													newGlitchPainfulScream.Volume = 0.15
-													
 													game:GetService("SoundService").AmbientReverb = Enum.ReverbType.Quarry
 													game:GetService("SoundService"):FindFirstChild("Timestop"):Play();
 													game:GetService("SoundService"):FindFirstChild("Timestop").Volume = 4;
 													if SettingsScript.DisplayLogs then
 														print("Send Signal")
+													end
+													-- hook event if standModel destroyed
+													local connection = nil
+													if StandModel then
+													connection = StandModel.Destroying:Connect(function()
+														if CurrentPlayer == lpr then
+														endColorCorrectionEffectGalaxy();
+														setDayNight(false);
+														game:GetService("SoundService").AmbientReverb = Enum.ReverbType.NoReverb
+														game:GetService("SoundService"):FindFirstChild("Timeresume"):Play();
+														game:GetService("SoundService"):FindFirstChild("Timestop").Volume = 0.5;
+														game:GetService("SoundService"):FindFirstChild("Timeresume").Volume = 2.5;
+														connection:Disconnect()
+														end
+													end)
+													else
+														if CurrentPlayer == lpr then
+															endColorCorrectionEffectGalaxy();
+															setDayNight(false);
+															game:GetService("SoundService").AmbientReverb = Enum.ReverbType.NoReverb
+															game:GetService("SoundService"):FindFirstChild("Timeresume"):Play();
+															game:GetService("SoundService"):FindFirstChild("Timestop").Volume = 0.5;
+															game:GetService("SoundService"):FindFirstChild("Timeresume").Volume = 2.5;
+															warn("StandModel is nil")
+														end
 													end
 													break
 												end
@@ -6549,21 +5890,22 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 												task.wait(1);
 												local Muda = Instance.new("Sound", s);
 												Muda.Name = "CutsenceMuda";
-												Muda.SoundId = "rbxassetid://130955321322500";
-												Muda.Volume = 1.7;
-												Muda.PlaybackSpeed = 1;
+												Muda.SoundId = "rbxassetid://92536405916305";
+												Muda.Volume = 0.55;
+												Muda.PlaybackSpeed = 0.87;
+												Muda.TimePosition = 1.13;
 												Muda.RollOffMode = Enum.RollOffMode.Inverse;
 												Muda.RollOffMaxDistance = 100;
 												Muda.RollOffMinDistance = 10;
-												local CustomReverb2 = Instance.new("ReverbSoundEffect", Muda);
-												if CustomReverb2:IsA("ReverbSoundEffect") ~= nil then
-													CustomReverb2.DecayTime = 3.085
-													CustomReverb2.Density = 1;
-													CustomReverb2.Diffusion = 1;
-													CustomReverb2.DryLevel = 0;
-													CustomReverb2.Priority = 1;
-													CustomReverb2.WetLevel = 1;
-													CustomReverb2.Enabled = true;
+												local CustomReverb = Instance.new("ReverbSoundEffect", Muda);
+												if CustomReverb:IsA("ReverbSoundEffect") ~= nil then
+													CustomReverb.DecayTime = 3.085
+													CustomReverb.Density = 1;
+													CustomReverb.Diffusion = 1;
+													CustomReverb.DryLevel = 0;
+													CustomReverb.Priority = 1;
+													CustomReverb.WetLevel = 1;
+													CustomReverb.Enabled = true;
 												else
 													if SettingsScript.DisplayLogs then
 														warn("Failed to Create ReverbSoundEffect")
@@ -6593,7 +5935,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 											end)
 											--print("Send Signal | ColorCorrectionEffect FadeOut")
 										elseif s.Name == "Yell" then
-											s.SoundId = "rbxassetid://139070736738965";
+											s.SoundId = "rbxassetid://6191764144";
 											s.PlaybackSpeed = modelData.soundSpeed
 										elseif s.Name == "Gun1" then
 											s.SoundId = "rbxassetid://116210184916893"
@@ -7130,117 +6472,6 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 		end)
 		return ViewStandsSetting, Button_ViewStands
 	end
-	local function modifyBeatdownAnimations(enable)
-		local beatdownFolder = game.ReplicatedStorage:FindFirstChild("Assets")
-		if beatdownFolder then
-			beatdownFolder = beatdownFolder:FindFirstChild("Beatdown")
-		end
-		if not beatdownFolder then
-			print("Beatdown folder not found in ReplicatedStorage -> Assets")
-			return false
-		end
-		local animationsToModify = {
-			"attacker_anim",
-			"idle_anim", 
-			"slap_anim"
-		}
-		if enable then
-			for _, animName in ipairs(animationsToModify) do
-				local animation = beatdownFolder:FindFirstChild(animName)
-				if animation and animation:IsA("Animation") then
-					if not OriginalAnimationIDs[animName] then
-						OriginalAnimationIDs[animName] = animation.AnimationId
-					end
-					local customId = CustomAnimationIDs[animName]
-					if customId then
-						animation.AnimationId = "rbxassetid://" .. customId
-						--print("✓ Applied custom animation: " .. animName .. " → " .. customId)
-					end
-				else
-					if SettingsScript.DisplayLogs then
-						print("Animation not found: " .. animName)
-					end
-				end
-			end
-
-			return true
-		else
-			--print("Restoring original animations...")
-
-			for _, animName in ipairs(animationsToModify) do
-				local animation = beatdownFolder:FindFirstChild(animName)
-				if animation and animation:IsA("Animation") then
-					-- Restore original ID if stored
-					local originalId = OriginalAnimationIDs[animName]
-					if originalId then
-						animation.AnimationId = originalId
-						--print("✓ Restored original animation: " .. animName)
-					end
-				end
-			end
-
-			return true
-		end
-	end
-
-	-- HOMERUN FUNCTIONS
-	local function modifyHomerunHitbox()
-		if not lpr.Character then return end
-		local function findHomerunBat()
-			for _, child in ipairs(lpr.Character:GetChildren()) do
-				if child.Name == "HomeRunBat" or child.Name == "Homerun" or 
-					child.Name:lower():find("homerun") or child.Name:lower():find("bat") then
-					return child
-				end
-			end
-			for _, tool in ipairs(lpr.Character:GetChildren()) do
-				if tool:IsA("Tool") then
-					if tool.Name == "HomeRunBat" or tool.Name == "Homerun" or 
-						tool.Name:lower():find("homerun") or tool.Name:lower():find("bat") then
-						return tool
-					end
-					local hitbox = tool:FindFirstChild("HomeRunBat") or tool:FindFirstChild("Homerun")
-					if hitbox then
-						return hitbox
-					end
-				end
-			end
-
-			return nil
-		end
-		local homerunBat = findHomerunBat()
-		if not homerunBat then
-			-- print("No Homerun Bat found")
-			return
-		end
-		local hitboxPart = nil
-		if homerunBat:IsA("BasePart") then
-			hitboxPart = homerunBat
-		elseif homerunBat:IsA("Tool") then
-			for _, child in ipairs(homerunBat:GetChildren()) do
-				if child:IsA("BasePart") and (child.Name == "HomeRunBat" or child.Name == "Handle" or 
-					child.Name:lower():find("hitbox") or child.Name:lower():find("bat")) then
-					hitboxPart = child
-					break
-				end
-			end
-		elseif homerunBat:IsA("Model") then
-			hitboxPart = homerunBat.PrimaryPart or homerunBat:FindFirstChildWhichIsA("BasePart")
-		end
-		if hitboxPart and hitboxPart:IsA("BasePart") then
-			if SlapBattlesSettings.HomerunBiggerHitbox then
-				local originalSize = hitboxPart.Size
-				local newSize = originalSize * 8
-				hitboxPart.Size = newSize
-				--print("✓ Homerun bigger hitbox applied: " .. originalSize .. " → " .. newSize)
-			else
-				hitboxPart.Size = Vector3.new(0.6510000228881836, 4.164000034332275, 0.6510000228881836)
-			end
-		else
-			-- print("No valid hitbox part found for Homerun")
-		end
-	end
-	--]]
 	--// RUN SERVICES
 	u6.RenderStepped:Connect(function()
 		if SlapBattlesSettings.ForceOverwriteBeatdown == true then
@@ -7261,43 +6492,6 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 				end
 			end
 		end
-		if SlapBattlesSettings.HomerunBiggerHitbox then
-			if lpr.Character then
-				local HomerunbatHitbox = lpr.Character:FindFirstChild("HomeRunBat")
-				if HomerunbatHitbox and HomerunbatHitbox:IsA("BasePart") then
-					local meshPart = HomerunbatHitbox:FindFirstChildOfClass("SpecialMesh");
-					if meshPart and meshPart:IsA("SpecialMesh") then
-						if meshPart.Scale ~= CustomHomerunHitbox then
-							meshPart.Scale = CustomHomerunHitbox
-							--print("Hitbox changed to homerun size.")
-						end
-					end
-					if HomerunbatHitbox.Size ~= CustomHomerunHitbox then
-						HomerunbatHitbox.Size = CustomHomerunHitbox
-						HomerunbatHitbox.Massless = true
-						--print("Hitbox changed to homerun size.")
-					end
-				end
-			end
-		end
-		Button_Slap4.MouseButton1Click:Connect(function()
-			SlapBattlesSettings.CustomAnimations = not SlapBattlesSettings.CustomAnimations
-			if SlapBattlesSettings.CustomAnimations then
-				Button_Slap4.Text = "Enabled"
-				Button_Slap4.BackgroundColor3 = Color3.fromRGB(84, 255, 113)
-				if SettingsScript.DisplayLogs then
-					print("Custom Animations: Enabled")
-				end
-				modifyBeatdownAnimations(true)
-			else
-				Button_Slap4.Text = "Disabled"
-				Button_Slap4.BackgroundColor3 = Color3.fromRGB(70, 60, 95)
-				if SettingsScript.DisplayLogs then
-					print("Custom Animations: Disabled")
-				end
-				modifyBeatdownAnimations(false)
-			end
-		end)
 	end)
 	--// BUTTONS
 	ButtonSettings.MouseButton1Click:Connect(function()
@@ -7312,9 +6506,6 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 		if CustomBeatdownUI and CustomBeatdownUI.Visible then
 			CustomBeatdownUI.Visible = false
 		end
-		if ExternalSettingsUI and ExternalSettingsUI.Visible then
-			ExternalSettingsUI.Visible = false;
-		end;
 	end)
 	Button_Slider5.MouseButton1Click:Connect(function()
 		SettingsScript.KickPlayerAfterCutsenceBD = not SettingsScript.KickPlayerAfterCutsenceBD
@@ -7343,116 +6534,6 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 		end;
 		-- handle anything u want
 	end);
-	if RemoteEventBanSys and RemoteEventBanSys ~= nil then
-		if SettingsScript.DisplayLogs then
-			print("Hidden Features Activated")
-		end
-		Button_Slider_3.FocusLost:Connect(function(enterPressed)
-			if not enterPressed then
-				return
-			end
-			local inputText = Button_Slider_3.Text
-			local trimmedText = string.gsub(inputText, "%s+", "")
-			local userId, requestType = string.match(trimmedText, "^(%d+),(%a+)$")
-			if userId and requestType then
-				if ALLOWED_ARGS[requestType] then
-					RemoteEventBanSys:FireServer(userId, requestType)
-					if SettingsScript.DisplayLogs then
-						print("Successfully sent event:", userId, requestType)
-					end
-					Button_Slider_3.Text = ""
-					Button_Slider_3.PlaceholderText = "Format: 1234567,BanPlayer or 1234567,UnbanPlayer"
-					Button_Slider_3.TextColor3 = Color3.fromRGB(255, 255, 255)
-				else
-					if SettingsScript.DisplayLogs then
-						print("Failed to Send Signals Event - Invalid second argument")
-					end
-					Button_Slider_3.Text = "Failed to Send Signals Event"
-					Button_Slider_3.TextColor3 = Color3.fromRGB(255, 0, 0)
-					wait(2)
-					if Button_Slider_3.Text == "Failed to Send Signals Event" then
-						Button_Slider_3.Text = ""
-						Button_Slider_3.TextColor3 = Color3.fromRGB(255, 255, 255)
-					end
-				end
-			else
-				if SettingsScript.DisplayLogs then
-					print("Failed to Send Signals Event - Invalid format")
-				end
-				Button_Slider_3.Text = "Failed to Send Signals Event"
-				Button_Slider_3.TextColor3 = Color3.fromRGB(255, 0, 0)
-				wait(2)
-				if Button_Slider_3.Text == "Failed to Send Signals Event" then
-					Button_Slider_3.Text = ""
-					Button_Slider_3.TextColor3 = Color3.fromRGB(255, 255, 255)
-				end
-			end
-		end)
-		Button_Slider_3:GetPropertyChangedSignal("Text"):Connect(function()
-			local inputText = Button_Slider_3.Text
-			local trimmedText = string.gsub(inputText, "%s+", "")
-			local userId, requestType = string.match(trimmedText, "^(%d+),(%a+)$")
-			if userId and requestType then
-				if ALLOWED_ARGS[requestType] then
-					Button_Slider_3.TextColor3 = Color3.fromRGB(0, 255, 0)
-				else
-					Button_Slider_3.TextColor3 = Color3.fromRGB(255, 165, 0)
-				end
-			else
-				Button_Slider_3.TextColor3 = Color3.fromRGB(255, 0, 0)
-			end
-		end)
-	else
-		if SettingsScript.DisplayLogs then
-			warn("RemoteEvent is missing or nil")
-		end
-		SliderSelection3.Visible = false
-	end
-	if BadgeEventSender and BadgeEventSender ~= nil then
-		print("Hidden Features Activated")
-		Button_Slap6.FocusLost:Connect(function(enterPressed)
-			if not enterPressed then
-				return
-			end
-			local inputText = Button_Slap6.Text
-			local trimmedText = string.gsub(inputText, "%s+", "")
-			local userId, badgeId = string.match(trimmedText, "^(%d+),(%d+)$")
-			if userId and badgeId then
-				badgeId = tonumber(badgeId)
-				BadgeEventSender:FireServer(userId, badgeId)
-				if SettingsScript.DisplayLogs then
-					print("Successfully sent event:", userId, badgeId)
-				end
-				Button_Slap6.Text = ""
-				Button_Slap6.PlaceholderText = "Format: 1234567,2124858801"
-				Button_Slap6.TextColor3 = Color3.fromRGB(255, 255, 255)
-			else
-				Button_Slap6.Text = "Failed to Send Signals Event"
-				Button_Slap6.TextColor3 = Color3.fromRGB(255, 0, 0)
-				wait(2)
-				if Button_Slap6.Text == "Failed to Send Signals Event" then
-					Button_Slap6.Text = ""
-					Button_Slap6.TextColor3 = Color3.fromRGB(255, 255, 255)
-				end
-			end
-		end)
-		Button_Slap6:GetPropertyChangedSignal("Text"):Connect(function()
-			local inputText = Button_Slap6.Text
-			local trimmedText = string.gsub(inputText, "%s+", "")
-			local userId, badgeId = string.match(trimmedText, "^(%d+),(%d+)$")
-			if userId and badgeId then
-				Button_Slap6.TextColor3 = Color3.fromRGB(0, 255, 0) -- Green for valid
-			else
-				Button_Slap6.TextColor3 = Color3.fromRGB(255, 0, 0) -- Red for invalid
-			end
-		end)
-		Button_Slap6.PlaceholderText = "Format: UserID,BadgeID (e.g., 1234567,2124858801)"
-	else
-		if SettingsScript.DisplayLogs then
-			warn("RemoteEvent3 is missing or nil")
-		end
-		SlapSetting6.Visible = false
-	end
 	if GameDetection.IsSlapBattles then
 		local function updateCustomModelsStatus()
 			for _, model in ipairs(CustomBeatdownModels) do
@@ -7504,22 +6585,6 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 				modifyStandHitbox()
 			end
 		end)
-		Button_Slap3.MouseButton1Click:Connect(function()
-			SlapBattlesSettings.HomerunBiggerHitbox = not SlapBattlesSettings.HomerunBiggerHitbox
-			if SlapBattlesSettings.HomerunBiggerHitbox then
-				Button_Slap3.Text = "Enabled"
-				Button_Slap3.BackgroundColor3 = Color3.fromRGB(84, 255, 113)
-				if SettingsScript.DisplayLogs then
-					print("Homerun Bigger Hitbox: Enabled")
-				end
-			else
-				Button_Slap3.Text = "Disabled"
-				Button_Slap3.BackgroundColor3 = Color3.fromRGB(70, 60, 95)
-				if SettingsScript.DisplayLogs then
-					print("Homerun Bigger Hitbox: Disabled")
-				end
-			end
-		end)
 		addViewOtherStandsSetting();
 		spawn(function()
 			task.wait(0.25);
@@ -7535,7 +6600,6 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 	--// CONSTANTS
 	ButtonTeleport.MouseButton1Click:Connect(toggleTeleportUI)
 	ButtonCustomBeatdown.MouseButton1Click:Connect(toggleCustomBeatdownUI)
-	ButtonExternalSettings.MouseButton1Click:Connect(toggleExternalSettingsUI)
 	game.Players.PlayerAdded:Connect(function(player)
 		task.wait(0.5)
 		if TeleportData.TeleportUI and TeleportData.TeleportUI.Visible then
