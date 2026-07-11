@@ -8,13 +8,13 @@ ZolinModules.CurrentTime = nil
 ZolinModules.AppLaunchType = {
 	["Settings"] = "ZolinModules",
 	["WallpaperSys"] = "ZolinModules",
-	["TranslationUI"] = "loadstring",
+	["Library Stands"] = "loadstring",
 	["ZolinInstaller"] = "ZolinModules",
 	["MemoryDisplay"] = "ZolinModules"
 }
 
 ZolinModules.AppUrls = {
-	["TranslationUI"] = "https://raw.githubusercontent.com/mohammadbakon123x/Zolin-OS/refs/heads/main/TranslationApp.lua",
+	["Library Stands"] = "https://raw.githubusercontent.com/mohammadbakon123x/Zolin-OS/refs/heads/main/TranslationApp.lua",
 }
 local openBuiltInModules = {}
 local RunningApps = {}
@@ -5044,6 +5044,7 @@ function ZolinModules.SettingsApp()
 					{name = "UI Animations", type = "toggle", settingName = "AnimationUI", valueRef = animationUIValue},
 					{name = "Animation Speed", type = "animation_speed", settingName = "TransitionSpeed", valueRef = transitionSpeedValue, min = 0.25, max = 10},
 					{name = "What's New (Changelogs)", type = "action", key = "changelogs"},
+					{name = "Memory Display", type = "action", key = "memorydisplayApp"},
 					{name = "Power Menu", type = "action", key = "power"},
 				}
 			}
@@ -5285,7 +5286,12 @@ function ZolinModules.SettingsApp()
 							AppManager.LaunchApplication("Changelogs")
 						end)
 					end
-					
+					if item.key == "memorydisplayApp" then
+						actionBtn.MouseButton1Click:Connect(function()
+							AppManager.HandleExit()
+							AppManager.LaunchApplication("MemoryDisplay")
+						end)
+					end
 				elseif item.type == "input" then
 					local inputBox = Instance.new("TextBox")
 					inputBox.Size = UDim2.new(0.4, -10, 0.7, 0)
