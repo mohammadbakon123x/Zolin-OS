@@ -3366,7 +3366,6 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 	SlapSetting2.SizeConstraint = Enum.SizeConstraint.RelativeXY;
 	if GameDetection.IsSlapBattles then
 		SlapSetting2.Visible = true;
-		Button_Slider_3.Visible = true;
 	else
 		SlapSetting2.Visible = false;
 	end
