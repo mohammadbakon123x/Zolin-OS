@@ -1,5 +1,5 @@
 local v1 = {};
-v1.ver = "1.3.2" -- versionOS
+v1.ver = "1.3.3" -- versionOS
 
 -- ============================================
 -- HELPER FUNCTIONS
@@ -1690,7 +1690,7 @@ local function createChunk15()
 	local ReplicatedWindow = MainUI:FindFirstChild("ReplicatedWindow")
 
 	local TranslationApp = Instance.new("Frame")
-	TranslationApp.Name = "TranslationUI"
+	TranslationApp.Name = "Library Stands"
 	TranslationApp.AnchorPoint = Vector2.new(0.5, 0.5)
 	TranslationApp.BackgroundTransparency = 0
 	TranslationApp.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
@@ -1706,12 +1706,12 @@ local function createChunk15()
 
 	local Desc_TranslationApp = Instance.new("StringValue")
 	Desc_TranslationApp.Name = "Description"
-	Desc_TranslationApp.Value = "TranslationUI has been created for modifying Slap Battles's rule game by Sky Attacker !"
+	Desc_TranslationApp.Value = "Library Stands has been created for modifying Slap Battles's rule game by Sky Attacker !"
 	Desc_TranslationApp.Parent = Data_TranslationApp
 
 	local Version_TranslationApp = Instance.new("StringValue")
 	Version_TranslationApp.Name = "Version"
-	Version_TranslationApp.Value = "3.16"
+	Version_TranslationApp.Value = "3.21.8"
 	Version_TranslationApp.Parent = Data_TranslationApp
 
 	createUICorner(TranslationApp, "UICorner_Translation", UDim.new(0, 10))
@@ -1753,7 +1753,7 @@ local function createChunk15()
 	ImageLabel_PreviewAppInfoZL_Translation.Position = UDim2.new(0.9, 0, 0.5, 0)
 	ImageLabel_PreviewAppInfoZL_Translation.Size = UDim2.new(0, 39, 0, 39)
 	ImageLabel_PreviewAppInfoZL_Translation.ZIndex = PreviewAppInfoZL_Translation.ZIndex
-	ImageLabel_PreviewAppInfoZL_Translation.Image = "rbxassetid://13458988525"
+	ImageLabel_PreviewAppInfoZL_Translation.Image = "rbxassetid://114292033825135"
 	ImageLabel_PreviewAppInfoZL_Translation.ScaleType = Enum.ScaleType.Fit
 	ImageLabel_PreviewAppInfoZL_Translation.Parent = PreviewAppInfoZL_Translation
 
@@ -1895,16 +1895,10 @@ local function createChunk16()
 	ImageLabel_ButtonSettings.ImageColor3 = Color3.fromRGB(48, 48, 48)
 	ImageLabel_ButtonSettings.ScaleType = Enum.ScaleType.Fit
 	ImageLabel_ButtonSettings.Parent = ButtonSettings
-
-	--[[ CONNECTION EVENTS
-	ButtonSettings.MouseButton1Click:Connect(function()
-		__ScreenFrame.Visible = not __ScreenFrame.Visible
-	end)
-	--]]
 end
 
 -- ============================================
--- CHUNK 17: ZolinInstaller App | BETA (Updated)
+-- CHUNK 17: ZolinInstaller App
 -- ============================================
 local function createChunk17()
 	local ReplicatedWindow_Sys = MainUI:FindFirstChild("ReplicatedWindow")
