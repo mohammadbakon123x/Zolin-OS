@@ -1753,7 +1753,7 @@ local function createChunk15()
 	ImageLabel_PreviewAppInfoZL_Translation.Position = UDim2.new(0.9, 0, 0.5, 0)
 	ImageLabel_PreviewAppInfoZL_Translation.Size = UDim2.new(0, 39, 0, 39)
 	ImageLabel_PreviewAppInfoZL_Translation.ZIndex = PreviewAppInfoZL_Translation.ZIndex
-	ImageLabel_PreviewAppInfoZL_Translation.Image = "rbxassetid://114292033825135"
+	ImageLabel_PreviewAppInfoZL_Translation.Image = "rbxassetid://93494988440239"
 	ImageLabel_PreviewAppInfoZL_Translation.ScaleType = Enum.ScaleType.Fit
 	ImageLabel_PreviewAppInfoZL_Translation.Parent = PreviewAppInfoZL_Translation
 
