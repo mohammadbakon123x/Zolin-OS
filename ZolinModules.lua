@@ -9,7 +9,8 @@ ZolinModules.AppLaunchType = {
 	["Settings"] = "ZolinModules",
 	["WallpaperSys"] = "ZolinModules",
 	["TranslationUI"] = "loadstring",
-	["ZolinInstaller"] = "ZolinModules"
+	["ZolinInstaller"] = "ZolinModules",
+	["MemoryDisplay"] = "ZolinModules"
 }
 
 ZolinModules.AppUrls = {
@@ -1132,6 +1133,7 @@ function ZolinModules.AppManager(dependencies)
 				Settings = modules.SettingsApp,
 				WallpaperSys = modules.WallpaperSysApp,
 				ZolinInstaller = modules.ZolinInstaller,
+				MemoryDisplay = modules.MemoryDisplayApp,
 			}
 			local builtInModule = builtInModules[p1]
 			if builtInModule then
@@ -1552,10 +1554,6 @@ function ZolinModules.AppManager(dependencies)
 		if app then
 			local isSystem = AppManager.IsSystemApp(p3)
 			if isSystem and ActiveApp == p3 then
-				if ZolinModules.Mode == "Mobile" then
-				AnimationManager.AnimateWindow(p3, "Close", "Destroy")
-				end
-			elseif not isSystem and ActiveApp == p3 then
 				if ZolinModules.Mode == "Mobile" then
 				AnimationManager.AnimateWindow(p3, "Close", "Destroy")
 				end
@@ -6425,6 +6423,295 @@ function ZolinModules.ZolinInstaller()
 end
 
 -- ============================================
+-- MEMORY DISPLAY APP (System Monitor + Graph)
+-- ============================================
+function ZolinModules.MemoryDisplayApp()
+	local MemoryApp = {}
+	local TweenService = game:GetService("TweenService")
+	local RunService = game:GetService("RunService")
+	local Stats = game:GetService("Stats")
+
+	-- Graph settings
+	local MAX_POINTS = 60           -- Show last 60 seconds (1 per second)
+	local GRAPH_HEIGHT = 120        -- Pixels
+	local BAR_WIDTH = 6
+	local BAR_SPACING = 2
+	local history = {}              -- Stores percentage values (0-100)
+
+	-- Helper: get used/total memory in MB
+	local function getMemoryStats()
+		local mem = Stats:FindFirstChild("Memory")
+		if mem then
+			local used = mem:FindFirstChild("Used") and mem.Used.Value or 0
+			local total = mem:FindFirstChild("Total") and mem.Total.Value or 1000
+			return used / 1024 / 1024, total / 1024 / 1024
+		end
+		-- Fallback (simulate real usage for demo)
+		return math.random(200, 800), 1024
+	end
+
+	-- Helper: format uptime
+	local function getUptime()
+		return ZolinModules.CurrentUptime or "00:00:00"
+	end
+
+	function MemoryApp.Init(ui, launchArgs, appFolder)
+		local modules = ZolinModules.GetAll()
+		local AppManager = modules.AppManager
+
+		-- === Main container ===
+		local mainFrame = Instance.new("Frame")
+		mainFrame.Name = "MemoryDisplay"
+		mainFrame.Size = UDim2.new(1, 0, 1, 0)
+		mainFrame.BackgroundTransparency = 1
+		mainFrame.Parent = 	ui
+
+		-- === Title ===
+		local title = Instance.new("TextLabel")
+		title.Size = UDim2.new(1, 0, 0, 40)
+		title.Position = UDim2.new(0, 0, 0, 10)
+		title.Text = "System Memory"
+		title.TextColor3 = Color3.new(1,1,1)
+		title.Font = Enum.Font.GothamBold
+		title.TextSize = 24
+		title.BackgroundTransparency = 1
+		title.Parent = mainFrame
+
+		-- === Info labels ===
+		local usedLabel = Instance.new("TextLabel")
+		usedLabel.Size = UDim2.new(1, 0, 0, 30)
+		usedLabel.Position = UDim2.new(0, 0, 0, 55)
+		usedLabel.Text = "Used: 0 MB"
+		usedLabel.TextColor3 = Color3.fromRGB(200,200,200)
+		usedLabel.Font = Enum.Font.Gotham
+		usedLabel.TextSize = 18
+		usedLabel.BackgroundTransparency = 1
+		usedLabel.Parent = mainFrame
+
+		local totalLabel = Instance.new("TextLabel")
+		totalLabel.Size = UDim2.new(1, 0, 0, 30)
+		totalLabel.Position = UDim2.new(0, 0, 0, 85)
+		totalLabel.Text = "Total: 0 MB"
+		totalLabel.TextColor3 = Color3.fromRGB(200,200,200)
+		totalLabel.Font = Enum.Font.Gotham
+		totalLabel.TextSize = 18
+		totalLabel.BackgroundTransparency = 1
+		totalLabel.Parent = mainFrame
+
+		local percentLabel = Instance.new("TextLabel")
+		percentLabel.Size = UDim2.new(1, 0, 0, 40)
+		percentLabel.Position = UDim2.new(0, 0, 0, 125)
+		percentLabel.Text = "0%"
+		percentLabel.TextColor3 = Color3.new(1,1,1)
+		percentLabel.Font = Enum.Font.GothamBold
+		percentLabel.TextSize = 32
+		percentLabel.BackgroundTransparency = 1
+		percentLabel.Parent = mainFrame
+
+		-- === Progress bar ===
+		local barBg = Instance.new("Frame")
+		barBg.Size = UDim2.new(0.8, 0, 0, 20)
+		barBg.Position = UDim2.new(0.1, 0, 0, 175)
+		barBg.BackgroundColor3 = Color3.fromRGB(50,50,50)
+		barBg.BorderSizePixel = 0
+		barBg.Parent = mainFrame
+		local corner = Instance.new("UICorner")
+		corner.CornerRadius = UDim.new(0, 10)
+		corner.Parent = barBg
+
+		local fill = Instance.new("Frame")
+		fill.Size = UDim2.new(0, 0, 1, 0)
+		fill.BackgroundColor3 = Color3.fromRGB(50, 181, 172)
+		fill.BorderSizePixel = 0
+		fill.Parent = barBg
+		local fillCorner = Instance.new("UICorner")
+		fillCorner.CornerRadius = UDim.new(0, 10)
+		fillCorner.Parent = fill
+
+		-- === Uptime label ===
+		local uptimeLabel = Instance.new("TextLabel")
+		uptimeLabel.Size = UDim2.new(1, 0, 0, 25)
+		uptimeLabel.Position = UDim2.new(0, 0, 0, 210)
+		uptimeLabel.Text = "Uptime: " .. getUptime()
+		uptimeLabel.TextColor3 = Color3.fromRGB(150,150,150)
+		uptimeLabel.Font = Enum.Font.Gotham
+		uptimeLabel.TextSize = 14
+		uptimeLabel.BackgroundTransparency = 1
+		uptimeLabel.Parent = mainFrame
+
+		-- === Graph section ===
+		local graphTitle = Instance.new("TextLabel")
+		graphTitle.Size = UDim2.new(1, 0, 0, 25)
+		graphTitle.Position = UDim2.new(0, 0, 0, 245)
+		graphTitle.Text = "Memory Usage Over Time (last 60s)"
+		graphTitle.TextColor3 = Color3.fromRGB(180,180,180)
+		graphTitle.Font = Enum.Font.Gotham
+		graphTitle.TextSize = 14
+		graphTitle.BackgroundTransparency = 1
+		graphTitle.Parent = mainFrame
+
+		-- Graph container (background)
+		local graphContainer = Instance.new("Frame")
+		graphContainer.Size = UDim2.new(0.9, 0, 0, GRAPH_HEIGHT)
+		graphContainer.Position = UDim2.new(0.05, 0, 0, 275)
+		graphContainer.BackgroundColor3 = Color3.fromRGB(20,20,25)
+		graphContainer.BorderSizePixel = 1
+		graphContainer.BorderColor3 = Color3.fromRGB(60,60,70)
+		graphContainer.Parent = mainFrame
+		local graphCorner = Instance.new("UICorner")
+		graphCorner.CornerRadius = UDim.new(0, 6)
+		graphCorner.Parent = graphContainer
+
+		-- Create bars (we will reuse them)
+		local bars = {}
+		local totalWidth = graphContainer.Size.X.Scale * 0.9 -- leave padding
+
+		-- Pre-create bars
+		for i = 1, MAX_POINTS do
+			local bar = Instance.new("Frame")
+			bar.Size = UDim2.new(0, BAR_WIDTH, 0, 0)
+			bar.Position = UDim2.new(0, 0, 0, 0) -- will be set in update
+			bar.BackgroundColor3 = Color3.fromRGB(50, 181, 172)
+			bar.BorderSizePixel = 0
+			bar.Parent = graphContainer
+			table.insert(bars, bar)
+		end
+
+		-- === Close button ===
+		local closeBtn = Instance.new("TextButton")
+		closeBtn.Size = UDim2.new(0, 100, 0, 40)
+		closeBtn.Position = UDim2.new(0.5, -50, 0, 420) -- adjust for graph
+		closeBtn.BackgroundColor3 = Color3.fromRGB(60,60,70)
+		closeBtn.Text = "Close"
+		closeBtn.TextColor3 = Color3.new(1,1,1)
+		closeBtn.Font = Enum.Font.Gotham
+		closeBtn.TextSize = 16
+		closeBtn.Parent = mainFrame
+		local btnCorner = Instance.new("UICorner")
+		btnCorner.CornerRadius = UDim.new(0, 8)
+		btnCorner.Parent = closeBtn
+
+		closeBtn.MouseButton1Click:Connect(function()
+			AppManager.CloseApp("MemoryDisplay")
+		end)
+
+		-- === Update loop ===
+		local updateThread = nil
+		local function updateStats()
+			local usedMB, totalMB = getMemoryStats()
+			local percent = (usedMB / totalMB) * 100
+			percent = math.clamp(percent, 0, 100)
+
+			-- Update labels
+			usedLabel.Text = string.format("Used: %.0f MB", usedMB)
+			totalLabel.Text = string.format("Total: %.0f MB", totalMB)
+			percentLabel.Text = string.format("%.0f%%", percent)
+
+			-- Update progress bar
+			local targetWidth = math.clamp(percent / 100, 0, 1)
+			local tween = TweenService:Create(fill, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+				Size = UDim2.new(targetWidth, 0, 1, 0)
+			})
+			tween:Play()
+
+			-- Color by usage
+			if percent > 80 then
+				fill.BackgroundColor3 = Color3.fromRGB(255, 80, 80)
+			elseif percent > 60 then
+				fill.BackgroundColor3 = Color3.fromRGB(255, 200, 50)
+			else
+				fill.BackgroundColor3 = Color3.fromRGB(50, 181, 172)
+			end
+
+			-- Uptime
+			uptimeLabel.Text = "Uptime: " .. getUptime()
+
+			-- === Graph update ===
+			-- Add new point
+			table.insert(history, percent)
+			if #history > MAX_POINTS then
+				table.remove(history, 1)
+			end
+
+			-- Redraw bars
+			local count = #history
+			if count == 0 then return end
+
+			-- Get container size (absolute)
+			local containerAbsSize = graphContainer.AbsoluteSize
+			local availWidth = containerAbsSize.X - 10 -- 5px padding each side
+			local availHeight = containerAbsSize.Y - 6
+
+			local barWidth = BAR_WIDTH
+			local spacing = BAR_SPACING
+			local totalBarWidth = (barWidth + spacing) * count - spacing
+			local startX = 5 -- left padding
+
+			-- If bars don't fit, reduce width proportionally
+			if totalBarWidth > availWidth then
+				local scale = availWidth / totalBarWidth
+				barWidth = math.max(2, barWidth * scale)
+				spacing = math.max(1, spacing * scale)
+				totalBarWidth = (barWidth + spacing) * count - spacing
+				startX = 5
+			end
+
+			for i = 1, count do
+				local bar = bars[i]
+				local val = history[i] or 0
+				local height = (val / 100) * availHeight
+				height = math.max(1, height)
+
+				local x = startX + (i - 1) * (barWidth + spacing)
+				local y = availHeight - height
+
+				bar.Size = UDim2.new(0, barWidth, 0, height)
+				bar.Position = UDim2.new(0, x, 0, y)
+
+				-- Color based on value (gradient)
+				local r = 50 + (val / 100) * 205
+				local g = 181 - (val / 100) * 150
+				local b = 172 - (val / 100) * 150
+				bar.BackgroundColor3 = Color3.fromRGB(
+					math.clamp(r, 50, 255),
+					math.clamp(g, 30, 181),
+					math.clamp(b, 30, 172)
+				)
+				bar.Visible = true
+			end
+
+			-- Hide unused bars
+			for i = count + 1, #bars do
+				bars[i].Visible = false
+			end
+		end
+
+		-- Initial update
+		updateStats()
+
+		-- Start periodic updates
+		updateThread = RunService.Heartbeat:Connect(function()
+			task.wait(1)
+			updateStats()
+		end)
+
+		-- === Cleanup ===
+		local function cleanup()
+			if updateThread then
+				updateThread:Disconnect()
+				updateThread = nil
+			end
+		end
+
+		appFolder.Destroying:Connect(cleanup)
+
+		ui.Visible = true
+	end
+
+	return MemoryApp
+end
+
+-- ============================================
 -- EXPORT ALL MODULES
 -- ============================================
 function ZolinModules.GetAll()
@@ -6441,6 +6728,7 @@ function ZolinModules.GetAll()
 		SettingsApp = ZolinModules.SettingsApp(),          -- Add this
 		WallpaperSysApp = ZolinModules.WallpaperSysApp(),  -- Add this
 		ZolinInstaller = ZolinModules.ZolinInstaller(),
+		MemoryDisplayApp = ZolinModules.MemoryDisplayApp(),
 	}
 	local deps = {
 		AnimationManager = modules.AnimationManager,
@@ -6472,6 +6760,7 @@ function ZolinModules.GetAll_Desktop()
 		TaskbarManager = ZolinModules.TaskbarManager(),
 		StartMenuManager = ZolinModules.StartMenuManager(),
 		ContextMenuManager = ZolinModules.ContextMenuManager(),
+		MemoryDisplayApp = ZolinModules.MemoryDisplayApp(),
 	}
 	local deps = {
 		AnimationManager = modules.AnimationManager,
