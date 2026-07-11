@@ -6612,7 +6612,22 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 			updatePlayerList2()
 		end
 	end)
-
+	
+	-- AUTO CLEANUP ON DESTROY APP
+	local appConnection = nil
+	appConnection = TranslationUI.Destroying:Connect(function()
+		if appConnection then
+			stopMonitoringOtherStands();
+			SettingsScript.KickPlayerAfterCutsenceBD = false
+			SlapBattlesSettings.ForceOverwriteBeatdown = false
+			SlapBattlesSettings.BiggerHitbox = false
+			ViewOtherCustomStands.Enabled = false
+			SelectedBeatdownModel = "uncle_beatdown" -- reset to default
+			print("Bye Bye")
+			appConnection:Disconnect()
+			appConnection = nil
+		end
+	end)
 
 	--// INITIALIZE
 	startAutoUpdate()
