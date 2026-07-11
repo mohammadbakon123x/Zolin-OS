@@ -5892,7 +5892,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 												local Muda = Instance.new("Sound", s);
 												Muda.Name = "CutsenceMuda";
 												Muda.SoundId = "rbxassetid://92536405916305";
-												Muda.Volume = 0.55;
+												Muda.Volume = 0.8;
 												Muda.PlaybackSpeed = 0.87;
 												Muda.TimePosition = 1.13;
 												Muda.RollOffMode = Enum.RollOffMode.Inverse;
