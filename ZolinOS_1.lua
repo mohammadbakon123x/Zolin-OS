@@ -1,5 +1,5 @@
 if game:GetService("RunService"):IsStudio() then warn("ZolinOS is not supported in Studio.") return end
-local ZolinOS = game.Players.LocalPlayer.PlayerGui:WaitForChild("ZolinOS");
+local ZolinOS = game.Players.LocalPlayer.PlayerGui:FindFirstChild("ZolinOS");
 if ZolinOS then
 	warn("ZolinOS is already loaded. | version: "..ZolinOS.DeviceTree.ZolinVersion.Value);
 	return
