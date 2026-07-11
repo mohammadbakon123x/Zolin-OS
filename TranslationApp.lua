@@ -1945,8 +1945,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 					if GlovePart then
 						print("Found Glove, replacing with Sword...")
 						GlovePart:Destroy();
-						if not rightArm then return end
-						if rightArm.Parent:FindFirstChild("Sword") then print("Sword already exists.") return false end
+						if rightArm:FindFirstChild("Sword") then print("Sword already exists.") return end
 						local Sword = Instance.new("MeshPart");
 						Sword.Name = "Sword";
 						Sword.Size = Vector3.new(0.819, 7.285, 0.247);
@@ -1957,6 +1956,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 						Sword.Anchored = false;
 						Sword.MeshId = "rbxassetid://13696156138";
 						Sword.Reflectance = 1;
+						Sword.Parent = rightArm;
 
 						local Weld = Instance.new("Weld");
 						Weld.Part0 = Sword;
@@ -2158,7 +2158,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 						end
 						if part.Name == "Torso" or part.Name:find("Leg") or part.Name:find("Arm") then
 							for _, child in ipairs(part:GetChildren()) do
-								if child:IsA("SpecialMesh") then
+								if child:IsA("SpecialMesh") and child.Name ~= "Sword" then
 									table.insert(meshesToRemove, child)
 								end
 							end
