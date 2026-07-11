@@ -265,7 +265,11 @@ function __MemoryDisplayPackage.Install()
 	end
 
 	local function getUptime()
-		return ZolinModules.CurrentUptime or "00:00:00"
+		local Runtime = __Zolin:FindFirstChild("Runtime");
+		if not Runtime then return end
+		local Uptime = Runtime:FindFirstChild("CurrentUptime");
+		if not Uptime then return end
+		return Uptime.Value;
 	end
 
 	local updateThread = nil
@@ -364,6 +368,8 @@ function __MemoryDisplayPackage.Install()
 	-- ============================================================
 	-- CLOSE BUTTON LOGIC
 	-- ============================================================
+	
+	--[[ not handled by ZolinModules
 	closeBtn.MouseButton1Click:Connect(function()
 		-- Close the app via ZolinModules (if available)
 		local modules = ZolinModules.GetAll()
@@ -378,6 +384,7 @@ function __MemoryDisplayPackage.Install()
 			end
 		end
 	end)
+	--]]
 
 	-- ============================================================
 	-- CLEANUP ON DESTROY
