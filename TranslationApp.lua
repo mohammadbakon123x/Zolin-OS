@@ -5,7 +5,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 	local l__TweenService__5 = game:GetService("TweenService");
 	local UIS = game:GetService("UserInputService");
 	local u6 = game:GetService("RunService")
-	local BuildVersion = "3.21.8"
+	local BuildVersion = "3.21.9"
 	local versionLabel = "v"..BuildVersion;
 	local SettingsScript = {
 		DisplayLogs = true,
@@ -3002,39 +3002,223 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 		TeleportData.PlayerCountLabel = PlayerCountLabel
 	end
 	local function teleportToPlayerInstant(targetPlayer)
-		local character = lpr.Character and Character;
+		-- Validate lpr
+		if not lpr then
+			if SettingsScript.DisplayLogs then
+				warn("lpr is nil!")
+			end
+			return false
+		end
+
+		local character = lpr.Character
 		local targetCharacter = targetPlayer.Character
+
 		if not character or not targetCharacter then
 			if SettingsScript.DisplayLogs then
 				warn("Character not found!")
 			end
 			return false
 		end
+
 		local humanoidRootPart = character:FindFirstChild("HumanoidRootPart")
 		local targetRootPart = targetCharacter:FindFirstChild("HumanoidRootPart")
-		if not humanoidRootPart or not targetRootPart then
+		local humanoid = character:FindFirstChildOfClass("Humanoid")
+
+		if not humanoidRootPart or not targetRootPart or not humanoid then
 			if SettingsScript.DisplayLogs then
-				warn("HumanoidRootPart not found!")
+				warn("HumanoidRootPart or Humanoid not found!")
 			end
 			return false
 		end
+
+		-- ============================================================
+		-- SAFE POSITION CALCULATION WITH RAYCAST
+		-- ============================================================
+		local function findSafePosition(targetPosition, lookVector)
+			local RaycastParams = RaycastParams.new()
+			RaycastParams.FilterDescendantsInstances = {character, targetCharacter}
+			RaycastParams.FilterType = Enum.RaycastFilterType.Exclude
+
+			-- Check distance from target position
+			local searchRadius = 15 -- How far to search for ground
+			local groundCheckDistance = 50 -- How far down to check for ground
+
+			-- 1. Check if there's ground directly below the target position
+			local origin = targetPosition + Vector3.new(0, groundCheckDistance, 0)
+			local direction = Vector3.new(0, -groundCheckDistance * 2, 0)
+
+			local raycastResult = workspace:Raycast(origin, direction, RaycastParams)
+
+			local safePosition = nil
+			local groundFound = false
+
+			if raycastResult then
+				-- Ground found! Position is safe
+				local groundPos = raycastResult.Position
+				local distanceToGround = targetPosition.Y - groundPos.Y
+
+				-- Check if target is at a reasonable height (not too high, not too low)
+				if distanceToGround > 0 and distanceToGround < 50 then
+					safePosition = targetPosition
+					groundFound = true
+				else
+					-- Target is floating or underground, try to find ground nearby
+					groundFound = false
+				end
+			end
+
+			-- 2. If no ground found directly, search in a radius
+			if not groundFound then
+				for angle = 0, 360, 30 do
+					local rad = math.rad(angle)
+					local offsetX = math.cos(rad) * searchRadius
+					local offsetZ = math.sin(rad) * searchRadius
+
+					local checkPos = targetPosition + Vector3.new(offsetX, 0, offsetZ)
+					origin = checkPos + Vector3.new(0, groundCheckDistance, 0)
+					direction = Vector3.new(0, -groundCheckDistance * 2, 0)
+
+					raycastResult = workspace:Raycast(origin, direction, RaycastParams)
+
+					if raycastResult then
+						local groundPos = raycastResult.Position
+						local distanceToGround = checkPos.Y - groundPos.Y
+
+						-- Found valid ground within reasonable height
+						if distanceToGround > 0 and distanceToGround < 15 then
+							safePosition = checkPos
+							groundFound = true
+							break
+						end
+					end
+				end
+			end
+
+			-- 3. If still no ground found, try falling back to target position with a hardcoded ground check
+			if not groundFound then
+				-- Try to find the nearest part below the target
+				local origin = targetPosition + Vector3.new(0, 100, 0)
+				local direction = Vector3.new(0, -200, 0)
+				raycastResult = workspace:Raycast(origin, direction, RaycastParams)
+
+				if raycastResult then
+					local groundPos = raycastResult.Position
+					local distanceToGround = targetPosition.Y - groundPos.Y
+
+					if distanceToGround > 0 and distanceToGround < 100 then
+						safePosition = Vector3.new(targetPosition.X, groundPos.Y + 3, targetPosition.Z)
+						groundFound = true
+					end
+				end
+			end
+
+			-- 4. Last resort: use target position with a small offset and hope for the best
+			if not groundFound then
+				warn("No safe ground found! Using fallback position.")
+				safePosition = targetPosition + Vector3.new(0, 5, 0)
+			end
+
+			return safePosition
+		end
+
+		-- Get target look vector
 		local lookVector = targetRootPart.CFrame.LookVector
-		local teleportPosition = targetRootPart.Position + lookVector  + Vector3.new(0, 1, 0)
-		humanoidRootPart.CFrame = CFrame.new(teleportPosition, teleportPosition + lookVector)
-		local teleportEffect = character:FindFirstChild("TeleportSound") or Instance.new("Sound", character);
-		teleportEffect.Name = "TeleportSound";
-		teleportEffect.SoundId = "rbxassetid://98917176503098";
-		teleportEffect.Volume = 0.3;
-		teleportEffect:Play();
-		if teleportEffect:IsA("Sound") then
-		teleportEffect.Ended:Connect(function()
+
+		-- Calculate base teleport position (in front of target)
+		local basePosition = targetRootPart.Position + lookVector + Vector3.new(0, 1, 0)
+
+		-- Find safe position
+		local safePosition = findSafePosition(basePosition, lookVector)
+
+		if not safePosition then
+			if SettingsScript.DisplayLogs then
+				warn("Could not find safe teleport position!")
+			end
+			return false
+		end
+
+		-- ============================================================
+		-- VISUAL EFFECTS BEFORE TELEPORT
+		-- ============================================================
+
+		-- Create a visual indicator at the destination (optional)
+		local teleportMarker = Instance.new("Part")
+		teleportMarker.Anchored = true
+		teleportMarker.CanCollide = false
+		teleportMarker.Size = Vector3.new(3, 0.5, 3)
+		teleportMarker.BrickColor = BrickColor.new("Bright violet")
+		teleportMarker.Material = Enum.Material.Neon
+		teleportMarker.Transparency = 0.5
+		teleportMarker.Position = safePosition
+		teleportMarker.Parent = workspace
+
+		-- Fade in the marker
+		local TweenService = game:GetService("TweenService")
+		TweenService:Create(teleportMarker, TweenInfo.new(0.3), {Transparency = 0}):Play()
+
+		-- ============================================================
+		-- PERFORM TELEPORT
+		-- ============================================================
+		
+		-- Teleport
+		humanoidRootPart.CFrame = CFrame.new(safePosition, safePosition + lookVector)
+
+		-- Force character to stand
+		humanoid:ChangeState(Enum.HumanoidStateType.Landed)
+
+		-- ============================================================
+		-- TELEPORT EFFECTS
+		-- ============================================================
+
+		-- Play teleport sound
+		local teleportEffect = character:FindFirstChild("TeleportSound")
+		if not teleportEffect then
+			teleportEffect = Instance.new("Sound")
+			teleportEffect.Name = "TeleportSound"
+			teleportEffect.Parent = character
+		end
+
+		teleportEffect.SoundId = "rbxassetid://98917176503098"
+		teleportEffect.Volume = 0.3
+		teleportEffect:Play()
+
+		-- Remove previous connection
+		if teleportEffect._endedConnection then
+			teleportEffect._endedConnection:Disconnect()
+			teleportEffect._endedConnection = nil
+		end
+
+		teleportEffect._endedConnection = teleportEffect.Ended:Connect(function()
 			teleportEffect:Destroy()
+			teleportEffect._endedConnection = nil
 		end)
+
+		game.Debris:AddItem(teleportEffect, 3)
+
+		-- ============================================================
+		-- SAFETY CHECK AFTER TELEPORT (Anti-void fall prevention)
+		-- ============================================================
+
+		-- Check if player is falling into void after teleport
+		task.wait(0.5)
+		
+		if humanoidRootPart.Position.Y < 0 then
+			-- Falling into void! Try to find a safe position again
+			local emergencyCheck = findSafePosition(targetRootPart.Position, lookVector)
+			if emergencyCheck and emergencyCheck.Y > 0 then
+				humanoidRootPart.CFrame = CFrame.new(emergencyCheck, emergencyCheck + lookVector)
+				humanoid:ChangeState(Enum.HumanoidStateType.Landed)
+
+				if SettingsScript.DisplayLogs then
+					warn("Emergency teleport to safe position!")
+				end
+			end
 		end
-		game.Debris:AddItem(teleportEffect, 2);
+
 		if SettingsScript.DisplayLogs then
-			print("Instantly teleported to " .. targetPlayer.Name)
+			print("Safely teleported to " .. targetPlayer.Name .. " at position: " .. tostring(safePosition))
 		end
+
 		return true
 	end
 	local function createPlayerButton2(player)
