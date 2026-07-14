@@ -5,7 +5,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 	local l__TweenService__5 = game:GetService("TweenService");
 	local UIS = game:GetService("UserInputService");
 	local u6 = game:GetService("RunService")
-	local BuildVersion = "3.21.9"
+	local BuildVersion = "3.21.8"
 	local versionLabel = "v"..BuildVersion;
 	local SettingsScript = {
 		DisplayLogs = true,
@@ -1939,182 +1939,174 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 					end
 				end
 				local function replaceGloveWithSword(standModel)
-					local rightArm = standModel:FindFirstChild("Right Arm");
+					local rightArm = standModel:FindFirstChild("Right Arm")
 					if not rightArm then return end
-					local GlovePart = rightArm:FindFirstChild("Glove");
+
+					local GlovePart = rightArm:FindFirstChild("Glove")
 					if GlovePart then
 						print("Found Glove, replacing with Sword...")
-						GlovePart:Destroy();
-						if rightArm:FindFirstChild("Sword") then print("Sword already exists.") return end
-						local Sword = Instance.new("MeshPart");
-						Sword.Name = "Sword";
-						Sword.Size = Vector3.new(0.819, 7.285, 0.247);
-						Sword.Color = Color3.fromRGB(255, 84, 246);
-						Sword.Material = Enum.Material.Neon;
-						Sword.Massless = true;
-						Sword.CanCollide = false;
-						Sword.Anchored = false;
-						Sword.MeshId = "rbxassetid://13696156138";
-						Sword.Reflectance = 1;
-						Sword.Parent = rightArm;
 
-						local Weld = Instance.new("Weld");
-						Weld.Part0 = Sword;
-						Weld.Part1 = rightArm;
+						-- Check if Sword already exists BEFORE destroying Glove
+						if rightArm:FindFirstChild("Sword") then
+							print("Sword already exists.")
+							return
+						end
 
-						Weld.C0 = CFrame.new(-1, -3, 0) * CFrame.Angles(math.rad(90), math.rad(-90), 0);
-						Weld.C1 = CFrame.new(0, 0, 0) * CFrame.Angles(math.rad(0), math.rad(0), 0);
-						Weld.Parent = Sword;
+						GlovePart:Destroy()
 
+						local Sword = Instance.new("MeshPart")
+						Sword.Name = "Sword"
+						Sword.Size = Vector3.new(0.819, 7.285, 0.247)
+						Sword.Color = Color3.fromRGB(255, 84, 246)
+						Sword.Material = Enum.Material.Neon
+						Sword.Massless = true
+						Sword.CanCollide = false
+						Sword.Anchored = false
+						Sword.MeshId = "rbxassetid://13696156138"
+						Sword.Reflectance = 1
+						Sword.Parent = rightArm
+
+						-- Weld
+						local Weld = Instance.new("Weld")
+						Weld.Part0 = Sword
+						Weld.Part1 = rightArm
+						Weld.C0 = CFrame.new(-1, -3, 0) * CFrame.Angles(math.rad(90), math.rad(-90), 0)
+						Weld.C1 = CFrame.new(0, 0, 0) * CFrame.Angles(math.rad(0), math.rad(0), 0)
+						Weld.Parent = Sword
+
+						-- ============================================================
+						-- PARTICLE 1: ItemHighlight
+						-- ============================================================
 						local ItemHighlight = Instance.new("ParticleEmitter")
 						ItemHighlight.Name = "ItemHighlight"
-
-						-- Create a ColorSequence with multiple keypoints
-						ItemHighlight.Brightness = 1;
+						ItemHighlight.Brightness = 1
 						ItemHighlight.Color = ColorSequence.new({
-							ColorSequenceKeypoint.new(0, Color3.fromRGB(184, 6, 255)),     -- Red at start
-							ColorSequenceKeypoint.new(0.734, Color3.fromRGB(184, 6, 255)),   -- Green at middle
-							ColorSequenceKeypoint.new(1, Color3.fromRGB(0, 221, 255))      -- Blue at end
+							ColorSequenceKeypoint.new(0, Color3.fromRGB(184, 6, 255)),
+							ColorSequenceKeypoint.new(0.734, Color3.fromRGB(184, 6, 255)),
+							ColorSequenceKeypoint.new(1, Color3.fromRGB(0, 221, 255))
 						})
 						ItemHighlight.LightEmission = 1
 						ItemHighlight.LightInfluence = 5
-						ItemHighlight.Orientation = Enum.ParticleOrientation.FacingCamera;
-
+						ItemHighlight.Orientation = Enum.ParticleOrientation.FacingCamera
 						ItemHighlight.Size = NumberSequence.new({
-							NumberSequenceKeypoint.new(0, 3.69, 1.43),  -- Time 0: Value 3.69, Envelope 1.43
-							NumberSequenceKeypoint.new(1, 1.54, 0)      -- Time 1: Value 1.54, Envelope 0
+							NumberSequenceKeypoint.new(0, 3.69, 1.43),
+							NumberSequenceKeypoint.new(1, 1.54, 0)
 						})
-						ItemHighlight.Texture = "http://www.roblox.com/asset/?id=1847258023";
-
+						ItemHighlight.Texture = "http://www.roblox.com/asset/?id=1847258023"
 						ItemHighlight.Transparency = NumberSequence.new({
-							NumberSequenceKeypoint.new(0, 1, 0),  -- Time 0: Value 0
-							NumberSequenceKeypoint.new(0.502, 0.929, 0),      -- Time 1: Value 1
-							NumberSequenceKeypoint.new(1, 1, 0),  -- Time 0: Value 0
+							NumberSequenceKeypoint.new(0, 1, 0),
+							NumberSequenceKeypoint.new(0.502, 0.929, 0),
+							NumberSequenceKeypoint.new(1, 1, 0),
 						})
-						ItemHighlight.ZOffset = 1;
+						ItemHighlight.ZOffset = 1
+						ItemHighlight.EmissionDirection = Enum.NormalId.Top
+						ItemHighlight.Enabled = true
+						ItemHighlight.Lifetime = 1
+						ItemHighlight.Rate = 100
+						ItemHighlight.Rotation = 0
+						ItemHighlight.RotSpeed = 0
+						ItemHighlight.Speed = 0.01
+						ItemHighlight.SpreadAngle = Vector2.new(0, 0)
+						ItemHighlight.Shape = Enum.ParticleEmitterShape.Box
+						ItemHighlight.ShapeInOut = Enum.ParticleEmitterShapeInOut.Outward
+						ItemHighlight.ShapeStyle = Enum.ParticleEmitterShapeStyle.Volume  -- ✅ Fixed
+						ItemHighlight.Acceleration = Vector3.new(0, 0, 0)
+						ItemHighlight.Drag = 0
+						ItemHighlight.LockedToPart = true
+						ItemHighlight.TimeScale = 1
+						ItemHighlight.VelocityInheritance = 0
+						ItemHighlight.WindAffectsDrag = false
+						ItemHighlight.Parent = Sword
 
-						ItemHighlight.EmissionDirection = Enum.NormalId.Top;
-						ItemHighlight.Enabled = true;
-						ItemHighlight.Lifetime = 1;
-						ItemHighlight.Rate = 100;
-						ItemHighlight.Rotation = 0;
-						ItemHighlight.RotSpeed = 0;
-						ItemHighlight.Speed = 0.01;
-						ItemHighlight.SpreadAngle = Vector2.new(0, 0);
-
-						ItemHighlight.Shape = Enum.ParticleEmitterShape.Box;
-						ItemHighlight.ShapeInOut = Enum.ParticleEmitterShapeInOut.Outward;
-						ItemHighlight.Shape = Enum.ParticleEmitterShapeStyle.Volume;
-
-						ItemHighlight.Acceleration = Vector3.new(0, 0, 0);
-						ItemHighlight.Drag = 0;
-						ItemHighlight.LockedToPart = true;
-						ItemHighlight.TimeScale = 1;
-						ItemHighlight.VelocityInheritance = 0;
-						ItemHighlight.WindAffectsDrag = false;
-						ItemHighlight.Parent = Sword;
-
-						-- TEXTURE PARTICLE 2
-
+						-- ============================================================
+						-- PARTICLE 2: SideSmoke
+						-- ============================================================
 						local SideSmoke = Instance.new("ParticleEmitter")
 						SideSmoke.Name = "SideSmoke"
-
-						-- Create a ColorSequence one
 						SideSmoke.Brightness = 5
-						SideSmoke.Color = Color3.fromRGB(144, 87, 255)
+						SideSmoke.Color = ColorSequence.new(Color3.fromRGB(144, 87, 255))  -- ✅ Fixed
 						SideSmoke.LightEmission = 1
 						SideSmoke.LightInfluence = 0
-						SideSmoke.Orientation = Enum.ParticleOrientation.FacingCamera;
-
+						SideSmoke.Orientation = Enum.ParticleOrientation.FacingCamera
 						SideSmoke.Size = NumberSequence.new({
-							NumberSequenceKeypoint.new(0, 1.62, 0.836),  -- Time 0: Value 3.69, Envelope 1.43
-							NumberSequenceKeypoint.new(1, 1.62, 0.836)      -- Time 1: Value 1.54, Envelope 0
+							NumberSequenceKeypoint.new(0, 1.62, 0.836),
+							NumberSequenceKeypoint.new(1, 1.62, 0.836)
 						})
-						SideSmoke.Texture = "rbxassetid://9139094373";
-
+						SideSmoke.Texture = "rbxassetid://9139094373"
 						SideSmoke.Transparency = NumberSequence.new({
-							NumberSequenceKeypoint.new(0, 0.253, 0.148),  -- Time 0: Value 0
-							NumberSequenceKeypoint.new(0.711, 0.186, 0.0692),      -- Time 1: Value 1
-							NumberSequenceKeypoint.new(1, 0.989, 0.011),  -- Time 0: Value 0
+							NumberSequenceKeypoint.new(0, 0.253, 0.148),
+							NumberSequenceKeypoint.new(0.711, 0.186, 0.0692),
+							NumberSequenceKeypoint.new(1, 0.989, 0.011),
 						})
-						SideSmoke.ZOffset = -1;
+						SideSmoke.ZOffset = -1
+						SideSmoke.EmissionDirection = Enum.NormalId.Right
+						SideSmoke.Enabled = true
+						SideSmoke.Lifetime = NumberRange.new(1.5, 2.5)
+						SideSmoke.Rate = 20
+						SideSmoke.Rotation = NumberRange.new(-180, 180)
+						SideSmoke.RotSpeed = 0
+						SideSmoke.Speed = 0.139
+						SideSmoke.SpreadAngle = Vector2.new(0, 360)
+						SideSmoke.Shape = Enum.ParticleEmitterShape.Box
+						SideSmoke.ShapeInOut = Enum.ParticleEmitterShapeInOut.Outward
+						SideSmoke.ShapeStyle = Enum.ParticleEmitterShapeStyle.Volume  -- ✅ Fixed
+						SideSmoke.FlipbookLayout = Enum.ParticleFlipbookLayout.Grid8x8
+						SideSmoke.FlipbookMode = Enum.ParticleFlipbookMode.OneShot
+						SideSmoke.FlipbookBlendFrames = true
+						SideSmoke.Acceleration = Vector3.new(0, -0.815, 0)
+						SideSmoke.Drag = 8
+						SideSmoke.LockedToPart = true
+						SideSmoke.TimeScale = 1
+						SideSmoke.VelocityInheritance = 0
+						SideSmoke.WindAffectsDrag = false
+						SideSmoke.Parent = Sword
 
-						SideSmoke.EmissionDirection = Enum.NormalId.Right;
-						SideSmoke.Enabled = true;
-						SideSmoke.Lifetime = Vector2.new(1.5, 2.5);
-						SideSmoke.Rate = 20;
-						SideSmoke.Rotation = Vector2.new(-180, 180);
-						SideSmoke.RotSpeed = 0;
-						SideSmoke.Speed = 0.139;
-						SideSmoke.SpreadAngle = Vector2.new(0, 360);
-
-						SideSmoke.Shape = Enum.ParticleEmitterShape.Box;
-						SideSmoke.ShapeInOut = Enum.ParticleEmitterShapeInOut.Outward;
-						SideSmoke.Shape = Enum.ParticleEmitterShapeStyle.Volume;
-
-						SideSmoke.FlipbookLayout = Enum.ParticleFlipbookLayout.Grid8x8;
-						SideSmoke.FlipbookMode = Enum.ParticleFlipbookMode.OneShot;
-						SideSmoke.FlipbookBlendFrames = true;
-
-						SideSmoke.Acceleration = Vector3.new(0, -0.815, 0);
-						SideSmoke.Drag = 8;
-						SideSmoke.LockedToPart = true;
-						SideSmoke.TimeScale = 1;
-						SideSmoke.VelocityInheritance = 0;
-						SideSmoke.WindAffectsDrag = false;
-						SideSmoke.Parent = Sword;
-
-						-- TEXTURE PARTICLE 3
-
+						-- ============================================================
+						-- PARTICLE 3: TextureParticle3
+						-- ============================================================
 						local TextureParticle3 = Instance.new("ParticleEmitter")
 						TextureParticle3.Name = "TextureParticle3"
-
-						-- Create a ColorSequence one
 						TextureParticle3.Brightness = 10
-						TextureParticle3.Color = Color3.fromRGB(248, 46, 255)
+						TextureParticle3.Color = ColorSequence.new(Color3.fromRGB(248, 46, 255))  -- ✅ Fixed
 						TextureParticle3.LightEmission = 1
 						TextureParticle3.LightInfluence = 0
-						TextureParticle3.Orientation = Enum.ParticleOrientation.FacingCamera;
-
+						TextureParticle3.Orientation = Enum.ParticleOrientation.FacingCamera
 						TextureParticle3.Size = NumberSequence.new({
-							NumberSequenceKeypoint.new(0, 0.75, 0.75),  -- Time 0: Value 3.69, Envelope 1.43
-							NumberSequenceKeypoint.new(1, 0.25, 0)      -- Time 1: Value 1.54, Envelope 0
+							NumberSequenceKeypoint.new(0, 0.75, 0.75),
+							NumberSequenceKeypoint.new(1, 0.25, 0)
 						})
-						TextureParticle3.Texture = "rbxassetid://9139094373";
-
+						TextureParticle3.Texture = "rbxassetid://9139094373"
 						TextureParticle3.Transparency = NumberSequence.new({
-							NumberSequenceKeypoint.new(0, 0, 0),  -- Time 0: Value 0
-							NumberSequenceKeypoint.new(0.508, 0, 0),      -- Time 1: Value 1
-							NumberSequenceKeypoint.new(1, 1, 0),  -- Time 0: Value 0
+							NumberSequenceKeypoint.new(0, 0, 0),
+							NumberSequenceKeypoint.new(0.508, 0, 0),
+							NumberSequenceKeypoint.new(1, 1, 0),
 						})
-						TextureParticle3.ZOffset = 0;
-
-						TextureParticle3.EmissionDirection = Enum.NormalId.Front;
-						TextureParticle3.Enabled = true;
-						TextureParticle3.Lifetime = 1;
-						TextureParticle3.Rate = 20;
-						TextureParticle3.Rotation = Vector2.new(-180, 180);
-						TextureParticle3.RotSpeed = Vector2.new(-30, 30);
-						TextureParticle3.Speed = 0.5;
-						TextureParticle3.SpreadAngle = Vector2.new(180, 90);
-
-						TextureParticle3.Shape = Enum.ParticleEmitterShape.Box;
-						TextureParticle3.ShapeInOut = Enum.ParticleEmitterShapeInOut.Outward;
-						TextureParticle3.Shape = Enum.ParticleEmitterShapeStyle.Volume;
-
-						TextureParticle3.FlipbookLayout = Enum.ParticleFlipbookLayout.Grid8x8;
+						TextureParticle3.ZOffset = 0
+						TextureParticle3.EmissionDirection = Enum.NormalId.Front
+						TextureParticle3.Enabled = true
+						TextureParticle3.Lifetime = 1
+						TextureParticle3.Rate = 20
+						TextureParticle3.Rotation = NumberRange.new(-180, 180)
+						TextureParticle3.RotSpeed = NumberRange.new(-30, 30)
+						TextureParticle3.Speed = 0.5
+						TextureParticle3.SpreadAngle = Vector2.new(180, 90)
+						TextureParticle3.Shape = Enum.ParticleEmitterShape.Box
+						TextureParticle3.ShapeInOut = Enum.ParticleEmitterShapeInOut.Outward
+						TextureParticle3.ShapeStyle = Enum.ParticleEmitterShapeStyle.Volume  -- ✅ Fixed
+						TextureParticle3.FlipbookLayout = Enum.ParticleFlipbookLayout.Grid8x8
 						TextureParticle3.FlipbookBlendFrames = true
-						TextureParticle3.FlipbookFramerate = Vector2.new(20, 40)
-						TextureParticle3.FlipbookMode = Enum.ParticleFlipbookMode.Loop;
-						TextureParticle3.FlipbookStartRandom = true;
-
-						TextureParticle3.Acceleration = Vector3.new(0, 1, 0);
-						TextureParticle3.Drag = 0;
-						TextureParticle3.LockedToPart = true;
-						TextureParticle3.TimeScale = 1;
-						TextureParticle3.VelocityInheritance = 0;
-						TextureParticle3.WindAffectsDrag = false;
+						TextureParticle3.FlipbookFramerate = NumberRange.new(20, 40)  -- ✅ Fixed
+						TextureParticle3.FlipbookMode = Enum.ParticleFlipbookMode.Loop
+						TextureParticle3.FlipbookStartRandom = true
+						TextureParticle3.Acceleration = Vector3.new(0, 1, 0)
+						TextureParticle3.Drag = 0
+						TextureParticle3.LockedToPart = true
+						TextureParticle3.TimeScale = 1
+						TextureParticle3.VelocityInheritance = 0
+						TextureParticle3.WindAffectsDrag = false
 						TextureParticle3.Parent = Sword
+
+						print("Sword created successfully!")
 					end
 				end
 				for _, part in ipairs(parts) do
@@ -3136,25 +3128,6 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 			end
 			return false
 		end
-
-		-- ============================================================
-		-- VISUAL EFFECTS BEFORE TELEPORT
-		-- ============================================================
-
-		-- Create a visual indicator at the destination (optional)
-		local teleportMarker = Instance.new("Part")
-		teleportMarker.Anchored = true
-		teleportMarker.CanCollide = false
-		teleportMarker.Size = Vector3.new(3, 0.5, 3)
-		teleportMarker.BrickColor = BrickColor.new("Bright violet")
-		teleportMarker.Material = Enum.Material.Neon
-		teleportMarker.Transparency = 0.5
-		teleportMarker.Position = safePosition
-		teleportMarker.Parent = workspace
-
-		-- Fade in the marker
-		local TweenService = game:GetService("TweenService")
-		TweenService:Create(teleportMarker, TweenInfo.new(0.3), {Transparency = 0}):Play()
 
 		-- ============================================================
 		-- PERFORM TELEPORT
