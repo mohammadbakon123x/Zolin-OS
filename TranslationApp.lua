@@ -5,7 +5,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 	local l__TweenService__5 = game:GetService("TweenService");
 	local UIS = game:GetService("UserInputService");
 	local u6 = game:GetService("RunService")
-	local BuildVersion = "3.21.8"
+	local BuildVersion = "3.21.9"
 	local versionLabel = "v"..BuildVersion;
 	local SettingsScript = {
 		DisplayLogs = true,
