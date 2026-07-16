@@ -5,7 +5,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 	local l__TweenService__5 = game:GetService("TweenService");
 	local UIS = game:GetService("UserInputService");
 	local u6 = game:GetService("RunService")
-	local BuildVersion = "3.22.2"
+	local BuildVersion = "3.22.3"
 	local versionLabel = "v"..BuildVersion;
 	local SettingsScript = {
 		DisplayLogs = true,
@@ -2993,6 +2993,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 		TeleportData.PlayersScrollFrame = PlayersScrollFrame
 		TeleportData.PlayerCountLabel = PlayerCountLabel
 	end
+	local _endedConnection = nil
 	local function teleportToPlayerInstant(targetPlayer)
 		-- Validate lpr
 		if not lpr then
@@ -3156,14 +3157,14 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 		teleportEffect:Play()
 
 		-- Remove previous connection
-		if teleportEffect._endedConnection then
-			teleportEffect._endedConnection:Disconnect()
-			teleportEffect._endedConnection = nil
+		if _endedConnection then
+			_endedConnection:Disconnect()
+			_endedConnection = nil
 		end
 
-		teleportEffect._endedConnection = teleportEffect.Ended:Connect(function()
+		_endedConnection = teleportEffect.Ended:Connect(function()
 			teleportEffect:Destroy()
-			teleportEffect._endedConnection = nil
+			_endedConnection = nil
 		end)
 
 		game.Debris:AddItem(teleportEffect, 3)
