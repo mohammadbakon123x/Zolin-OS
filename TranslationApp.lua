@@ -6661,7 +6661,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 								applyCustomStandToOtherPlayer(player, selectedModelData)
 								data.appliedModel = SelectedBeatdownModel
 								if SettingsScript.DisplayLogs then
-									print("Applied custom stand to: " .. player.Name)
+									--print("Applied custom stand to: " .. player.Name)
 								end
 							end
 						end
