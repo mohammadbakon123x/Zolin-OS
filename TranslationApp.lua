@@ -5,7 +5,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 	local l__TweenService__5 = game:GetService("TweenService");
 	local UIS = game:GetService("UserInputService");
 	local u6 = game:GetService("RunService")
-	local BuildVersion = "3.21.9"
+	local BuildVersion = "3.22.0"
 	local versionLabel = "v"..BuildVersion;
 	local SettingsScript = {
 		DisplayLogs = true,
@@ -2441,7 +2441,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 	end
 	
 	local function CreateLightning(StartPosition, EndPosition, TotalDuration)
-		TotalDuration = TotalDuration or 1.8
+		TotalDuration = TotalDuration or 2
 
 		local Model = Instance.new("Model", game.Workspace);
 		local Parts = {};
@@ -2451,7 +2451,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 
 		-- Create a single lightning bolt (straight line with slight randomness)
 		local points = {}
-		local numSegments = 9
+		local numSegments = 10
 
 		for i = 0, numSegments do
 			local progress = i / numSegments
@@ -2623,7 +2623,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 		return Model
 	end
 
-	local SelectedBeatdownModel = "uncle_beatdown"
+	local SelectedBeatdownModel = "Galaxa_beatdown"
 	local ViewportCamera = nil
 	local ViewportModel = nil
 	local ViewOtherCustomStands = {
@@ -6032,7 +6032,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 														local startPos = rootPart.Position + Vector3.new(0, 90, 0)
 														local endPos = rootPart.Position + Vector3.new(0, -10, 0)
 														-- Create the lightning
-														CreateLightning(startPos, endPos, 3.5)
+														CreateLightning(startPos, endPos, 4)
 													end
 												end)
 											end
@@ -6188,12 +6188,14 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 					return
 				end
 			end
+			--[[
 			for _, model in ipairs(CustomBeatdownModels) do
 				if model.id == "evil_beatdown" then
 					ApplyCustomBeatdownModel(StandModel, model, lpr)
 					return
 				end
 			end
+			--]]
 		end
 		for v1, parts in ipairs(StandModel:GetChildren()) do
 			if parts:IsA("BasePart") then
@@ -6318,12 +6320,14 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 					return
 				end
 			end
+			--[[
 			for _, model in ipairs(CustomBeatdownModels) do
 				if model.id == "evil_beatdown" then
 					ApplyCustomBeatdownModel(StandModel, model, CurrentPlayer)
 					return
 				end
 			end
+			--]]
 		end
 		for v1, parts in ipairs(StandModel:GetChildren()) do
 			if parts:IsA("BasePart") then
@@ -6434,6 +6438,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 			end;
 		end;
 	end;
+	
 	local function applyCustomStandToOtherPlayer(otherPlayer, modelData)
 		if not otherPlayer or not otherPlayer.Character then return false end
 		local standmodel = otherPlayer.Character:FindFirstChild("Stand")
@@ -6443,8 +6448,6 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 			ViewOtherCustomStands.ActiveChecks[otherPlayer] = {}
 		end
 		ViewOtherCustomStands.ActiveChecks[otherPlayer].appliedModel = modelData.id
-		if standmodel == nil then return end
-		if otherPlayer == nil then return end
 		return true
 	end
 	local function restoreOriginalStand(player)
@@ -6458,7 +6461,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 			end
 		end
 	end
-
+	--[[ old
 	local function startMonitoringOtherStands()
 		if not ViewOtherCustomStands.Enabled then return end
 		local function monitorPlayer(player)
@@ -6525,6 +6528,178 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 		end)
 		if SettingsScript.DisplayLogs then
 			print("Started monitoring other players' stands")
+		end
+	end
+	--]]
+	local function startMonitoringOtherStands()
+		if not ViewOtherCustomStands.Enabled then return end
+
+		-- Store references for all monitored players
+		local monitoredPlayers = {}
+
+		local function setupCharacterMonitoring(player, character)
+			if not character then return end
+			if monitoredPlayers[player] and monitoredPlayers[player].active then return end
+
+			-- Find the selected model data
+			local selectedModelData = nil
+			for _, model in ipairs(CustomBeatdownModels) do
+				if model.id == SelectedBeatdownModel then
+					selectedModelData = model
+					break
+				end
+			end
+
+			if not selectedModelData then
+				-- Fallback to evil_beatdown
+				for _, model in ipairs(CustomBeatdownModels) do
+					if model.id == "evil_beatdown" then
+						selectedModelData = model
+						break
+					end
+				end
+			end
+
+			if not selectedModelData then return end
+
+			-- Initialize tracking for this player
+			monitoredPlayers[player] = {
+				active = true,
+				character = character,
+				appliedModel = nil,
+				isFriend = isFriend(player)
+			}
+
+			-- Apply immediately if stand exists
+			local stand = character:FindFirstChild("Stand")
+			if stand then
+				applyCustomStandToOtherPlayer(player, selectedModelData)
+				monitoredPlayers[player].appliedModel = SelectedBeatdownModel
+			end
+
+			-- Track character changes
+			character.AncestryChanged:Connect(function(_, parent)
+				if not parent then
+					if monitoredPlayers[player] then
+						monitoredPlayers[player].active = false
+					end
+				end
+			end)
+		end
+
+		-- Setup monitoring for a player
+		local function monitorPlayer(player)
+			if player == lpr then return end
+			if ViewOtherCustomStands.FriendStandsOnly and not isFriend(player) then
+				return
+			end
+
+			-- Clean up old tracking
+			if monitoredPlayers[player] then
+				monitoredPlayers[player].active = false
+			end
+
+			if player.Character then
+				setupCharacterMonitoring(player, player.Character)
+			end
+
+			player.CharacterAdded:Connect(function(character)
+				setupCharacterMonitoring(player, character)
+			end)
+		end
+
+		-- Monitor all current players
+		for _, player in ipairs(game.Players:GetPlayers()) do
+			monitorPlayer(player)
+		end
+
+		-- Monitor new players
+		game.Players.PlayerAdded:Connect(function(player)
+			if ViewOtherCustomStands.Enabled then
+				monitorPlayer(player)
+			end
+		end)
+
+		-- Single RenderStepped loop for all monitoring (like your main loop)
+		
+		local renderSteppedConnection
+		
+		renderSteppedConnection = u6.RenderStepped:Connect(function()
+			if not ViewOtherCustomStands.Enabled then
+				if renderSteppedConnection then
+					renderSteppedConnection:Disconnect()
+				end
+				return
+			end
+
+			-- Process all monitored players
+			for player, data in pairs(monitoredPlayers) do
+				if not data.active then
+					monitoredPlayers[player] = nil
+					continue
+				end
+
+				-- Check if player still exists
+				if not player or not player.Parent then
+					monitoredPlayers[player] = nil
+					continue
+				end
+
+				-- Check if character exists
+				local character = player.Character
+				if not character then
+					-- Character was removed, wait for CharacterAdded event
+					continue
+				end
+
+				-- Check if stand exists
+				local stand = character:FindFirstChild("Stand")
+				if stand then
+					-- Get selected model data
+					local selectedModelData = nil
+					for _, model in ipairs(CustomBeatdownModels) do
+						if model.id == SelectedBeatdownModel then
+							selectedModelData = model
+							break
+						end
+					end
+
+					if not selectedModelData then
+						for _, model in ipairs(CustomBeatdownModels) do
+							if model.id == "evil_beatdown" then
+								selectedModelData = model
+								break
+							end
+						end
+					end
+
+					if selectedModelData then
+						-- Check if we need to apply or reapply the model
+						if data.appliedModel ~= SelectedBeatdownModel then
+							applyCustomStandToOtherPlayer(player, selectedModelData)
+							data.appliedModel = SelectedBeatdownModel
+						end
+					end
+				else
+					-- Stand was removed
+					data.appliedModel = nil
+				end
+			end
+		end)
+
+		if SettingsScript.DisplayLogs then
+			print("Started monitoring other players' stands with RenderStepped")
+		end
+
+		-- Return cleanup function
+		return function()
+			if renderSteppedConnection then
+				renderSteppedConnection:Disconnect()
+			end
+			monitoredPlayers = {}
+			if SettingsScript.DisplayLogs then
+				print("Stopped monitoring other players' stands")
+			end
 		end
 	end
 	local function stopMonitoringOtherStands()
