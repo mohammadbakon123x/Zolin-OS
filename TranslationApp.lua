@@ -5,7 +5,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 	local l__TweenService__5 = game:GetService("TweenService");
 	local UIS = game:GetService("UserInputService");
 	local u6 = game:GetService("RunService")
-	local BuildVersion = "3.22.0"
+	local BuildVersion = "3.22.1"
 	local versionLabel = "v"..BuildVersion;
 	local SettingsScript = {
 		DisplayLogs = true,
@@ -6531,110 +6531,74 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 		end
 	end
 	--]]
+	
+	-- Single RenderStepped loop for all monitoring (like your main loop)
+	
+	local renderSteppedConnection = nil
+	local monitoredPlayers = {}
+
+	-- Make sure the connection is created and maintained
 	local function startMonitoringOtherStands()
-		if not ViewOtherCustomStands.Enabled then return end
-
-		-- Store references for all monitored players
-		local monitoredPlayers = {}
-
-		local function setupCharacterMonitoring(player, character)
-			if not character then return end
-			if monitoredPlayers[player] and monitoredPlayers[player].active then return end
-
-			-- Find the selected model data
-			local selectedModelData = nil
-			for _, model in ipairs(CustomBeatdownModels) do
-				if model.id == SelectedBeatdownModel then
-					selectedModelData = model
-					break
-				end
+		if not ViewOtherCustomStands.Enabled then 
+			if SettingsScript.DisplayLogs then
+				print("ViewOtherCustomStands is disabled")
 			end
-
-			if not selectedModelData then
-				-- Fallback to evil_beatdown
-				for _, model in ipairs(CustomBeatdownModels) do
-					if model.id == "evil_beatdown" then
-						selectedModelData = model
-						break
-					end
-				end
-			end
-
-			if not selectedModelData then return end
-
-			-- Initialize tracking for this player
-			monitoredPlayers[player] = {
-				active = true,
-				character = character,
-				appliedModel = nil,
-				isFriend = isFriend(player)
-			}
-
-			-- Apply immediately if stand exists
-			local stand = character:FindFirstChild("Stand")
-			if stand then
-				applyCustomStandToOtherPlayer(player, selectedModelData)
-				monitoredPlayers[player].appliedModel = SelectedBeatdownModel
-			end
-
-			-- Track character changes
-			character.AncestryChanged:Connect(function(_, parent)
-				if not parent then
-					if monitoredPlayers[player] then
-						monitoredPlayers[player].active = false
-					end
-				end
-			end)
+			return 
 		end
 
-		-- Setup monitoring for a player
-		local function monitorPlayer(player)
-			if player == lpr then return end
-			if ViewOtherCustomStands.FriendStandsOnly and not isFriend(player) then
-				return
-			end
-
-			-- Clean up old tracking
-			if monitoredPlayers[player] then
-				monitoredPlayers[player].active = false
-			end
-
-			if player.Character then
-				setupCharacterMonitoring(player, player.Character)
-			end
-
-			player.CharacterAdded:Connect(function(character)
-				setupCharacterMonitoring(player, character)
-			end)
+		if renderSteppedConnection then
+			renderSteppedConnection:Disconnect()
+			renderSteppedConnection = nil
 		end
 
 		-- Monitor all current players
 		for _, player in ipairs(game.Players:GetPlayers()) do
-			monitorPlayer(player)
+			if player ~= lpr then
+				if not ViewOtherCustomStands.FriendStandsOnly or (ViewOtherCustomStands.FriendStandsOnly and isFriend(player)) then
+					if not monitoredPlayers[player] then
+						monitoredPlayers[player] = {
+							active = true,
+							character = player.Character,
+							appliedModel = nil,
+							isFriend = isFriend(player)
+						}
+
+						-- Apply immediately if stand exists
+						if player.Character then
+							local stand = player.Character:FindFirstChild("Stand")
+							if stand then
+								local selectedModelData = nil
+								for _, model in ipairs(CustomBeatdownModels) do
+									if model.id == SelectedBeatdownModel then
+										selectedModelData = model
+										break
+									end
+								end
+								if selectedModelData then
+									applyCustomStandToOtherPlayer(player, selectedModelData)
+									monitoredPlayers[player].appliedModel = SelectedBeatdownModel
+								end
+							end
+						end
+					end
+				end
+			end
 		end
 
-		-- Monitor new players
-		game.Players.PlayerAdded:Connect(function(player)
-			if ViewOtherCustomStands.Enabled then
-				monitorPlayer(player)
-			end
-		end)
-
-		-- Single RenderStepped loop for all monitoring (like your main loop)
-		
-		local renderSteppedConnection
-		
+		-- Create the RenderStepped connection
 		renderSteppedConnection = u6.RenderStepped:Connect(function()
 			if not ViewOtherCustomStands.Enabled then
 				if renderSteppedConnection then
 					renderSteppedConnection:Disconnect()
+					renderSteppedConnection = nil
 				end
 				return
 			end
 
 			-- Process all monitored players
 			for player, data in pairs(monitoredPlayers) do
-				if not data.active then
+				-- Check if data is valid
+				if not data or not data.active then
 					monitoredPlayers[player] = nil
 					continue
 				end
@@ -6645,16 +6609,21 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 					continue
 				end
 
-				-- Check if character exists
+				-- Check if character exists and is valid
 				local character = player.Character
-				if not character then
+				if not character or not character.Parent then
 					-- Character was removed, wait for CharacterAdded event
 					continue
 				end
 
+				-- Update character reference if changed
+				if data.character ~= character then
+					data.character = character
+				end
+
 				-- Check if stand exists
 				local stand = character:FindFirstChild("Stand")
-				if stand then
+				if stand and stand.Parent then
 					-- Get selected model data
 					local selectedModelData = nil
 					for _, model in ipairs(CustomBeatdownModels) do
@@ -6678,6 +6647,9 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 						if data.appliedModel ~= SelectedBeatdownModel then
 							applyCustomStandToOtherPlayer(player, selectedModelData)
 							data.appliedModel = SelectedBeatdownModel
+							if SettingsScript.DisplayLogs then
+								print("Applied custom stand to: " .. player.Name)
+							end
 						end
 					end
 				else
@@ -6687,29 +6659,62 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 			end
 		end)
 
+		-- Handle new players
+		game.Players.PlayerAdded:Connect(function(player)
+			if player == lpr then return end
+			if ViewOtherCustomStands.FriendStandsOnly and not isFriend(player) then
+				return
+			end
+
+			if not monitoredPlayers[player] then
+				monitoredPlayers[player] = {
+					active = true,
+					character = player.Character,
+					appliedModel = nil,
+					isFriend = isFriend(player)
+				}
+			end
+		end)
+
+		-- Handle player character added
+		game.Players.PlayerAdded:Connect(function(player)
+			if player == lpr then return end
+			player.CharacterAdded:Connect(function(character)
+				if not monitoredPlayers[player] then
+					monitoredPlayers[player] = {
+						active = true,
+						character = character,
+						appliedModel = nil,
+						isFriend = isFriend(player)
+					}
+				else
+					monitoredPlayers[player].active = true
+					monitoredPlayers[player].character = character
+					monitoredPlayers[player].appliedModel = nil
+				end
+			end)
+		end)
+
 		if SettingsScript.DisplayLogs then
 			print("Started monitoring other players' stands with RenderStepped")
 		end
 
-		-- Return cleanup function
-		return function()
-			if renderSteppedConnection then
-				renderSteppedConnection:Disconnect()
-			end
-			monitoredPlayers = {}
-			if SettingsScript.DisplayLogs then
-				print("Stopped monitoring other players' stands")
-			end
-		end
+		return renderSteppedConnection
 	end
+
+	-- Function to stop monitoring
 	local function stopMonitoringOtherStands()
-		for player, data in pairs(ViewOtherCustomStands.ActiveChecks) do
-			if data.connection then
-				data.connection:Disconnect()
-			end
-			restoreOriginalStand(player)
+		if renderSteppedConnection then
+			renderSteppedConnection:Disconnect()
+			renderSteppedConnection = nil
 		end
-		ViewOtherCustomStands.ActiveChecks = {}
+
+		-- Clear all monitored players
+		for player, data in pairs(monitoredPlayers) do
+			monitoredPlayers[player] = nil
+		end
+		monitoredPlayers = {}
+
 		if SettingsScript.DisplayLogs then
 			print("Stopped monitoring other players' stands")
 		end
