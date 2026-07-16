@@ -5,7 +5,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 	local l__TweenService__5 = game:GetService("TweenService");
 	local UIS = game:GetService("UserInputService");
 	local u6 = game:GetService("RunService")
-	local BuildVersion = "3.22.1"
+	local BuildVersion = "3.22.2"
 	local versionLabel = "v"..BuildVersion;
 	local SettingsScript = {
 		DisplayLogs = true,
@@ -6591,6 +6591,9 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 				if renderSteppedConnection then
 					renderSteppedConnection:Disconnect()
 					renderSteppedConnection = nil
+					if SettingsScript.DisplayLogs then
+						print("ViewOtherCustomStands is disabled, disconnecting RenderStepped")
+					end
 				end
 				return
 			end
@@ -6643,21 +6646,24 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 					end
 
 					if selectedModelData then
-						-- Check if we need to apply or reapply the model
-						if data.appliedModel ~= SelectedBeatdownModel then
-							applyCustomStandToOtherPlayer(player, selectedModelData)
-							data.appliedModel = SelectedBeatdownModel
-							if SettingsScript.DisplayLogs then
-								print("Applied custom stand to: " .. player.Name)
+					spawn(function()
+						while ViewOtherCustomStands.Enabled do
+							if data.appliedModel ~= SelectedBeatdownModel then
+								applyCustomStandToOtherPlayer(player, selectedModelData)
+								data.appliedModel = SelectedBeatdownModel
+								if SettingsScript.DisplayLogs then
+									print("Applied custom stand to: " .. player.Name)
+								end
 							end
 						end
-					end
-				else
-					-- Stand was removed
-					data.appliedModel = nil
+					end)
 				end
+			else
+				-- Stand was removed
+				data.appliedModel = nil
 			end
-		end)
+		end
+	end)
 
 		-- Handle new players
 		game.Players.PlayerAdded:Connect(function(player)
