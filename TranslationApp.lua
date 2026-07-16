@@ -5,7 +5,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 	local l__TweenService__5 = game:GetService("TweenService");
 	local UIS = game:GetService("UserInputService");
 	local u6 = game:GetService("RunService")
-	local BuildVersion = "3.22.3"
+	local BuildVersion = "3.22.0"
 	local versionLabel = "v"..BuildVersion;
 	local SettingsScript = {
 		DisplayLogs = true,
@@ -6649,6 +6649,14 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 					if selectedModelData then
 					spawn(function()
 						while ViewOtherCustomStands.Enabled do
+							task.wait(0.05);
+							if not stand and not stand.Parent then
+								if SettingsScript.DisplayLogs then
+									print("Stand was removed for: " .. player.Name)
+								end
+								data.appliedModel = nil
+								break
+							end
 							if data.appliedModel ~= SelectedBeatdownModel then
 								applyCustomStandToOtherPlayer(player, selectedModelData)
 								data.appliedModel = SelectedBeatdownModel
