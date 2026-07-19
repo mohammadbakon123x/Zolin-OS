@@ -1,19 +1,19 @@
 local v1 = {};
-v1.ver = "1.3.3" -- versionOS
+v1.ver = "1.3.5" -- versionOS
 
 -- ============================================
 -- HELPER FUNCTIONS
 -- ============================================
-local function createUIStroke(parent, name, color, thickness, transparency, zIndex)
+local function createUIStroke(parent, name, color, thickness, transparency, zIndex, applyStrokeMode, borderStrokePosition, strokeSizingMode, lineJoinMode)
 	local stroke = Instance.new("UIStroke")
 	stroke.Name = name
-	stroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Contextual
+	stroke.ApplyStrokeMode = Enum.ApplyStrokeMode[applyStrokeMode or "Border"]
 	stroke.Color = color
 	stroke.Thickness = thickness
 	stroke.Transparency = transparency
 	stroke.ZIndex = zIndex
-	stroke.StrokeSizingMode = Enum.StrokeSizingMode.FixedSize
-	stroke.LineJoinMode = Enum.LineJoinMode.Round
+	stroke.StrokeSizingMode = Enum.StrokeSizingMode[strokeSizingMode or "FixedSize"]
+	stroke.LineJoinMode = Enum.LineJoinMode[lineJoinMode or "Round"]
 	stroke.Parent = parent
 	return stroke
 end
@@ -1117,6 +1117,10 @@ local function createChunk10()
 	local sendnotificationEvent = Instance.new("BindableEvent")
 	sendnotificationEvent.Name = "SendNotificationEvent"
 	sendnotificationEvent.Parent = Remotes
+	
+	local ZolinModeEvent = Instance.new("BindableEvent")
+	ZolinModeEvent.Name = "ZolinModeEvent"
+	ZolinModeEvent.Parent = Remotes
 end
 
 -- ============================================
@@ -2111,7 +2115,7 @@ local function createChunk18()
 	-- Package queue: [Name] = URL
 	local __packageQueue = {
 		Changelogs = "https://raw.githubusercontent.com/mohammadbakon123x/Zolin-OS/refs/heads/main/__package_Changelogs.lua",
-		MemoryDisplay = "https://raw.githubusercontent.com/mohammadbakon123x/Zolin-OS/refs/heads/main/__package_MemoryDisplayApp.lua",
+		TaskManager = "https://raw.githubusercontent.com/mohammadbakon123x/Zolin-OS/refs/heads/main/__package_MemoryDisplayApp.lua",
 	}
 
 	-- Create a StringValue for each package
@@ -2678,6 +2682,172 @@ local function createChunk24()
 	AppIcon.Parent = AppButtonTemplate;
 end
 
+-- create bootloader for system selection
+local function createChunk25()
+	local bootloader = Instance.new("Frame")
+	bootloader.Name = "Bootloader";
+	bootloader.AnchorPoint = Vector2.new(0.5, 0.5);
+	bootloader.Position = UDim2.new(0.5, 0, 0.5, 0);
+	bootloader.Size = UDim2.new(0.9, 0, 0.9, 0);
+	bootloader.BackgroundTransparency = 0;
+	bootloader.BackgroundColor3 = Color3.fromRGB(0, 0, 0);
+	bootloader.ZIndex = -999999999;
+	bootloader.Parent = MainUI;
+	createUICorner(bootloader, "UICorner", Vector2.new(0, 5));
+	createUIScale(bootloader, 1);
+	createUIStroke(bootloader, "UIStroke", Color3.fromRGB(33, 33, 33), 5.8, 0.67, 3);
+	local ImageOS = Instance.new("ImageLabel");
+	ImageOS.Name = "ImageOS";
+	ImageOS.BackgroundTransparency = 1;
+	ImageOS.Size = UDim2.new(0.171, 0, 0.186, 0);
+	ImageOS.Position = UDim2.new(0.041, 0,0.123, 0);
+	ImageOS.ZIndex = -999999998;
+	ImageOS.BackgroundTransparency = 1;
+	ImageOS.Image = "rbxassetid://2467523453";
+	ImageOS.ScaleType = Enum.ScaleType.Fit;
+	ImageOS.Parent = bootloader;
+	local UIGradient = Instance.new("UIGradient");
+	UIGradient.Name = "UIGradient";
+	UIGradient.Parent = ImageOS;
+	UIGradient.Rotation = -118;
+	UIGradient.Color = ColorSequence.new({
+		ColorSequenceKeypoint.new(0, Color3.fromRGB(74, 0, 0)),
+		ColorSequenceKeypoint.new(0.401, Color3.fromRGB(255, 0, 0)),
+		ColorSequenceKeypoint.new(1, Color3.fromRGB(74, 0, 0))
+	});
+	local SystemName = Instance.new("TextLabel");
+	SystemName.Name = "SystemName";
+	SystemName.AnchorPoint = Vector2.new(0, 0);
+	SystemName.BackgroundTransparency = 1;
+	SystemName.Position = UDim2.new(0.055, 0, 0.0309, 0);
+	SystemName.Size = UDim2.new(0.143, 0, 0.075, 0);
+	SystemName.Font = Enum.Font.PatrickHand;
+	SystemName.Text = "ZolinOS "..tostring(BuildVersion);
+	SystemName.TextColor3 = Color3.fromRGB(255, 255, 255);
+	SystemName.TextScaled = true;
+	SystemName.ZIndex = -999999998;
+	SystemName.Parent = bootloader;
+	local UIGradient2 = Instance.new("UIGradient");
+	UIGradient2.Name = "UIGradient";
+	UIGradient2.Parent = SystemName;
+	UIGradient2.Rotation = 64;
+	UIGradient2.Color = ColorSequence.new({
+		ColorSequenceKeypoint.new(0, Color3.fromRGB(74, 0, 0)),
+		ColorSequenceKeypoint.new(0.401, Color3.fromRGB(255, 0, 0)),
+		ColorSequenceKeypoint.new(1, Color3.fromRGB(74, 0, 0))
+	});
+	local TextLabel = Instance.new("TextLabel");
+	TextLabel.Name = "TextLabel";
+	TextLabel.AnchorPoint = Vector2.new(0.5, 0.5);
+	TextLabel.BackgroundTransparency = 1;
+	TextLabel.Position = UDim2.new(0.5, 0, 0.097, 0);
+	TextLabel.Size = UDim2.new(1, 0, 0.074, 0);
+	TextLabel.Font = Enum.Font.Oswald;
+	TextLabel.Text = "BOOTLOADER";
+	TextLabel.TextColor3 = Color3.fromRGB(255, 255, 255);
+	TextLabel.TextScaled = true;
+	TextLabel.ZIndex = -999999999;
+	TextLabel.Parent = bootloader;
+	local UITextSizeConstraint = Instance.new("UITextSizeConstraint");
+	UITextSizeConstraint.Name = "UITextSizeConstraint";
+	UITextSizeConstraint.Parent = TextLabel;
+	UITextSizeConstraint.MaxTextSize = 60;
+	local SelectionList = Instance.new("Frame");
+	SelectionList.Name = "SelectionList";
+	SelectionList.AnchorPoint = Vector2.new(0.5, 0.5);
+	SelectionList.Position = UDim2.new(0.5, 0, 0.698, 0);
+	SelectionList.Size = UDim2.new(0.576, 0, 0.525, 0);
+	SelectionList.ZIndex = -999999998;
+	SelectionList.Parent = bootloader;
+	SelectionList.BackgroundTransparency = 1;
+	local UIListLayout = Instance.new("UIListLayout");
+	UIListLayout.FillDirection = Enum.FillDirection.Vertical;
+	UIListLayout.SortOrder = Enum.SortOrder.LayoutOrder;
+	UIListLayout.Parent = SelectionList;
+	
+	local FrameList = Instance.new("Frame");
+	FrameList.Name = "FrameList";
+	FrameList.AnchorPoint = Vector2.new(0.5, 0.5);
+	FrameList.Position = UDim2.new(0.115, 0, 0.657, 0);
+	FrameList.Size = UDim2.new(0.173, 0, 0.493, 0);
+	FrameList.BackgroundTransparency = 1;
+	FrameList.ZIndex = -999999998;
+	FrameList.Parent =  bootloader;
+	local UIListLayout2 = Instance.new("UIListLayout");
+	UIListLayout2.FillDirection = Enum.FillDirection.Vertical;
+	UIListLayout2.SortOrder = Enum.SortOrder.LayoutOrder;
+	UIListLayout2.VerticalAlignment = Enum.VerticalAlignment.Top;
+	UIListLayout2.Parent = FrameList;
+	
+	--// BOOTLOADER FOLDER \\--
+	
+	local __bootloader = Instance.new("Folder") -- folder for the bootloader
+	__bootloader.Name = "__Bootloader"
+	__bootloader.Parent = MainUI;
+	local __FrameList = Instance.new("Folder") -- folder for the frame list
+	__FrameList.Name = "__FrameList"
+	__FrameList.Parent = __bootloader;
+	local __SelectionList = Instance.new("Folder") -- folder for the selection list
+	__SelectionList.Name = "__SelectionList"
+	__SelectionList.Parent = __bootloader;
+	
+	local InfoLabel = Instance.new("TextLabel");
+	InfoLabel.Name = "InfoLabel";
+	InfoLabel.AnchorPoint = Vector2.new(0.5, 0.5);
+	InfoLabel.BackgroundTransparency = 1;
+	InfoLabel.Position = UDim2.new(0, 0, 0, 0);
+	InfoLabel.Size = UDim2.new(1, 0, 0.115, 0);
+	InfoLabel.TextScaled = true;
+	InfoLabel.TextColor3 = Color3.fromRGB(60, 255, 0);
+	InfoLabel.TextXAlignment = Enum.TextXAlignment.Left;
+	InfoLabel.LayoutOrder = 0;
+	InfoLabel.Visible = false;
+	InfoLabel.ZIndex = -999999997
+	InfoLabel.Parent = __FrameList;
+
+	local SelectionButton = Instance.new("TextButton");
+	SelectionButton.Name = "SelectionButton";
+	SelectionButton.AnchorPoint = Vector2.new(0.5, 0.5);
+	SelectionButton.Active = true;
+	SelectionButton.BackgroundColor3 = Color3.fromRGB(72, 98, 131);
+	SelectionButton.Size = UDim2.new(1, 0, 0.15, 0);
+	SelectionButton.Visible = false;
+	SelectionButton.ZIndex = -999999997;
+	SelectionButton.Parent = __SelectionList;
+	SelectionButton.TextColor3 = Color3.fromRGB(140, 192, 255);
+	SelectionButton.TextScaled = true;
+	SelectionButton.TextXAlignment = Enum.TextXAlignment.Left;
+	SelectionButton.RichText = true;
+	SelectionButton.TextSize = 52;
+	local UITextSizeConstraint2 = Instance.new("UITextSizeConstraint");
+	UITextSizeConstraint2.MaxTextSize = 52;
+	UITextSizeConstraint2.Parent = SelectionButton;
+	createUICorner(SelectionButton, "UICorner", Vector2.new(0, 8))
+	local UIGradient3 = Instance.new("UIGradient");
+	UIGradient3.Parent = SelectionButton;
+	UIGradient3.Color = ColorSequence.new({
+		ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 255, 255)),
+		ColorSequenceKeypoint.new(1, Color3.fromRGB(48, 48, 48)),
+	})
+	createUIStroke(SelectionButton, "UIStroke", Color3.fromRGB(119, 207, 255), 0.9, 0, 1, "Border", "Outer")
+	local UIGradient4 = Instance.new("UIGradient");
+	UIGradient4.Parent = SelectionButton:WaitForChild("UIStroke");
+	UIGradient4.Color = ColorSequence.new({
+		ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 255, 255)),
+		ColorSequenceKeypoint.new(1, Color3.fromRGB(48, 48, 48)),
+	})
+	local UIShadow = Instance.new("UIShadow");
+	UIShadow.Parent = SelectionButton;
+	UIShadow.Color = Color3.fromRGB(255, 255, 255);
+	UIShadow.BlurRadius = Vector2.new(0, 20);
+	UIShadow.Offset = Vector2.new(0, 0)
+	UIShadow.Spread = Vector2.new(0, 0)
+	UIShadow.Transparency = 0.5;
+	UIShadow.ZIndex  = -1;
+	
+	
+end
+
 -- ============================================
 -- MAIN INIT FUNCTION
 -- ============================================
@@ -2785,6 +2955,8 @@ function v1.Init()
 		task.spawn(function() createChunk23() end)
 		task.wait()
 		task.spawn(function() createChunk24() end)
+		task.wait()
+		task.spawn(function() createChunk25() end)
 
 		print("ZolinOS UI initialized | Version: " ..tostring(BuildVersion));
 	end
