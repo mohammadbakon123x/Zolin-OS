@@ -1,5 +1,5 @@
 local v1 = {};
-v1.ver = "1.3.6" -- versionOS
+v1.ver = "1.3.7" -- versionOS
 
 -- ============================================
 -- HELPER FUNCTIONS
