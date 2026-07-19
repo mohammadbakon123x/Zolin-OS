@@ -1,8 +1,9 @@
-
 -- ZolinModules (Complete Combined ModuleScript)
 local ZolinModules = {}
-ZolinModules.Mode = "Mobile"  --| Mobile | default - | Desktop | beta
---Global Variables | Desktop
+ZolinModules.Mode = nil  --| Mobile | default - | Desktop | beta
+
+--Global Variables | Both platforms
+ZolinModules.SafeMode = false
 ZolinModules.CurrentUptime = nil
 ZolinModules.CurrentTime = nil
 ZolinModules.AppLaunchType = {
@@ -10,12 +11,15 @@ ZolinModules.AppLaunchType = {
 	["WallpaperSys"] = "ZolinModules",
 	["Library Stands"] = "loadstring",
 	["ZolinInstaller"] = "ZolinModules",
-	["MemoryDisplay"] = "ZolinModules"
+	["TaskManager"] = "ZolinModules"
 }
 
 ZolinModules.AppUrls = {
 	["Library Stands"] = "https://raw.githubusercontent.com/mohammadbakon123x/Zolin-OS/refs/heads/main/TranslationApp.lua",
 }
+
+ZolinModules.ZolinVersion = nil
+
 local openBuiltInModules = {}
 local RunningApps = {}
 local BackgroundApps = {}
@@ -78,6 +82,7 @@ local function getMainUI()
 	end
 	return nil
 end
+
 -- ============================================
 -- ANIMATION MANAGER
 -- ============================================
@@ -1133,7 +1138,7 @@ function ZolinModules.AppManager(dependencies)
 				Settings = modules.SettingsApp,
 				WallpaperSys = modules.WallpaperSysApp,
 				ZolinInstaller = modules.ZolinInstaller,
-				MemoryDisplay = modules.MemoryDisplayApp,
+				TaskManager = modules.TaskManagerApp,
 			}
 			local builtInModule = builtInModules[p1]
 			if builtInModule then
@@ -3819,7 +3824,10 @@ function ZolinModules.SettingsManager()
 		settingsFolder.Name = "SettingsData"
 		settingsFolder.Parent = MainUI
 	end
-
+	
+	local deviceTree = MainUI:FindFirstChild("DeviceTree")
+	ZolinModules.ZolinVersion = deviceTree.ZolinVersion.Value or "1.0.0"
+	
 	-- Default settings
 	local defaultSettings = {
 		Wallpaper = {
@@ -3920,7 +3928,6 @@ function ZolinModules.SettingsManager()
 	end
 
 	function SettingsManager.GetOSInfo()
-		local deviceTree = MainUI:FindFirstChild("DeviceTree")
 		return {
 			OSName = deviceTree and deviceTree:FindFirstChild("DeviceName") and deviceTree.DeviceName.Value or "ZolinOS",
 			Version = deviceTree and deviceTree:FindFirstChild("ZolinVersion") and deviceTree.ZolinVersion.Value or "1.1",
@@ -4220,11 +4227,32 @@ function ZolinModules.ZolinListener()
 	local updateZolinLauncherEvent = Remotes:FindFirstChild("updateZolinLauncher")
 	local contactDirHWupdateEvent = Remotes:FindFirstChild("contactDirHWupdateEvent")
 	local SendNotificationEvent = Remotes:FindFirstChild("SendNotificationEvent")
+	local ZolinModeEvent = Remotes:FindFirstChild("ZolinModeEvent");
 	local modules = ZolinModules.GetAll()
 	local AppManager = modules.AppManager
 	local VolumeStyleOptions = modules.VolumeStyleOptions
 	local DirectHW = modules.DirectHW
+	
+	if ZolinModeEvent then
+		ZolinModeEvent.Event:Connect(function(p1, p2)
+			print("[Initiator] Received mode:", p2)
+			
+			ZolinModules.Mode = p2
+			if p2 == "__safeModeDesktop" then
+				ZolinModules.SafeMode = true
+			end
 
+			-- Initialize the OS
+			ZolinModules.Init()
+
+			-- Hide bootloader UI (already hidden by the manager, but ensure it)
+			local bootloader = MainUI:FindFirstChild("Bootloader")
+			if bootloader then
+				bootloader.Visible = false
+			end
+
+		end)
+	end
 	if moreOptionsVolStyleEvent then
 		moreOptionsVolStyleEvent.Event:Connect(function(p1, p2)
 			if p1 == "Toggle" then
@@ -5043,8 +5071,8 @@ function ZolinModules.SettingsApp()
 				items = {
 					{name = "UI Animations", type = "toggle", settingName = "AnimationUI", valueRef = animationUIValue},
 					{name = "Animation Speed", type = "animation_speed", settingName = "TransitionSpeed", valueRef = transitionSpeedValue, min = 0.25, max = 10},
-					{name = "What's New (Changelogs)", type = "action", key = "changelogs"},
-					{name = "Memory Display", type = "action", key = "memorydisplayApp"},
+					{name = "What's New in Zolin "..tostring(ZolinModules.ZolinVersion), type = "action", key = "changelogs"},
+					{name = "Task Manager", type = "action", key = "memorydisplayApp"},
 					{name = "Power Menu", type = "action", key = "power"},
 				}
 			}
@@ -5289,7 +5317,7 @@ function ZolinModules.SettingsApp()
 					if item.key == "memorydisplayApp" then
 						actionBtn.MouseButton1Click:Connect(function()
 							AppManager.HandleExit()
-							AppManager.LaunchApplication("MemoryDisplay")
+							AppManager.LaunchApplication("TaskManager")
 						end)
 					end
 				elseif item.type == "input" then
@@ -6429,22 +6457,33 @@ function ZolinModules.ZolinInstaller()
 end
 
 -- ============================================
--- MEMORY DISPLAY APP (System Monitor + Graph)
+-- TASK MANAGER (Windows 10 Style)
+-- Supports Mobile & Desktop
 -- ============================================
-function ZolinModules.MemoryDisplayApp()
-	local MemoryApp = {}
+function ZolinModules.TaskManagerApp()
+	local TaskManager = {}
 	local TweenService = game:GetService("TweenService")
 	local RunService = game:GetService("RunService")
 	local Stats = game:GetService("Stats")
+	local Players = game:GetService("Players")
+	local HttpService = game:GetService("HttpService")
 
 	-- Graph settings
-	local MAX_POINTS = 60           -- Show last 60 seconds (1 per second)
-	local GRAPH_HEIGHT = 120        -- Pixels
-	local BAR_WIDTH = 6
+	local MAX_POINTS = 60
+	local GRAPH_HEIGHT = 100
+	local BAR_WIDTH = 5
 	local BAR_SPACING = 2
-	local history = {}              -- Stores percentage values (0-100)
 
-	-- Helper: get used/total memory in MB
+	-- History storage
+	local cpuHistory = {}
+	local memHistory = {}
+	local networkHistory = {}
+
+	-- Current platform
+	local isMobile = ZolinModules.Mode == "Mobile"
+	local isDesktop = ZolinModules.Mode == "Desktop"
+
+	-- Helper: Get memory stats
 	local function getMemoryStats()
 		local mem = Stats:FindFirstChild("Memory")
 		if mem then
@@ -6452,253 +6491,694 @@ function ZolinModules.MemoryDisplayApp()
 			local total = mem:FindFirstChild("Total") and mem.Total.Value or 1000
 			return used / 1024 / 1024, total / 1024 / 1024
 		end
-		-- Fallback (simulate real usage for demo)
 		return math.random(200, 800), 1024
 	end
 
-	-- Helper: format uptime
+	-- Helper: Get CPU usage (simulated for now)
+	local function getCPUUsage()
+		-- In real Roblox, you'd use performance stats
+		-- For now, simulate realistic CPU usage
+		local base = 20 + math.random() * 10
+		return math.min(100, base)
+	end
+
+	-- Helper: Format uptime
 	local function getUptime()
 		return ZolinModules.CurrentUptime or "00:00:00"
 	end
 
-	function MemoryApp.Init(ui, launchArgs, appFolder)
+	-- Helper: Get running processes
+	local function getProcesses()
+		local processes = {}
 		local modules = ZolinModules.GetAll()
 		local AppManager = modules.AppManager
 
+		if AppManager then
+			local running = AppManager.GetRunningApps and AppManager.GetRunningApps() or {}
+			local background = AppManager.GetBackgroundApps and AppManager.GetBackgroundApps() or {}
+
+			for _, name in ipairs(running) do
+				table.insert(processes, {
+					name = name,
+					status = "Running",
+					cpu = math.random(1, 30),
+					memory = math.random(10, 200)
+				})
+			end
+
+			for _, name in ipairs(background) do
+				table.insert(processes, {
+					name = name,
+					status = "Background",
+					cpu = math.random(0, 5),
+					memory = math.random(5, 50)
+				})
+			end
+		end
+
+		-- Add system processes
+		table.insert(processes, { name = "System", status = "Running", cpu = 5, memory = 50 })
+		table.insert(processes, { name = "Desktop Window Manager", status = "Running", cpu = 8, memory = 30 })
+
+		return processes
+	end
+
+	-- ============================================
+	-- UI CREATION
+	-- ============================================
+
+	function TaskManager.Init(ui, launchArgs, appFolder)
+		local modules = ZolinModules.GetAll()
+		local AppManager = modules.AppManager
+		local AppLoader = modules.AppLoader
+
+		-- Get current platform
+		isMobile = ZolinModules.Mode == "Mobile"
+		isDesktop = ZolinModules.Mode == "Desktop"
+
 		-- === Main container ===
 		local mainFrame = Instance.new("Frame")
-		mainFrame.Name = "MemoryDisplay"
+		mainFrame.Name = "TaskManager"
 		mainFrame.Size = UDim2.new(1, 0, 1, 0)
 		mainFrame.BackgroundTransparency = 1
-		mainFrame.Parent = 	ui
+		mainFrame.Parent = ui
 
-		-- === Title ===
+		-- === Title Bar ===
+		local titleBar = Instance.new("Frame")
+		titleBar.Size = UDim2.new(1, 0, 0, 50)
+		titleBar.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
+		titleBar.BorderSizePixel = 0
+		titleBar.Parent = mainFrame
+
 		local title = Instance.new("TextLabel")
-		title.Size = UDim2.new(1, 0, 0, 40)
-		title.Position = UDim2.new(0, 0, 0, 10)
-		title.Text = "System Memory"
-		title.TextColor3 = Color3.new(1,1,1)
+		title.Size = UDim2.new(1, -100, 1, 0)
+		title.Position = UDim2.new(0, 15, 0, 0)
+		title.Text = "🔧 Task Manager"
+		title.TextColor3 = Color3.new(1, 1, 1)
 		title.Font = Enum.Font.GothamBold
-		title.TextSize = 24
+		title.TextSize = isMobile and 18 or 22
+		title.TextXAlignment = Enum.TextXAlignment.Left
 		title.BackgroundTransparency = 1
-		title.Parent = mainFrame
+		title.Parent = titleBar
 
-		-- === Info labels ===
-		local usedLabel = Instance.new("TextLabel")
-		usedLabel.Size = UDim2.new(1, 0, 0, 30)
-		usedLabel.Position = UDim2.new(0, 0, 0, 55)
-		usedLabel.Text = "Used: 0 MB"
-		usedLabel.TextColor3 = Color3.fromRGB(200,200,200)
-		usedLabel.Font = Enum.Font.Gotham
-		usedLabel.TextSize = 18
-		usedLabel.BackgroundTransparency = 1
-		usedLabel.Parent = mainFrame
+		-- Close button (Desktop only)
+		if isDesktop then
+			local closeBtn = Instance.new("TextButton")
+			closeBtn.Size = UDim2.new(0, 30, 0, 30)
+			closeBtn.Position = UDim2.new(1, -40, 0.5, -15)
+			closeBtn.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
+			closeBtn.Text = "✕"
+			closeBtn.TextColor3 = Color3.new(1, 1, 1)
+			closeBtn.Font = Enum.Font.GothamBold
+			closeBtn.TextSize = 16
+			closeBtn.ZIndex = 10
+			closeBtn.Parent = titleBar
+			local closeCorner = Instance.new("UICorner")
+			closeCorner.CornerRadius = UDim.new(1, 0)
+			closeCorner.Parent = closeBtn
 
-		local totalLabel = Instance.new("TextLabel")
-		totalLabel.Size = UDim2.new(1, 0, 0, 30)
-		totalLabel.Position = UDim2.new(0, 0, 0, 85)
-		totalLabel.Text = "Total: 0 MB"
-		totalLabel.TextColor3 = Color3.fromRGB(200,200,200)
-		totalLabel.Font = Enum.Font.Gotham
-		totalLabel.TextSize = 18
-		totalLabel.BackgroundTransparency = 1
-		totalLabel.Parent = mainFrame
-
-		local percentLabel = Instance.new("TextLabel")
-		percentLabel.Size = UDim2.new(1, 0, 0, 40)
-		percentLabel.Position = UDim2.new(0, 0, 0, 125)
-		percentLabel.Text = "0%"
-		percentLabel.TextColor3 = Color3.new(1,1,1)
-		percentLabel.Font = Enum.Font.GothamBold
-		percentLabel.TextSize = 32
-		percentLabel.BackgroundTransparency = 1
-		percentLabel.Parent = mainFrame
-
-		-- === Progress bar ===
-		local barBg = Instance.new("Frame")
-		barBg.Size = UDim2.new(0.8, 0, 0, 20)
-		barBg.Position = UDim2.new(0.1, 0, 0, 175)
-		barBg.BackgroundColor3 = Color3.fromRGB(50,50,50)
-		barBg.BorderSizePixel = 0
-		barBg.Parent = mainFrame
-		local corner = Instance.new("UICorner")
-		corner.CornerRadius = UDim.new(0, 10)
-		corner.Parent = barBg
-
-		local fill = Instance.new("Frame")
-		fill.Size = UDim2.new(0, 0, 1, 0)
-		fill.BackgroundColor3 = Color3.fromRGB(50, 181, 172)
-		fill.BorderSizePixel = 0
-		fill.Parent = barBg
-		local fillCorner = Instance.new("UICorner")
-		fillCorner.CornerRadius = UDim.new(0, 10)
-		fillCorner.Parent = fill
-
-		-- === Uptime label ===
-		local uptimeLabel = Instance.new("TextLabel")
-		uptimeLabel.Size = UDim2.new(1, 0, 0, 25)
-		uptimeLabel.Position = UDim2.new(0, 0, 0, 210)
-		uptimeLabel.Text = "Uptime: " .. getUptime()
-		uptimeLabel.TextColor3 = Color3.fromRGB(150,150,150)
-		uptimeLabel.Font = Enum.Font.Gotham
-		uptimeLabel.TextSize = 14
-		uptimeLabel.BackgroundTransparency = 1
-		uptimeLabel.Parent = mainFrame
-
-		-- === Graph section ===
-		local graphTitle = Instance.new("TextLabel")
-		graphTitle.Size = UDim2.new(1, 0, 0, 25)
-		graphTitle.Position = UDim2.new(0, 0, 0, 245)
-		graphTitle.Text = "Memory Usage Over Time (last 60s)"
-		graphTitle.TextColor3 = Color3.fromRGB(180,180,180)
-		graphTitle.Font = Enum.Font.Gotham
-		graphTitle.TextSize = 14
-		graphTitle.BackgroundTransparency = 1
-		graphTitle.Parent = mainFrame
-
-		-- Graph container (background)
-		local graphContainer = Instance.new("Frame")
-		graphContainer.Size = UDim2.new(0.9, 0, 0, GRAPH_HEIGHT)
-		graphContainer.Position = UDim2.new(0.05, 0, 0, 275)
-		graphContainer.BackgroundColor3 = Color3.fromRGB(20,20,25)
-		graphContainer.BorderSizePixel = 1
-		graphContainer.BorderColor3 = Color3.fromRGB(60,60,70)
-		graphContainer.Parent = mainFrame
-		local graphCorner = Instance.new("UICorner")
-		graphCorner.CornerRadius = UDim.new(0, 6)
-		graphCorner.Parent = graphContainer
-
-		-- Create bars (we will reuse them)
-		local bars = {}
-		local totalWidth = graphContainer.Size.X.Scale * 0.9 -- leave padding
-
-		-- Pre-create bars
-		for i = 1, MAX_POINTS do
-			local bar = Instance.new("Frame")
-			bar.Size = UDim2.new(0, BAR_WIDTH, 0, 0)
-			bar.Position = UDim2.new(0, 0, 0, 0) -- will be set in update
-			bar.BackgroundColor3 = Color3.fromRGB(50, 181, 172)
-			bar.BorderSizePixel = 0
-			bar.Parent = graphContainer
-			table.insert(bars, bar)
+			closeBtn.MouseButton1Click:Connect(function()
+				AppManager.CloseApp("TaskManager")
+			end)
 		end
 
-		-- === Close button ===
-		local closeBtn = Instance.new("TextButton")
-		closeBtn.Size = UDim2.new(0, 100, 0, 40)
-		closeBtn.Position = UDim2.new(0.5, -50, 0, 420) -- adjust for graph
-		closeBtn.BackgroundColor3 = Color3.fromRGB(60,60,70)
-		closeBtn.Text = "Close"
-		closeBtn.TextColor3 = Color3.new(1,1,1)
-		closeBtn.Font = Enum.Font.Gotham
-		closeBtn.TextSize = 16
-		closeBtn.Parent = mainFrame
-		local btnCorner = Instance.new("UICorner")
-		btnCorner.CornerRadius = UDim.new(0, 8)
-		btnCorner.Parent = closeBtn
+		-- === Tabs (Mobile = dropdown, Desktop = buttons) ===
+		local tabContainer = Instance.new("Frame")
+		tabContainer.Size = UDim2.new(1, 0, 0, 40)
+		tabContainer.Position = UDim2.new(0, 0, 0, 50)
+		tabContainer.BackgroundColor3 = isDesktop and Color3.fromRGB(25, 25, 35) or Color3.fromRGB(20, 20, 30)
+		tabContainer.BackgroundTransparency = isMobile and 1 or 0
+		tabContainer.BorderSizePixel = 0
+		tabContainer.Parent = mainFrame
 
-		closeBtn.MouseButton1Click:Connect(function()
-			AppManager.CloseApp("MemoryDisplay")
-		end)
+		local tabs = {"Performance", "Processes", "App History"}
+		local tabButtons = {}
+		local currentTab = "Performance"
+		local contentContainer = nil
 
-		-- === Update loop ===
-		local updateThread = nil
-		local function updateStats()
-			local usedMB, totalMB = getMemoryStats()
-			local percent = (usedMB / totalMB) * 100
-			percent = math.clamp(percent, 0, 100)
+		-- === Tab Content Functions ===
+		local function createPerformanceTab()
+			local container = Instance.new("Frame")
+			container.Size = UDim2.new(1, 0, 1, 0)
+			container.BackgroundTransparency = 1
+			container.Parent = contentContainer
 
-			-- Update labels
-			usedLabel.Text = string.format("Used: %.0f MB", usedMB)
-			totalLabel.Text = string.format("Total: %.0f MB", totalMB)
-			percentLabel.Text = string.format("%.0f%%", percent)
+			-- Stats grid
+			local grid = Instance.new("Frame")
+			grid.Size = UDim2.new(1, 0, 0, 200)
+			grid.BackgroundTransparency = 1
+			grid.Parent = container
 
-			-- Update progress bar
-			local targetWidth = math.clamp(percent / 100, 0, 1)
-			local tween = TweenService:Create(fill, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-				Size = UDim2.new(targetWidth, 0, 1, 0)
-			})
-			tween:Play()
+			local gridLayout = Instance.new("UIGridLayout")
+			gridLayout.CellSize = UDim2.new(0.45, 0, 0, 80)
+			gridLayout.CellPadding = UDim2.new(0.03, 0, 0.02, 0)
+			gridLayout.FillDirection = Enum.FillDirection.Vertical
+			gridLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+			gridLayout.VerticalAlignment = Enum.VerticalAlignment.Top
+			gridLayout.Parent = grid
 
-			-- Color by usage
-			if percent > 80 then
-				fill.BackgroundColor3 = Color3.fromRGB(255, 80, 80)
-			elseif percent > 60 then
-				fill.BackgroundColor3 = Color3.fromRGB(255, 200, 50)
-			else
-				fill.BackgroundColor3 = Color3.fromRGB(50, 181, 172)
+			-- Stats widgets
+			local stats = {}
+
+			local function createStatWidget(parent, title, icon, initialValue, color)
+				local frame = Instance.new("Frame")
+				frame.Size = UDim2.new(1, 0, 1, 0)
+				frame.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
+				frame.BorderSizePixel = 0
+				frame.Parent = parent
+
+				local corner = Instance.new("UICorner")
+				corner.CornerRadius = UDim.new(0, 8)
+				corner.Parent = frame
+
+				local iconLabel = Instance.new("TextLabel")
+				iconLabel.Size = UDim2.new(0, 30, 0, 30)
+				iconLabel.Position = UDim2.new(0, 10, 0, 5)
+				iconLabel.Text = icon
+				iconLabel.TextColor3 = Color3.new(1, 1, 1)
+				iconLabel.Font = Enum.Font.Gotham
+				iconLabel.TextSize = 24
+				iconLabel.BackgroundTransparency = 1
+				iconLabel.Parent = frame
+
+				local titleLabel = Instance.new("TextLabel")
+				titleLabel.Size = UDim2.new(1, -50, 0, 20)
+				titleLabel.Position = UDim2.new(0, 45, 0, 5)
+				titleLabel.Text = title
+				titleLabel.TextColor3 = Color3.fromRGB(150, 150, 150)
+				titleLabel.Font = Enum.Font.Gotham
+				titleLabel.TextSize = 12
+				titleLabel.TextXAlignment = Enum.TextXAlignment.Left
+				titleLabel.BackgroundTransparency = 1
+				titleLabel.Parent = frame
+
+				local valueLabel = Instance.new("TextLabel")
+				valueLabel.Size = UDim2.new(1, -50, 0, 35)
+				valueLabel.Position = UDim2.new(0, 45, 0, 25)
+				valueLabel.Text = initialValue
+				valueLabel.TextColor3 = Color3.new(1, 1, 1)
+				valueLabel.Font = Enum.Font.GothamBold
+				valueLabel.TextSize = 28
+				valueLabel.TextXAlignment = Enum.TextXAlignment.Left
+				valueLabel.BackgroundTransparency = 1
+				valueLabel.Parent = frame
+
+				return valueLabel, frame
 			end
 
-			-- Uptime
+			-- Create stats
+			local cpuStat, cpuFrame = createStatWidget(grid, "CPU", "💻", "0%", Color3.fromRGB(50, 181, 172))
+			local memStat, memFrame = createStatWidget(grid, "Memory", "🧠", "0%", Color3.fromRGB(255, 200, 50))
+			local diskStat, diskFrame = createStatWidget(grid, "Disk", "💾", "0%", Color3.fromRGB(100, 150, 255))
+			local netStat, netFrame = createStatWidget(grid, "Network", "🌐", "0 KB/s", Color3.fromRGB(255, 100, 100))
+
+			-- CPU Graph
+			local graphContainer = Instance.new("Frame")
+			graphContainer.Size = UDim2.new(1, -20, 0, 120)
+			graphContainer.Position = UDim2.new(0, 10, 0, 215)
+			graphContainer.BackgroundColor3 = Color3.fromRGB(20, 20, 25)
+			graphContainer.BorderSizePixel = 0
+			graphContainer.Parent = container
+
+			local graphCorner = Instance.new("UICorner")
+			graphCorner.CornerRadius = UDim.new(0, 6)
+			graphCorner.Parent = graphContainer
+
+			local graphTitle = Instance.new("TextLabel")
+			graphTitle.Size = UDim2.new(1, 0, 0, 25)
+			graphTitle.Position = UDim2.new(0, 5, 0, 0)
+			graphTitle.Text = "CPU Usage History"
+			graphTitle.TextColor3 = Color3.fromRGB(180, 180, 180)
+			graphTitle.Font = Enum.Font.Gotham
+			graphTitle.TextSize = 12
+			graphTitle.TextXAlignment = Enum.TextXAlignment.Left
+			graphTitle.BackgroundTransparency = 1
+			graphTitle.Parent = graphContainer
+
+			-- Graph bars
+			local bars = {}
+			for i = 1, MAX_POINTS do
+				local bar = Instance.new("Frame")
+				bar.Size = UDim2.new(0, 4, 0, 0)
+				bar.Position = UDim2.new(0, 0, 0, 0)
+				bar.BackgroundColor3 = Color3.fromRGB(50, 181, 172)
+				bar.BorderSizePixel = 0
+				bar.Parent = graphContainer
+				table.insert(bars, bar)
+			end
+
+			-- Uptime label
+			local uptimeLabel = Instance.new("TextLabel")
+			uptimeLabel.Size = UDim2.new(1, 0, 0, 20)
+			uptimeLabel.Position = UDim2.new(0, 10, 0, 345)
 			uptimeLabel.Text = "Uptime: " .. getUptime()
+			uptimeLabel.TextColor3 = Color3.fromRGB(150, 150, 150)
+			uptimeLabel.Font = Enum.Font.Gotham
+			uptimeLabel.TextSize = 12
+			uptimeLabel.BackgroundTransparency = 1
+			uptimeLabel.Parent = container
 
-			-- === Graph update ===
-			-- Add new point
-			table.insert(history, percent)
-			if #history > MAX_POINTS then
-				table.remove(history, 1)
+			-- Update function
+			local function updatePerformance()
+				local usedMB, totalMB = getMemoryStats()
+				local memPercent = (usedMB / totalMB) * 100
+				memPercent = math.clamp(memPercent, 0, 100)
+				local cpuPercent = getCPUUsage()
+
+				-- Update stats
+				cpuStat.Text = string.format("%d%%", cpuPercent)
+				memStat.Text = string.format("%.0f%%", memPercent)
+				diskStat.Text = string.format("%.0f%%", 40 + math.random() * 30)
+				netStat.Text = string.format("%.0f KB/s", 10 + math.random() * 90)
+				uptimeLabel.Text = "Uptime: " .. getUptime()
+
+				-- Color coding
+				cpuFrame.BackgroundColor3 = cpuPercent > 80 and Color3.fromRGB(60, 30, 30) or Color3.fromRGB(30, 30, 40)
+				memFrame.BackgroundColor3 = memPercent > 80 and Color3.fromRGB(60, 30, 30) or Color3.fromRGB(30, 30, 40)
+
+				-- Update graph
+				table.insert(cpuHistory, cpuPercent)
+				if #cpuHistory > MAX_POINTS then
+					table.remove(cpuHistory, 1)
+				end
+
+				local count = #cpuHistory
+				if count > 0 then
+					local availWidth = graphContainer.AbsoluteSize.X - 10
+					local availHeight = graphContainer.AbsoluteSize.Y - 30
+					local barWidth = math.max(2, math.min(6, (availWidth - 5) / count - 1))
+					local spacing = 1
+
+					for i = 1, count do
+						local bar = bars[i]
+						local val = cpuHistory[i] or 0
+						local height = (val / 100) * availHeight
+						height = math.max(1, height)
+
+						local x = 5 + (i - 1) * (barWidth + spacing)
+						local y = 25 + availHeight - height
+
+						bar.Size = UDim2.new(0, barWidth, 0, height)
+						bar.Position = UDim2.new(0, x, 0, y)
+						bar.BackgroundColor3 = val > 80 and Color3.fromRGB(255, 80, 80) or
+							val > 60 and Color3.fromRGB(255, 200, 50) or
+							Color3.fromRGB(50, 181, 172)
+						bar.Visible = true
+					end
+
+					for i = count + 1, #bars do
+						bars[i].Visible = false
+					end
+				end
 			end
 
-			-- Redraw bars
-			local count = #history
-			if count == 0 then return end
+			return container, updatePerformance
+		end
 
-			-- Get container size (absolute)
-			local containerAbsSize = graphContainer.AbsoluteSize
-			local availWidth = containerAbsSize.X - 10 -- 5px padding each side
-			local availHeight = containerAbsSize.Y - 6
+		local function createProcessesTab()
+			local container = Instance.new("Frame")
+			container.Size = UDim2.new(1, 0, 1, 0)
+			container.BackgroundTransparency = 1
+			container.Parent = contentContainer
 
-			local barWidth = BAR_WIDTH
-			local spacing = BAR_SPACING
-			local totalBarWidth = (barWidth + spacing) * count - spacing
-			local startX = 5 -- left padding
+			-- Header
+			local header = Instance.new("Frame")
+			header.Size = UDim2.new(1, 0, 0, 30)
+			header.BackgroundColor3 = Color3.fromRGB(25, 25, 35)
+			header.BorderSizePixel = 0
+			header.Parent = container
 
-			-- If bars don't fit, reduce width proportionally
-			if totalBarWidth > availWidth then
-				local scale = availWidth / totalBarWidth
-				barWidth = math.max(2, barWidth * scale)
-				spacing = math.max(1, spacing * scale)
-				totalBarWidth = (barWidth + spacing) * count - spacing
-				startX = 5
+			local nameHeader = Instance.new("TextLabel")
+			nameHeader.Size = UDim2.new(0.4, 0, 1, 0)
+			nameHeader.Position = UDim2.new(0, 10, 0, 0)
+			nameHeader.Text = "Process Name"
+			nameHeader.TextColor3 = Color3.fromRGB(150, 150, 150)
+			nameHeader.Font = Enum.Font.Gotham
+			nameHeader.TextSize = 12
+			nameHeader.TextXAlignment = Enum.TextXAlignment.Left
+			nameHeader.BackgroundTransparency = 1
+			nameHeader.Parent = header
+
+			local statusHeader = Instance.new("TextLabel")
+			statusHeader.Size = UDim2.new(0.25, 0, 1, 0)
+			statusHeader.Position = UDim2.new(0.4, 0, 0, 0)
+			statusHeader.Text = "Status"
+			statusHeader.TextColor3 = Color3.fromRGB(150, 150, 150)
+			statusHeader.Font = Enum.Font.Gotham
+			statusHeader.TextSize = 12
+			statusHeader.TextXAlignment = Enum.TextXAlignment.Left
+			statusHeader.BackgroundTransparency = 1
+			statusHeader.Parent = header
+
+			local cpuHeader = Instance.new("TextLabel")
+			cpuHeader.Size = UDim2.new(0.15, 0, 1, 0)
+			cpuHeader.Position = UDim2.new(0.65, 0, 0, 0)
+			cpuHeader.Text = "CPU"
+			cpuHeader.TextColor3 = Color3.fromRGB(150, 150, 150)
+			cpuHeader.Font = Enum.Font.Gotham
+			cpuHeader.TextSize = 12
+			cpuHeader.TextXAlignment = Enum.TextXAlignment.Left
+			cpuHeader.BackgroundTransparency = 1
+			cpuHeader.Parent = header
+
+			local memHeader = Instance.new("TextLabel")
+			memHeader.Size = UDim2.new(0.15, 0, 1, 0)
+			memHeader.Position = UDim2.new(0.8, 0, 0, 0)
+			memHeader.Text = "Memory"
+			memHeader.TextColor3 = Color3.fromRGB(150, 150, 150)
+			memHeader.Font = Enum.Font.Gotham
+			memHeader.TextSize = 12
+			memHeader.TextXAlignment = Enum.TextXAlignment.Left
+			memHeader.BackgroundTransparency = 1
+			memHeader.Parent = header
+
+			-- Process list
+			local scrollFrame = Instance.new("ScrollingFrame")
+			scrollFrame.Size = UDim2.new(1, 0, 1, -30)
+			scrollFrame.Position = UDim2.new(0, 0, 0, 30)
+			scrollFrame.BackgroundTransparency = 1
+			scrollFrame.CanvasSize = UDim2.new(0, 0, 0, 0)
+			scrollFrame.AutomaticCanvasSize = Enum.AutomaticSize.Y
+			scrollFrame.ScrollBarThickness = 4
+			scrollFrame.Parent = container
+
+			local listLayout = Instance.new("UIListLayout")
+			listLayout.Padding = UDim.new(0, 2)
+			listLayout.SortOrder = Enum.SortOrder.LayoutOrder
+			listLayout.Parent = scrollFrame
+
+			local processRows = {}
+
+			local function updateProcesses()
+				-- Clear existing rows
+				for _, row in pairs(processRows) do
+					row:Destroy()
+				end
+				processRows = {}
+
+				local processes = getProcesses()
+				for _, proc in ipairs(processes) do
+					local row = Instance.new("Frame")
+					row.Size = UDim2.new(1, 0, 0, 30)
+					row.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
+					row.BorderSizePixel = 0
+					row.Parent = scrollFrame
+
+					local nameLabel = Instance.new("TextLabel")
+					nameLabel.Size = UDim2.new(0.4, 0, 1, 0)
+					nameLabel.Position = UDim2.new(0, 10, 0, 0)
+					nameLabel.Text = proc.name
+					nameLabel.TextColor3 = Color3.new(1, 1, 1)
+					nameLabel.Font = Enum.Font.Gotham
+					nameLabel.TextSize = 13
+					nameLabel.TextXAlignment = Enum.TextXAlignment.Left
+					nameLabel.BackgroundTransparency = 1
+					nameLabel.Parent = row
+
+					local statusLabel = Instance.new("TextLabel")
+					statusLabel.Size = UDim2.new(0.25, 0, 1, 0)
+					statusLabel.Position = UDim2.new(0.4, 0, 0, 0)
+					statusLabel.Text = proc.status
+					statusLabel.TextColor3 = proc.status == "Running" and Color3.fromRGB(0, 255, 100) or Color3.fromRGB(200, 200, 0)
+					statusLabel.Font = Enum.Font.Gotham
+					statusLabel.TextSize = 13
+					statusLabel.TextXAlignment = Enum.TextXAlignment.Left
+					statusLabel.BackgroundTransparency = 1
+					statusLabel.Parent = row
+
+					local cpuLabel = Instance.new("TextLabel")
+					cpuLabel.Size = UDim2.new(0.15, 0, 1, 0)
+					cpuLabel.Position = UDim2.new(0.65, 0, 0, 0)
+					cpuLabel.Text = proc.cpu .. "%"
+					cpuLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
+					cpuLabel.Font = Enum.Font.Gotham
+					cpuLabel.TextSize = 13
+					cpuLabel.TextXAlignment = Enum.TextXAlignment.Left
+					cpuLabel.BackgroundTransparency = 1
+					cpuLabel.Parent = row
+
+					local memLabel = Instance.new("TextLabel")
+					memLabel.Size = UDim2.new(0.15, 0, 1, 0)
+					memLabel.Position = UDim2.new(0.8, 0, 0, 0)
+					memLabel.Text = proc.memory .. " MB"
+					memLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
+					memLabel.Font = Enum.Font.Gotham
+					memLabel.TextSize = 13
+					memLabel.TextXAlignment = Enum.TextXAlignment.Left
+					memLabel.BackgroundTransparency = 1
+					memLabel.Parent = row
+
+					-- Click to focus app
+					if proc.name ~= "System" and proc.name ~= "Desktop Window Manager" then
+						row.MouseButton1Click:Connect(function()
+							if AppManager then
+								AppManager.ResumeApplication(proc.name)
+							end
+						end)
+					end
+
+					table.insert(processRows, row)
+				end
 			end
 
-			for i = 1, count do
-				local bar = bars[i]
-				local val = history[i] or 0
-				local height = (val / 100) * availHeight
-				height = math.max(1, height)
+			updateProcesses()
+			return container, updateProcesses
+		end
 
-				local x = startX + (i - 1) * (barWidth + spacing)
-				local y = availHeight - height
+		local function createHistoryTab()
+			local container = Instance.new("Frame")
+			container.Size = UDim2.new(1, 0, 1, 0)
+			container.BackgroundTransparency = 1
+			container.Parent = contentContainer
 
-				bar.Size = UDim2.new(0, barWidth, 0, height)
-				bar.Position = UDim2.new(0, x, 0, y)
+			local infoLabel = Instance.new("TextLabel")
+			infoLabel.Size = UDim2.new(1, 0, 0, 40)
+			infoLabel.Position = UDim2.new(0, 0, 0, 20)
+			infoLabel.Text = "📊 App Resource Usage History"
+			infoLabel.TextColor3 = Color3.new(1, 1, 1)
+			infoLabel.Font = Enum.Font.GothamBold
+			infoLabel.TextSize = 18
+			infoLabel.BackgroundTransparency = 1
+			infoLabel.Parent = container
 
-				-- Color based on value (gradient)
-				local r = 50 + (val / 100) * 205
-				local g = 181 - (val / 100) * 150
-				local b = 172 - (val / 100) * 150
-				bar.BackgroundColor3 = Color3.fromRGB(
-					math.clamp(r, 50, 255),
-					math.clamp(g, 30, 181),
-					math.clamp(b, 30, 172)
-				)
-				bar.Visible = true
+			local historyFrame = Instance.new("Frame")
+			historyFrame.Size = UDim2.new(1, -20, 0, 200)
+			historyFrame.Position = UDim2.new(0, 10, 0, 70)
+			historyFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 25)
+			historyFrame.BorderSizePixel = 0
+			historyFrame.Parent = container
+			local histCorner = Instance.new("UICorner")
+			histCorner.CornerRadius = UDim.new(0, 6)
+			histCorner.Parent = historyFrame
+
+			-- Simple history view (just show recent apps)
+			local scrollHist = Instance.new("ScrollingFrame")
+			scrollHist.Size = UDim2.new(1, -10, 1, -10)
+			scrollHist.Position = UDim2.new(0, 5, 0, 5)
+			scrollHist.BackgroundTransparency = 1
+			scrollHist.AutomaticCanvasSize = Enum.AutomaticSize.Y
+			scrollHist.ScrollBarThickness = 4
+			scrollHist.Parent = historyFrame
+
+			local histLayout = Instance.new("UIListLayout")
+			histLayout.Padding = UDim.new(0, 5)
+			histLayout.SortOrder = Enum.SortOrder.LayoutOrder
+			histLayout.Parent = scrollHist
+
+			local historyRows = {}
+
+			local function updateHistory()
+				for _, row in pairs(historyRows) do
+					row:Destroy()
+				end
+				historyRows = {}
+
+				local apps = AppLoader.GetAllApps and AppLoader.GetAllApps() or {}
+				for _, appData in ipairs(apps) do
+					if not AppManager.IsSystemApp(appData.name) then
+						local row = Instance.new("Frame")
+						row.Size = UDim2.new(1, 0, 0, 35)
+						row.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
+						row.BorderSizePixel = 0
+						row.Parent = scrollHist
+
+						local nameLabel = Instance.new("TextLabel")
+						nameLabel.Size = UDim2.new(0.5, 0, 1, 0)
+						nameLabel.Position = UDim2.new(0, 10, 0, 0)
+						nameLabel.Text = appData.name
+						nameLabel.TextColor3 = Color3.new(1, 1, 1)
+						nameLabel.Font = Enum.Font.Gotham
+						nameLabel.TextSize = 14
+						nameLabel.TextXAlignment = Enum.TextXAlignment.Left
+						nameLabel.BackgroundTransparency = 1
+						nameLabel.Parent = row
+
+						local timeLabel = Instance.new("TextLabel")
+						timeLabel.Size = UDim2.new(0.3, 0, 1, 0)
+						timeLabel.Position = UDim2.new(0.5, 0, 0, 0)
+						timeLabel.Text = "Last used: " .. (os.date("%H:%M") or "Never")
+						timeLabel.TextColor3 = Color3.fromRGB(150, 150, 150)
+						timeLabel.Font = Enum.Font.Gotham
+						timeLabel.TextSize = 12
+						timeLabel.TextXAlignment = Enum.TextXAlignment.Right
+						timeLabel.BackgroundTransparency = 1
+						timeLabel.Parent = row
+
+						local statusLabel = Instance.new("TextLabel")
+						statusLabel.Size = UDim2.new(0.15, 0, 1, 0)
+						statusLabel.Position = UDim2.new(0.85, 0, 0, 0)
+						statusLabel.Text = AppManager.GetActiveApp and AppManager.GetActiveApp() == appData.name and "🟢 Active" or "⚪ Idle"
+						statusLabel.TextColor3 = AppManager.GetActiveApp and AppManager.GetActiveApp() == appData.name and Color3.fromRGB(0, 255, 100) or Color3.fromRGB(150, 150, 150)
+						statusLabel.Font = Enum.Font.Gotham
+						statusLabel.TextSize = 12
+						statusLabel.TextXAlignment = Enum.TextXAlignment.Right
+						statusLabel.BackgroundTransparency = 1
+						statusLabel.Parent = row
+
+						table.insert(historyRows, row)
+					end
+				end
 			end
 
-			-- Hide unused bars
-			for i = count + 1, #bars do
-				bars[i].Visible = false
+			updateHistory()
+			return container, updateHistory
+		end
+
+		-- === Tab Switching ===
+		local tabContents = {}
+		local tabUpdateFuncs = {}
+
+		local function SwitchTab(tabName)
+			-- Clear content container
+			for _, child in pairs(contentContainer:GetChildren()) do
+				child:Destroy()
+			end
+
+			local content, updateFunc
+			if tabName == "Performance" then
+				content, updateFunc = createPerformanceTab()
+			elseif tabName == "Processes" then
+				content, updateFunc = createProcessesTab()
+			elseif tabName == "App History" then
+				content, updateFunc = createHistoryTab()
+			end
+
+			tabContents[tabName] = content
+			tabUpdateFuncs[tabName] = updateFunc
+
+			-- Initial update
+			if updateFunc then
+				updateFunc()
 			end
 		end
 
-		-- Initial update
-		updateStats()
+		if isDesktop then
+			-- Desktop: Tab buttons
+			for i, tabName in ipairs(tabs) do
+				local btn = Instance.new("TextButton")
+				btn.Size = UDim2.new(1 / #tabs, 0, 1, 0)
+				btn.Position = UDim2.new((i - 1) / #tabs, 0, 0, 0)
+				btn.BackgroundColor3 = (i == 1) and Color3.fromRGB(50, 50, 60) or Color3.fromRGB(25, 25, 35)
+				btn.Text = tabName
+				btn.TextColor3 = Color3.new(1, 1, 1)
+				btn.Font = Enum.Font.Gotham
+				btn.TextSize = 14
+				btn.BorderSizePixel = 0
+				btn.Parent = tabContainer
+				tabButtons[tabName] = btn
 
-		-- Start periodic updates
+				btn.MouseButton1Click:Connect(function()
+					for _, b in pairs(tabButtons) do
+						b.BackgroundColor3 = Color3.fromRGB(25, 25, 35)
+					end
+					btn.BackgroundColor3 = Color3.fromRGB(50, 50, 60)
+					currentTab = tabName
+					SwitchTab(tabName)
+				end)
+			end
+		else
+			-- Mobile: Dropdown for tabs
+			local dropdown = Instance.new("TextButton")
+			dropdown.Size = UDim2.new(0.6, 0, 1, 0)
+			dropdown.Position = UDim2.new(0.2, 0, 0, 0)
+			dropdown.BackgroundColor3 = Color3.fromRGB(40, 40, 50)
+			dropdown.Text = "📊 Performance"
+			dropdown.TextColor3 = Color3.new(1, 1, 1)
+			dropdown.Font = Enum.Font.Gotham
+			dropdown.TextSize = 16
+			dropdown.BorderSizePixel = 0
+			dropdown.ZIndex = 5
+			dropdown.Parent = tabContainer
+
+			local dropdownList = Instance.new("Frame")
+			dropdownList.Size = UDim2.new(0.6, 0, 0, 0)
+			dropdownList.Position = UDim2.new(0.2, 0, 1, 0)
+			dropdownList.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
+			dropdownList.BackgroundTransparency = 0.95
+			dropdownList.Visible = false
+			dropdownList.ZIndex = 6
+			dropdownList.Parent = tabContainer
+
+			local listLayout = Instance.new("UIListLayout")
+			listLayout.Padding = UDim.new(0, 2)
+			listLayout.SortOrder = Enum.SortOrder.LayoutOrder
+			listLayout.Parent = dropdownList
+
+			for i, tabName in ipairs(tabs) do
+				local item = Instance.new("TextButton")
+				item.Size = UDim2.new(1, 0, 0, 35)
+				item.BackgroundColor3 = Color3.fromRGB(40, 40, 50)
+				item.Text = "📊 " .. tabName
+				item.TextColor3 = Color3.new(1, 1, 1)
+				item.Font = Enum.Font.Gotham
+				item.TextSize = 15
+				item.BorderSizePixel = 0
+				item.LayoutOrder = i
+				item.Parent = dropdownList
+
+				item.MouseButton1Click:Connect(function()
+					dropdown.Text = "📊 " .. tabName
+					dropdownList.Visible = false
+					dropdownList.Size = UDim2.new(0.6, 0, 0, 0)
+					currentTab = tabName
+					SwitchTab(tabName)
+				end)
+			end
+
+			dropdown.MouseButton1Click:Connect(function()
+				dropdownList.Visible = not dropdownList.Visible
+				if dropdownList.Visible then
+					local count = #tabs
+					dropdownList.Size = UDim2.new(0.6, 0, 0, count * 37 + 5)
+				else
+					dropdownList.Size = UDim2.new(0.6, 0, 0, 0)
+				end
+			end)
+		end
+
+		-- === Content Container ===
+		contentContainer = Instance.new("Frame")
+		contentContainer.Size = UDim2.new(1, 0, 1, -90)
+		contentContainer.Position = UDim2.new(0, 0, 0, 90)
+		contentContainer.BackgroundTransparency = 1
+		contentContainer.Parent = mainFrame
+
+		-- Initial tab
+		SwitchTab("Performance")
+
+		-- === Update Loop ===
+		local updateThread = nil
+		local function runUpdate()
+			for tabName, func in pairs(tabUpdateFuncs) do
+				if tabName == currentTab then
+					pcall(func)
+				end
+			end
+		end
+
 		updateThread = RunService.Heartbeat:Connect(function()
 			task.wait(1)
-			updateStats()
+			runUpdate()
 		end)
 
 		-- === Cleanup ===
@@ -6712,9 +7192,10 @@ function ZolinModules.MemoryDisplayApp()
 		appFolder.Destroying:Connect(cleanup)
 
 		ui.Visible = true
+		print("[TaskManager] Initialized!")
 	end
 
-	return MemoryApp
+	return TaskManager
 end
 
 -- ============================================
@@ -6734,7 +7215,7 @@ function ZolinModules.GetAll()
 		SettingsApp = ZolinModules.SettingsApp(),          -- Add this
 		WallpaperSysApp = ZolinModules.WallpaperSysApp(),  -- Add this
 		ZolinInstaller = ZolinModules.ZolinInstaller(),
-		MemoryDisplayApp = ZolinModules.MemoryDisplayApp(),
+		TaskManager = ZolinModules.TaskManagerApp(),
 	}
 	local deps = {
 		AnimationManager = modules.AnimationManager,
@@ -6766,7 +7247,7 @@ function ZolinModules.GetAll_Desktop()
 		TaskbarManager = ZolinModules.TaskbarManager(),
 		StartMenuManager = ZolinModules.StartMenuManager(),
 		ContextMenuManager = ZolinModules.ContextMenuManager(),
-		MemoryDisplayApp = ZolinModules.MemoryDisplayApp(),
+		TaskManager = ZolinModules.TaskManagerApp(),
 	}
 	local deps = {
 		AnimationManager = modules.AnimationManager,
@@ -6863,8 +7344,10 @@ function ZolinModules.Init()
 			end)
 		end
 	end
--- // AUTO INITIALIZE //
+--[[ // AUTO INITIALIZE //
 
 ZolinModules.Init();
+--]]
+ZolinModules.ZolinListener()
 
 return ZolinModules
