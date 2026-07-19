@@ -23,7 +23,19 @@ if not bootloader then
 	return
 end
 
--- ---- References to UI containers ----
+local FrameList = bootloader:FindFirstChild("FrameList")
+if not FrameList then
+	warn("Bootloader: FrameList not found")
+	return
+end
+
+local SelectionList = bootloader:FindFirstChild("SelectionList")
+if not SelectionList then
+	warn("Bootloader: SelectionList not found")
+	return
+end
+
+-- ---- References to UI containers (template folders) ----
 local __bootloader = MainUI:FindFirstChild("__Bootloader")
 if not __bootloader then
 	warn("Bootloader: __Bootloader folder not found")
@@ -38,13 +50,13 @@ if not frameListFolder or not selectionListFolder then
 	return
 end
 
--- ---- InfoLabel (template) ----
-local infoLabel = frameListFolder:FindFirstChild("InfoLabel")
-if infoLabel then
-	infoLabel.Visible = true
-else
-	warn("Bootloader: InfoLabel not found")
+-- ---- InfoLabel template ----
+local infoTemplate = frameListFolder:FindFirstChild("InfoLabel")
+if not infoTemplate then
+	warn("Bootloader: InfoLabel template not found")
+	return
 end
+infoTemplate.Visible = false  -- hide template
 
 -- ---- SelectionButton template ----
 local buttonTemplate = selectionListFolder:FindFirstChild("SelectionButton")
@@ -67,7 +79,7 @@ local function isSystemOwner()
 	return false
 end
 
--- ---- Build info text ----
+-- ---- Build info text (as a table of lines) ----
 local function getFriendCount(userId)
 	local success, page = pcall(function()
 		return Players:GetFriendsAsync(userId)
@@ -78,7 +90,7 @@ local function getFriendCount(userId)
 	end
 
 	local onlineCount = 0
-	
+
 	repeat
 		for _, friend in ipairs(page:GetCurrentPage()) do
 			if friend.IsOnline then
@@ -97,37 +109,59 @@ local function getFriendCount(userId)
 	return onlineCount
 end
 
-local function buildInfoText()
+local function getInfoLines()
 	local userId = player.UserId
 	local displayName = player.DisplayName
 	local userName = player.Name
-	local friendCount = getFriendCount(player.UserId)
+	local friendCount = getFriendCount(userId)
 	local isOwner = isSystemOwner()
 	local gameName = game.Name or "Unknown"
 	local placeId = game.PlaceId or 0
 	local bootMode = "Bootloader"
 
-	local text = string.format([[
-Username: %s
-Display Name: %s
-User ID: %d
-Friends Online: %s
-System Owner: %s
-Game: %s
-Place ID: %d
-Current Boot: %s
-]], userName, displayName, userId, tostring(friendCount), isOwner and "✅ Yes" or "❌ No", gameName, placeId, bootMode)
-
-	return text
+	return {
+		"Username: " .. userName,
+		"Display Name: " .. displayName,
+		"User ID: " .. userId,
+		"Friends Online: " .. tostring(friendCount),
+		"System Owner: " .. (isOwner and "✅ Yes" or "❌ No"),
+		"Game: " .. gameName,
+		"Place ID: " .. placeId,
+		"Current Boot: " .. bootMode,
+	}
 end
 
--- ---- Update InfoLabel ----
-local function updateInfoLabel()
-	if infoLabel then
-		infoLabel.Text = buildInfoText()
+-- ---- Populate InfoLabel lines into FrameList ----
+local function populateInfoLabels()
+	-- Clear existing info labels (keep template)
+	for _, child in ipairs(FrameList:GetChildren()) do
+		if child ~= infoTemplate then
+			child:Destroy()
+		end
+	end
+
+	-- Ensure FrameList has a UIListLayout
+	local layout = FrameList:FindFirstChildOfClass("UIListLayout")
+	if not layout then
+		layout = Instance.new("UIListLayout")
+		layout.FillDirection = Enum.FillDirection.Vertical
+		layout.SortOrder = Enum.SortOrder.LayoutOrder
+		layout.Padding = UDim.new(0, 4)
+		layout.Parent = FrameList
+	end
+
+	local lines = getInfoLines()
+	for order, line in ipairs(lines) do
+		local label = infoTemplate:Clone()
+		label.Name = "InfoLine_" .. order
+		label.Visible = true
+		label.Text = line
+		label.LayoutOrder = order
+		label.Parent = FrameList
 	end
 end
-updateInfoLabel()
+
+populateInfoLabels()
 
 -- ---- Mode options (LayoutOrder is determined by table order) ----
 local modeOptions = {
@@ -137,20 +171,20 @@ local modeOptions = {
 }
 
 -- ---- Clear existing buttons (keep template) ----
-for _, child in ipairs(selectionListFolder:GetChildren()) do
+for _, child in ipairs(SelectionList:GetChildren()) do
 	if child ~= buttonTemplate then
 		child:Destroy()
 	end
 end
 
 -- ---- Ensure UIListLayout exists on SelectionList ----
-local layout = selectionListFolder:FindFirstChildOfClass("UIListLayout")
+local layout = SelectionList:FindFirstChildOfClass("UIListLayout")
 if not layout then
 	layout = Instance.new("UIListLayout")
 	layout.FillDirection = Enum.FillDirection.Vertical
 	layout.SortOrder = Enum.SortOrder.LayoutOrder
 	layout.Padding = UDim.new(0, 10)
-	layout.Parent = selectionListFolder
+	layout.Parent = SelectionList
 end
 
 -- ---- Create selection buttons ----
@@ -171,7 +205,7 @@ for order, option in ipairs(modeOptions) do
 	btn.Visible = true
 	btn.Text = option.label
 	btn.LayoutOrder = order
-	btn.Parent = selectionListFolder
+	btn.Parent = SelectionList
 
 	btn.MouseButton1Click:Connect(function()
 		local mode = option.mode
