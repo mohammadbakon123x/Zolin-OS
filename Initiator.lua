@@ -2693,7 +2693,7 @@ local function createChunk25()
 	bootloader.BackgroundColor3 = Color3.fromRGB(0, 0, 0);
 	bootloader.ZIndex = -999999999;
 	bootloader.Parent = MainUI;
-	createUICorner(bootloader, "UICorner", UDim2.new(0, 5));
+	createUICorner(bootloader, "UICorner", UDim.new(0, 5));
 	createUIScale(bootloader, 1);
 	createUIStroke(bootloader, "UIStroke", Color3.fromRGB(33, 33, 33), 5.8, 0.67, 3);
 	local ImageOS = Instance.new("ImageLabel");
@@ -2822,7 +2822,7 @@ local function createChunk25()
 	local UITextSizeConstraint2 = Instance.new("UITextSizeConstraint");
 	UITextSizeConstraint2.MaxTextSize = 52;
 	UITextSizeConstraint2.Parent = SelectionButton;
-	createUICorner(SelectionButton, "UICorner", UDim2.new(0, 8))
+	createUICorner(SelectionButton, "UICorner", UDim.new(0, 8))
 	local UIGradient3 = Instance.new("UIGradient");
 	UIGradient3.Parent = SelectionButton;
 	UIGradient3.Color = ColorSequence.new({
