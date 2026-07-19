@@ -1,5 +1,5 @@
 local v1 = {};
-v1.ver = "1.3.5" -- versionOS
+v1.ver = "1.3.6" -- versionOS
 
 -- ============================================
 -- HELPER FUNCTIONS
@@ -2839,9 +2839,9 @@ local function createChunk25()
 	local UIShadow = Instance.new("UIShadow");
 	UIShadow.Parent = SelectionButton;
 	UIShadow.Color = Color3.fromRGB(255, 255, 255);
-	UIShadow.BlurRadius = UDim2.new(0, 20);
-	UIShadow.Offset = UDim2.new(0, 0);
-	UIShadow.Spread = UDim2.new(0, 0);
+	UIShadow.BlurRadius = UDim.new(0, 20);
+	UIShadow.Offset = UDim.new(0, 0);
+	UIShadow.Spread = UDim.new(0, 0);
 	UIShadow.Transparency = 0.5;
 	UIShadow.ZIndex  = -1;
 end
