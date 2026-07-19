@@ -2694,7 +2694,7 @@ local function createChunk25()
 	bootloader.ZIndex = -999999999;
 	bootloader.Parent = MainUI;
 	createUICorner(bootloader, "UICorner", UDim.new(0, 5));
-	createUIScale(bootloader, 1);
+	createUIScale(bootloader, "UIScale", 1);
 	createUIStroke(bootloader, "UIStroke", Color3.fromRGB(33, 33, 33), 5.8, 0.67, 3);
 	local ImageOS = Instance.new("ImageLabel");
 	ImageOS.Name = "ImageOS";
@@ -2840,8 +2840,8 @@ local function createChunk25()
 	UIShadow.Parent = SelectionButton;
 	UIShadow.Color = Color3.fromRGB(255, 255, 255);
 	UIShadow.BlurRadius = UDim.new(0, 20);
-	UIShadow.Offset = Vector2.new(0, 0)
-	UIShadow.Spread = Vector2.new(0, 0)
+	UIShadow.Offset = UDim.new(0, 0)
+	UIShadow.Spread = UDim.new(0, 0)
 	UIShadow.Transparency = 0.5;
 	UIShadow.ZIndex  = -1;
 	
