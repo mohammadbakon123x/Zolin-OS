@@ -1,5 +1,5 @@
 local v1 = {};
-v1.ver = "1.3.8" -- versionOS
+v1.ver = "1.3.9" -- versionOS
 
 -- ============================================
 -- HELPER FUNCTIONS
@@ -2875,7 +2875,7 @@ function v1.Init()
 		__ScreenFrame.ZIndex = 999999999
 		__ScreenFrame.ClipsDescendants = true
 		__ScreenFrame.Active = true
-		__ScreenFrame.Visible = true
+		__ScreenFrame.Visible = false
 		__ScreenFrame.Parent = MainUI
 
 		__ZolinDesktop = Instance.new("Frame")
