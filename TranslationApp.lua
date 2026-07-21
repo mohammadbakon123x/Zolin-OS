@@ -5,7 +5,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 	local l__TweenService__5 = game:GetService("TweenService");
 	local UIS = game:GetService("UserInputService");
 	local u6 = game:GetService("RunService")
-	local BuildVersion = "3.22.4"
+	local BuildVersion = "3.22.5"
 	local versionLabel = "v"..BuildVersion;
 	local SettingsScript = {
 		DisplayLogs = true,
@@ -27,6 +27,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 	local l__HumanoidRootPart__9 = Character:WaitForChild("HumanoidRootPart", 5);
 	local copyrightLabel
 	local CustomHitbox = Vector3.new(32, 32, 32) -- beatdown custom hitbox size
+	local CustomGloveHitbox = Vector3.new(7, 7, 7) -- slap battles custom hitbox size
 	local TeleportUI = nil;
 	local TeleportData = {
 		UpdateInterval = 5,
@@ -38,7 +39,15 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 	local SlapBattlesSettings = {
 		ForceOverwriteBeatdown = false,
 		BiggerHitbox = false,
+		GloveBigHitBox = false,
 	};
+	
+	local CurrentGloveHitboxScale = 1   -- default size multiplier (1 to 25)
+	local gloveResizeEnabled = false
+	local gloveScale = CurrentGloveHitboxScale  -- default 1
+	local dragging = false
+	local trackWidth = 0
+	
 	local originalSkybox = {}
 	local originalLighting = {}
 	--[ Custom Beatdown Var
@@ -3516,6 +3525,134 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 	UIStroke_TitleSlider5.Transparency = 0;
 	--]]
 	
+	--[ Glove Hitbox Resize Setting
+	local GloveResizeSetting = Instance.new("Frame", Desclabel)
+	GloveResizeSetting.Name = "GloveResizeSetting"
+	GloveResizeSetting.AnchorPoint = Vector2.new(0.5, 0.5)
+	GloveResizeSetting.Active = true
+	GloveResizeSetting.BackgroundColor3 = Color3.fromRGB(35, 31, 59)
+	GloveResizeSetting.BackgroundTransparency = 0
+	GloveResizeSetting.Size = UDim2.new(1, 0, 0.35, 0)   -- taller to accommodate slider
+	GloveResizeSetting.SizeConstraint = Enum.SizeConstraint.RelativeXY
+	GloveResizeSetting.Visible = GameDetection.IsSlapBattles
+	GloveResizeSetting.ZIndex = 6
+	GloveResizeSetting.LayoutOrder = 7  -- adjust as needed
+	local UICorner_GloveResize = Instance.new("UICorner", GloveResizeSetting)
+	UICorner_GloveResize.CornerRadius = UDim.new(0, 5)
+
+	local Title_GloveResize = Instance.new("TextLabel", GloveResizeSetting)
+	Title_GloveResize.AnchorPoint = Vector2.new(0.5, 0)
+	Title_GloveResize.BackgroundTransparency = 1
+	Title_GloveResize.Position = UDim2.new(0.5, 0, 0, 0)
+	Title_GloveResize.Size = UDim2.new(1, 0, 0.5, 0)
+	Title_GloveResize.SizeConstraint = Enum.SizeConstraint.RelativeXY
+	Title_GloveResize.Visible = true
+	Title_GloveResize.ZIndex = 6
+	Title_GloveResize.RichText = true
+	Title_GloveResize.Text = "  Force Resize Glove Hitbox (Beta):"
+	Title_GloveResize.TextColor3 = Color3.fromRGB(194, 194, 194)
+	Title_GloveResize.TextScaled = false
+	Title_GloveResize.TextSize = 29
+	Title_GloveResize.TextWrapped = true
+	Title_GloveResize.TextXAlignment = Enum.TextXAlignment.Left
+	Title_GloveResize.TextYAlignment = Enum.TextYAlignment.Center
+	local UIPadding_TitleGloveResize = Instance.new("UIPadding", Title_GloveResize)
+	UIPadding_TitleGloveResize.PaddingBottom = UDim.new(-0.2, 0)
+	UIPadding_TitleGloveResize.PaddingLeft = UDim.new(0, 0)
+	UIPadding_TitleGloveResize.PaddingRight = UDim.new(0, 0)
+	UIPadding_TitleGloveResize.PaddingTop = UDim.new(-0.2, 0)
+
+	-- Toggle button
+	local Button_GloveResizeToggle = Instance.new("TextButton", Title_GloveResize)
+	Button_GloveResizeToggle.Active = true
+	Button_GloveResizeToggle.AutoButtonColor = true
+	Button_GloveResizeToggle.AnchorPoint = Vector2.new(0.5, 0.5)
+	Button_GloveResizeToggle.BackgroundColor3 = Color3.fromRGB(70, 60, 95)
+	Button_GloveResizeToggle.BackgroundTransparency = 0.55
+	Button_GloveResizeToggle.Position = UDim2.new(0.85, 0, 0.25, 0)
+	Button_GloveResizeToggle.Size = UDim2.new(0, 200, 0, 31)
+	Button_GloveResizeToggle.SizeConstraint = Enum.SizeConstraint.RelativeXY
+	Button_GloveResizeToggle.Visible = true
+	Button_GloveResizeToggle.ZIndex = 6
+	Button_GloveResizeToggle.Name = "GloveResizeToggle"
+	Button_GloveResizeToggle.Font = Enum.Font.Oswald
+	Button_GloveResizeToggle.FontFace.Weight = Enum.FontWeight.Bold
+	Button_GloveResizeToggle.FontFace.Style = Enum.FontStyle.Italic
+	Button_GloveResizeToggle.Text = "OFF"
+	Button_GloveResizeToggle.TextColor3 = Color3.fromRGB(214, 214, 214)
+	Button_GloveResizeToggle.RichText = true
+	Button_GloveResizeToggle.TextScaled = true
+	Button_GloveResizeToggle.TextWrapped = true
+	Button_GloveResizeToggle.TextXAlignment = Enum.TextXAlignment.Center
+	Button_GloveResizeToggle.TextYAlignment = Enum.TextYAlignment.Center
+	local UICorner_GloveResizeToggle = Instance.new("UICorner", Button_GloveResizeToggle)
+	UICorner_GloveResizeToggle.CornerRadius = UDim.new(0, 5)
+	local UIStroke_GloveResizeToggle = Instance.new("UIStroke", Button_GloveResizeToggle)
+	UIStroke_GloveResizeToggle.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+	UIStroke_GloveResizeToggle.BorderStrokePosition = Enum.BorderStrokePosition.Outer
+	UIStroke_GloveResizeToggle.Thickness = 2.9
+	UIStroke_GloveResizeToggle.Color = Color3.fromRGB(103, 92, 150)
+	UIStroke_GloveResizeToggle.StrokeSizingMode = Enum.StrokeSizingMode.FixedSize
+	UIStroke_GloveResizeToggle.LineJoinMode = Enum.LineJoinMode.Round
+	UIStroke_GloveResizeToggle.ZIndex = 6
+	UIStroke_GloveResizeToggle.Transparency = 0
+
+	-- Slider container (visible only when toggle is ON)
+	local SliderContainer = Instance.new("Frame", GloveResizeSetting)
+	SliderContainer.Name = "SliderContainer"
+	SliderContainer.AnchorPoint = Vector2.new(0.5, 0)
+	SliderContainer.BackgroundTransparency = 1
+	SliderContainer.Position = UDim2.new(0.5, 0, 0.5, 0)
+	SliderContainer.Size = UDim2.new(0.9, 0, 0.45, 0)
+	SliderContainer.ZIndex = 6
+	SliderContainer.Visible = false  -- initially hidden
+
+	-- Slider track
+	local SliderTrack = Instance.new("Frame", SliderContainer)
+	SliderTrack.Name = "SliderTrack"
+	SliderTrack.AnchorPoint = Vector2.new(0.5, 0.5)
+	SliderTrack.BackgroundColor3 = Color3.fromRGB(60, 60, 80)
+	SliderTrack.BackgroundTransparency = 0.3
+	SliderTrack.Position = UDim2.new(0.5, 0, 0.5, 0)
+	SliderTrack.Size = UDim2.new(0.8, 0, 0.2, 0)
+	SliderTrack.ZIndex = 6
+	local UICorner_Track = Instance.new("UICorner", SliderTrack)
+	UICorner_Track.CornerRadius = UDim.new(0, 5)
+
+	-- Slider handle (draggable)
+	local SliderHandle = Instance.new("TextButton", SliderTrack)
+	SliderHandle.Name = "SliderHandle"
+	SliderHandle.AnchorPoint = Vector2.new(0.5, 0.5)
+	SliderHandle.BackgroundColor3 = Color3.fromRGB(113, 84, 255)
+	SliderHandle.BackgroundTransparency = 0
+	SliderHandle.Position = UDim2.new(0, 0, 0.5, 0)  -- will be updated
+	SliderHandle.Size = UDim2.new(0, 20, 0, 20)
+	SliderHandle.ZIndex = 7
+	SliderHandle.Text = ""
+	local UICorner_Handle = Instance.new("UICorner", SliderHandle)
+	UICorner_Handle.CornerRadius = UDim.new(0, 10)
+	local UIStroke_Handle = Instance.new("UIStroke", SliderHandle)
+	UIStroke_Handle.Color = Color3.fromRGB(255, 255, 255)
+	UIStroke_Handle.Thickness = 1
+
+	-- Value label
+	local ValueLabel = Instance.new("TextLabel", SliderContainer)
+	ValueLabel.Name = "ValueLabel"
+	ValueLabel.AnchorPoint = Vector2.new(0.5, 0)
+	ValueLabel.BackgroundTransparency = 1
+	ValueLabel.Position = UDim2.new(0.5, 0, 0.75, 0)
+	ValueLabel.Size = UDim2.new(0.5, 0, 0.25, 0)
+	local initPercent = (CurrentGloveHitboxScale - 1) / 24
+	SliderHandle.Position = UDim2.new(initPercent, 0, 0.5, 0)
+	ValueLabel.Text = string.format("%.1f", CurrentGloveHitboxScale)
+	ValueLabel.Font = Enum.Font.Oswald
+	ValueLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+	ValueLabel.TextScaled = true
+	ValueLabel.ZIndex = 6
+	
+	--]]
+
+	
 	local SlapSetting2 = Instance.new("Frame", Desclabel);
 	SlapSetting2.Name = "SlapSetting2";
 	SlapSetting2.AnchorPoint = Vector2.new(0.5, 0.5);
@@ -3586,6 +3723,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 	UIStroke_ButtonSlap2.StrokeSizingMode = Enum.StrokeSizingMode.FixedSize;
 	UIStroke_ButtonSlap2.LineJoinMode = Enum.LineJoinMode.Round;
 	UIStroke_ButtonSlap2.Transparency = 0;
+	
 	--]]
 
 	--[ Slap Battles Settings
@@ -6313,7 +6451,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 		local character = CurrentPlayer.Character;
 		if not character then return end;
 		local StandModel = character:FindFirstChild(Stand);
-		if not StandModel then return end;
+		if not StandModel then return end;	
 		if SlapBattlesSettings.ForceOverwriteBeatdown then
 			for _, model in ipairs(CustomBeatdownModels) do
 				if model.id == SelectedBeatdownModel and model.enabled then
@@ -6462,6 +6600,88 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 			end
 		end
 	end
+	
+	-- Apply and restore functions
+	local function applyGloveHitbox(scale)
+		if not lpr.Character then return end
+		-- find the glove/tool (adjust names as needed)
+		local character = lpr.Character
+		local tool = character:FindFirstChildOfClass("Tool")
+		if not tool then return end
+		-- look for parts named "Handle" or "Glove" or the glove itself
+		local glovePart = nil
+		for _, child in ipairs(tool:GetDescendants()) do
+			if child:IsA("BasePart") and (child.Name == "Glove") then
+				glovePart = child
+				break
+			end
+		end
+		if not glovePart then return end
+		-- apply scaled size
+		local baseSize = CustomGloveHitbox or Vector3.new(7, 7, 7)
+		glovePart.Size = baseSize * scale
+		glovePart.Transparency = 0.5  -- optional visual feedback
+	end
+	
+	local function updateSliderFromMouse(mouseX)
+		local track = SliderTrack
+		local handle = SliderHandle
+		local trackAbsSize = track.AbsoluteSize.X
+		if trackAbsSize == 0 then return end
+		local handleHalf = handle.AbsoluteSize.X / 2
+		local leftEdge = track.AbsolutePosition.X
+		local rightEdge = leftEdge + trackAbsSize
+		local clampedX = math.clamp(mouseX, leftEdge + handleHalf, rightEdge - handleHalf)
+		local percent = (clampedX - leftEdge - handleHalf) / (trackAbsSize - handle.AbsoluteSize.X)
+		percent = math.clamp(percent, 0, 1)
+		-- map percent to scale 1..25
+		local scale = 1 + percent * 24
+		gloveScale = scale
+		CurrentGloveHitboxScale = scale
+		ValueLabel.Text = string.format("%.1f", scale)
+		-- update handle position
+		local handlePos = UDim2.new(percent, 0, 0.5, 0)
+		handle.Position = handlePos
+		-- apply if enabled
+		if gloveResizeEnabled then
+			applyGloveHitbox(scale)
+		end
+	end
+
+	SliderHandle.MouseButton1Down:Connect(function()
+		dragging = true
+		trackWidth = SliderTrack.AbsoluteSize.X
+	end)
+
+	UIS.InputChanged:Connect(function(input)
+		if input.UserInputType == Enum.UserInputType.MouseMovement and dragging then
+			updateSliderFromMouse(input.Position.X)
+		end
+	end)
+
+	UIS.InputEnded:Connect(function(input)
+		if input.UserInputType == Enum.UserInputType.MouseButton1 then
+			dragging = false
+		end
+	end)
+
+	local function restoreGloveHitbox()
+		if not lpr.Character then return end
+		local character = lpr.Character
+		local tool = character:FindFirstChildOfClass("Tool")
+		if not tool then return end
+		local glovePart = nil
+		for _, child in ipairs(tool:GetDescendants()) do
+			if child:IsA("BasePart") and (child.Name == "Glove") then
+				glovePart = child
+				break
+			end
+		end
+		if not glovePart then return end
+		glovePart.Size = CustomGloveHitbox or Vector3.new(7, 7, 7)
+		glovePart.Transparency = 0
+	end
+	
 	--[[ old
 	local function startMonitoringOtherStands()
 		if not ViewOtherCustomStands.Enabled then return end
@@ -6649,7 +6869,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 					if selectedModelData then
 					spawn(function()
 						while ViewOtherCustomStands.Enabled do
-							task.wait(0.05);
+							task.wait(0.01);
 							if not stand and not stand.Parent then
 								if SettingsScript.DisplayLogs then
 									print("Stand was removed for: " .. player.Name)
@@ -6845,6 +7065,9 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 				end
 			end
 		end
+		if SlapBattlesSettings.GloveBigHitBox then
+			applyGloveHitbox(CurrentGloveHitboxScale)
+		end
 	end)
 	--// BUTTONS
 	ButtonSettings.MouseButton1Click:Connect(function()
@@ -6874,6 +7097,24 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 			if SettingsScript.DisplayLogs then
 				print("SettingsScript.KickPlayerAfterCutsenceBD: Disabled")
 			end
+		end
+	end)
+	
+	Button_GloveResizeToggle.MouseButton1Click:Connect(function()
+		gloveResizeEnabled = not gloveResizeEnabled
+		SlapBattlesSettings.GloveBigHitBox = gloveResizeEnabled
+		if gloveResizeEnabled then
+			Button_GloveResizeToggle.Text = "ON"
+			Button_GloveResizeToggle.BackgroundColor3 = Color3.fromRGB(84, 255, 113)
+			SliderContainer.Visible = true
+			-- apply current scale
+			applyGloveHitbox(gloveScale)
+		else
+			Button_GloveResizeToggle.Text = "OFF"
+			Button_GloveResizeToggle.BackgroundColor3 = Color3.fromRGB(70, 60, 95)
+			SliderContainer.Visible = false
+			-- restore default hitbox
+			restoreGloveHitbox()
 		end
 	end)
 	
