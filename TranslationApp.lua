@@ -7399,6 +7399,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 			end
 		end)
 		addViewOtherStandsSetting();
+		addHighlightSetting();
 		spawn(function()
 			task.wait(0.25);
 			startMonitoringOtherStands()
