@@ -5,7 +5,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 	local l__TweenService__5 = game:GetService("TweenService");
 	local UIS = game:GetService("UserInputService");
 	local u6 = game:GetService("RunService")
-	local BuildVersion = "3.22.6"
+	local BuildVersion = "3.22.7"
 	local versionLabel = "v"..BuildVersion;
 	local SettingsScript = {
 		DisplayLogs = true,
@@ -41,15 +41,21 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 		BiggerHitbox = false,
 		GloveBigHitBox = false,
 	};
-	
+	-- Slap battles | big hitbox glove
 	local CurrentGloveHitboxScale = 1   -- default size multiplier (1 to 25)
 	local gloveResizeEnabled = false
 	local gloveScale = CurrentGloveHitboxScale  -- default 1
 	local dragging = false
 	local trackWidth = 0
 	
+	-- Slap battles | highlight people
+	local PlayerHighlightEnabled = false
+	local highlightsTable = {}  -- tracks highlights per player
+	local highlightConnections = {}  -- tracks character added connections
+	
 	local originalSkybox = {}
 	local originalLighting = {}
+	
 	--[ Custom Beatdown Var
 	local CustomBeatdownUI = nil
 	local CustomBeatdownModels = {
@@ -7045,8 +7051,221 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 		end)
 		return ViewStandsSetting, Button_ViewStands
 	end
+	
+	-- ============ PLAYER HIGHLIGHT (ESP) SYSTEM ============
+
+	local highlightUpdateTimer = 0
+
+	local function updatePlayerHighlights()
+		if not PlayerHighlightEnabled then
+			-- Remove all highlights
+			for player, highlight in pairs(highlightsTable) do
+				if highlight then
+					highlight:Destroy()
+				end
+			end
+			highlightsTable = {}
+			return
+		end
+
+		-- Update highlights for all players
+		for _, player in ipairs(game.Players:GetPlayers()) do
+			if player ~= lpr then
+				local char = player.Character
+				if char then
+					local hl = highlightsTable[player]
+					if not hl or not hl.Parent then
+						hl = Instance.new("Highlight")
+						hl.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
+						hl.FillTransparency = 0.4
+						hl.OutlineTransparency = 0.2
+						hl.Adornee = char  -- attach to character
+						hl.Parent = char
+						highlightsTable[player] = hl
+					end
+					-- Set color based on friend status
+					if isFriend(player) then
+						hl.FillColor = Color3.fromRGB(0, 255, 0)   -- green
+						hl.OutlineColor = Color3.fromRGB(0, 255, 0)
+					else
+						hl.FillColor = Color3.fromRGB(255, 0, 0)   -- red
+						hl.OutlineColor = Color3.fromRGB(255, 0, 0)
+					end
+					hl.Enabled = true
+				else
+					-- Character doesn't exist, remove highlight if any
+					local hl = highlightsTable[player]
+					if hl then
+						hl:Destroy()
+						highlightsTable[player] = nil
+					end
+				end
+			end
+		end
+	end
+
+	-- Handle new players
+	local function onPlayerAdded(player)
+		if player == lpr then return end
+		-- When character spawns, update highlights
+		local charAddedConn
+		charAddedConn = player.CharacterAdded:Connect(function(char)
+			if PlayerHighlightEnabled then
+				-- Small delay to ensure character fully loads
+				task.wait(0.1)
+				updatePlayerHighlights()
+			end
+		end)
+		highlightConnections[player] = charAddedConn
+		-- Also update immediately if character exists
+		if player.Character then
+			task.wait(0.1)
+			updatePlayerHighlights()
+		end
+	end
+
+	local function onPlayerRemoving(player)
+		-- Clean up highlight
+		local hl = highlightsTable[player]
+		if hl then
+			hl:Destroy()
+			highlightsTable[player] = nil
+		end
+		-- Disconnect CharacterAdded
+		local conn = highlightConnections[player]
+		if conn then
+			conn:Disconnect()
+			highlightConnections[player] = nil
+		end
+	end
+	
+	local function startHighlightSystem()
+		if PlayerHighlightEnabled then return end
+		PlayerHighlightEnabled = true
+		-- Update for existing players
+		for _, player in ipairs(game.Players:GetPlayers()) do
+			onPlayerAdded(player)
+		end
+		updatePlayerHighlights()
+		-- Connect events
+		game.Players.PlayerAdded:Connect(onPlayerAdded)
+		game.Players.PlayerRemoving:Connect(onPlayerRemoving)
+		print("Player Highlight (ESP) enabled")
+	end
+
+	local function stopHighlightSystem()
+		PlayerHighlightEnabled = false
+		-- Remove all highlights
+		for player, hl in pairs(highlightsTable) do
+			hl:Destroy()
+		end
+		highlightsTable = {}
+		-- Disconnect all CharacterAdded connections
+		for player, conn in pairs(highlightConnections) do
+			conn:Disconnect()
+		end
+		highlightConnections = {}
+		print("Player Highlight (ESP) disabled")
+	end
+	
+	local function addHighlightSetting()
+		-- Player Highlight (ESP) Setting
+		local PlayerHighlightSetting = Instance.new("Frame", Desclabel)
+		PlayerHighlightSetting.Name = "PlayerHighlightSetting"
+		PlayerHighlightSetting.AnchorPoint = Vector2.new(0.5, 0.5)
+		PlayerHighlightSetting.Active = true
+		PlayerHighlightSetting.BackgroundColor3 = Color3.fromRGB(35, 31, 59)
+		PlayerHighlightSetting.BackgroundTransparency = 0
+		PlayerHighlightSetting.Size = UDim2.new(1, 0, 0.2, 0)
+		PlayerHighlightSetting.SizeConstraint = Enum.SizeConstraint.RelativeXY
+		if GameDetection.IsSlapBattles then
+			PlayerHighlightSetting.Visible = true
+		else
+			PlayerHighlightSetting.Visible = false
+		end
+		PlayerHighlightSetting.ZIndex = 6
+		PlayerHighlightSetting.LayoutOrder = 10  -- adjust as needed
+		local UICorner_Highlight = Instance.new("UICorner", PlayerHighlightSetting)
+		UICorner_Highlight.CornerRadius = UDim.new(0, 5)
+
+		local Title_Highlight = Instance.new("TextLabel", PlayerHighlightSetting)
+		Title_Highlight.AnchorPoint = Vector2.new(0.5, 0)
+		Title_Highlight.BackgroundTransparency = 1
+		Title_Highlight.Position = UDim2.new(0.5, 0, 0, 0)
+		Title_Highlight.Size = UDim2.new(1, 0, 1, 0)
+		Title_Highlight.SizeConstraint = Enum.SizeConstraint.RelativeXY
+		Title_Highlight.Visible = true
+		Title_Highlight.ZIndex = 6
+		Title_Highlight.RichText = true
+		Title_Highlight.Text = "  Player Highlight (ESP):"
+		Title_Highlight.TextColor3 = Color3.fromRGB(194, 194, 194)
+		Title_Highlight.TextScaled = false
+		Title_Highlight.TextSize = 29
+		Title_Highlight.TextWrapped = true
+		Title_Highlight.TextXAlignment = Enum.TextXAlignment.Left
+		Title_Highlight.TextYAlignment = Enum.TextYAlignment.Center
+		local UIPadding_TitleHighlight = Instance.new("UIPadding", Title_Highlight)
+		UIPadding_TitleHighlight.PaddingBottom = UDim.new(-0.2, 0)
+		UIPadding_TitleHighlight.PaddingLeft = UDim.new(0, 0)
+		UIPadding_TitleHighlight.PaddingRight = UDim.new(0, 0)
+		UIPadding_TitleHighlight.PaddingTop = UDim.new(-0.2, 0)
+
+		local Button_HighlightToggle = Instance.new("TextButton", Title_Highlight)
+		Button_HighlightToggle.Name = "HighlightToggle"
+		Button_HighlightToggle.Active = true
+		Button_HighlightToggle.AutoButtonColor = true
+		Button_HighlightToggle.AnchorPoint = Vector2.new(0.5, 0.5)
+		Button_HighlightToggle.BackgroundColor3 = Color3.fromRGB(70, 60, 95)
+		Button_HighlightToggle.BackgroundTransparency = 0.55
+		Button_HighlightToggle.Position = UDim2.new(0.85, 0, 0.5, 0)
+		Button_HighlightToggle.Size = UDim2.new(0, 200, 0, 31)
+		Button_HighlightToggle.SizeConstraint = Enum.SizeConstraint.RelativeXY
+		Button_HighlightToggle.Visible = true
+		Button_HighlightToggle.ZIndex = 6
+		Button_HighlightToggle.Font = Enum.Font.Oswald
+		Button_HighlightToggle.FontFace.Weight = Enum.FontWeight.Bold
+		Button_HighlightToggle.FontFace.Style = Enum.FontStyle.Italic
+		Button_HighlightToggle.Text = "Disabled"
+		Button_HighlightToggle.TextColor3 = Color3.fromRGB(214, 214, 214)
+		Button_HighlightToggle.RichText = true
+		Button_HighlightToggle.TextScaled = true
+		Button_HighlightToggle.TextWrapped = true
+		Button_HighlightToggle.TextXAlignment = Enum.TextXAlignment.Center
+		Button_HighlightToggle.TextYAlignment = Enum.TextYAlignment.Center
+		local UICorner_HighlightToggle = Instance.new("UICorner", Button_HighlightToggle)
+		UICorner_HighlightToggle.CornerRadius = UDim.new(0, 5)
+		local UIStroke_HighlightToggle = Instance.new("UIStroke", Button_HighlightToggle)
+		UIStroke_HighlightToggle.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+		UIStroke_HighlightToggle.BorderStrokePosition = Enum.BorderStrokePosition.Outer
+		UIStroke_HighlightToggle.Thickness = 2.9
+		UIStroke_HighlightToggle.Color = Color3.fromRGB(103, 92, 150)
+		UIStroke_HighlightToggle.StrokeSizingMode = Enum.StrokeSizingMode.FixedSize
+		UIStroke_HighlightToggle.LineJoinMode = Enum.LineJoinMode.Round
+		UIStroke_HighlightToggle.ZIndex = 6
+		UIStroke_HighlightToggle.Transparency = 0
+		
+		Button_HighlightToggle.MouseButton1Click:Connect(function()
+			if not PlayerHighlightEnabled then
+				startHighlightSystem()
+				Button_HighlightToggle.Text = "Enabled"
+				Button_HighlightToggle.BackgroundColor3 = Color3.fromRGB(84, 255, 113)
+			else
+				stopHighlightSystem()
+				Button_HighlightToggle.Text = "Disabled"
+				Button_HighlightToggle.BackgroundColor3 = Color3.fromRGB(70, 60, 95)
+			end
+		end)
+		return PlayerHighlightSetting, Button_HighlightToggle
+	end
 	--// RUN SERVICES
-	u6.RenderStepped:Connect(function()
+	u6.RenderStepped:Connect(function(dt)
+		if PlayerHighlightEnabled then
+			highlightUpdateTimer = highlightUpdateTimer + dt
+			if highlightUpdateTimer > 1 then  -- update every second
+				highlightUpdateTimer = 0
+				updatePlayerHighlights()
+			end
+		end
 		if SlapBattlesSettings.ForceOverwriteBeatdown == true then
 			if GetStandModel("Stand") == true then
 				WriteStandModel("Stand")
@@ -7211,6 +7430,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 	appConnection = TranslationUI.Destroying:Connect(function()
 		if appConnection then
 			stopMonitoringOtherStands();
+			stopHighlightSystem();   -- <-- add this
 			SettingsScript.KickPlayerAfterCutsenceBD = false
 			SlapBattlesSettings.ForceOverwriteBeatdown = false
 			SlapBattlesSettings.BiggerHitbox = false
