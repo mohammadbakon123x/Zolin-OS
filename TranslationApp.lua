@@ -5,7 +5,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 	local l__TweenService__5 = game:GetService("TweenService");
 	local UIS = game:GetService("UserInputService");
 	local u6 = game:GetService("RunService")
-	local BuildVersion = "3.22.5"
+	local BuildVersion = "3.22.6"
 	local versionLabel = "v"..BuildVersion;
 	local SettingsScript = {
 		DisplayLogs = true,
@@ -7214,6 +7214,8 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 			SettingsScript.KickPlayerAfterCutsenceBD = false
 			SlapBattlesSettings.ForceOverwriteBeatdown = false
 			SlapBattlesSettings.BiggerHitbox = false
+			SlapBattlesSettings.GloveBigHitBox = false
+			restoreGloveHitbox()
 			ViewOtherCustomStands.Enabled = false
 			SelectedBeatdownModel = "uncle_beatdown" -- reset to default
 			print("Bye Bye")
