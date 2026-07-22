@@ -5,7 +5,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 	local l__TweenService__5 = game:GetService("TweenService");
 	local UIS = game:GetService("UserInputService");
 	local u6 = game:GetService("RunService")
-	local BuildVersion = "3.22.7"
+	local BuildVersion = "3.22.8"
 	local versionLabel = "v"..BuildVersion;
 	local SettingsScript = {
 		DisplayLogs = true,
@@ -2255,6 +2255,472 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 				end
 			end
 		},
+		{
+			id = "RefRayDown_beatdown",
+			name = "RefRayDown Beatdown",
+			description = "Finally. SMT and Refraif decided to fuse into one just like Your_Uncle and King_Dracule they did. RefRaydown he has a massive power and at same time an ability who has a unique technique that uses when attacking someone and never can mistake the hit. and the Power is when Refraif is under attack. he can control his power and the speed by his mind and can do a instant transmission. and OfCourse he has an ability that he can do a transform to the ultimate dimensional vanity of anger. which is can attack enemies remotely and while getting damaged and change it from imcoming damage into a big amount of power that can do a oneshot them. that means is getting way stronger.",
+			color = Color3.fromRGB(0, 157, 255),
+			fireColor = Color3.fromRGB(1, 18, 255),
+			material = Enum.Material.SmoothPlastic,
+			transparency = 0,
+			icon = "rbxassetid://5912420913",
+			iconColor = Color3.fromRGB(0, 145, 255),
+			soundSpeed = 0.7,
+			customSounds = {
+				["Nukem"] = 0.7, --0.7 -- 1
+				["Male Scream Short Yelling Bursts Death Cries (SFX)"] = 0.76,
+				["explosion2"] = 0.9,
+				["Gun1"] = 1,
+				["Gun2"] = 0.7,
+				["Yell"] = 1,
+				["Implosion"] = 0.7,
+			},
+			enabled = false,
+			specialEffects = function(parts)
+				local meshesToRemove = {}
+				local rigParts = {}
+				local headPart = nil
+				local RightArmPart = nil
+				local textureId = "rbxassetid://3272341233"
+				local faces = {
+					Enum.NormalId.Top,
+					Enum.NormalId.Bottom,
+					Enum.NormalId.Front,
+					Enum.NormalId.Back,
+					Enum.NormalId.Right,
+					Enum.NormalId.Left
+				}
+				local function replaceGloveWithSword(standModel)
+					local rightArm = standModel:FindFirstChild("Right Arm")
+					if not rightArm then return end
+
+					local GlovePart = rightArm:FindFirstChild("Glove")
+					if GlovePart then
+						print("Found Glove, replacing with Sword...")
+
+						-- Check if Sword already exists BEFORE modifying the Glove
+						if rightArm:FindFirstChild("Sword") then
+							print("Sword already exists.")
+							return
+						end
+
+						GlovePart.Transparency = 1;
+
+						local Sword = Instance.new("Part")
+						Sword.Name = "Sword"
+						Sword.Size = Vector3.new(0.819, 7.285, 0.247)
+						Sword.Color = Color3.fromRGB(255, 84, 246)
+						Sword.Material = Enum.Material.Neon
+						Sword.Massless = true
+						Sword.CanCollide = false
+						Sword.Anchored = false
+						Sword.Reflectance = 1
+						Sword.Parent = rightArm
+						
+						-- SpecialMesh
+						
+						local SpecialMesh = Instance.new("SpecialMesh")
+						SpecialMesh.MeshId = "http://www.roblox.com/asset/?id=94840342";
+						SpecialMesh.MeshType = Enum.MeshType.FileMesh
+						SpecialMesh.Scale = Vector3.new(0.75, 0.75, 0.75)
+						SpecialMesh.TextureId = "rbxassetid://3142335903";
+						SpecialMesh.Parent = Sword;
+						SpecialMesh.Name = "Sword";
+						
+						-- Light
+						
+						local Light = Instance.new("PointLight")
+						Light.Brightness = 35;
+						Light.Range = 7;
+						Light.Shadows = true;
+						Light.Color = Color3.fromRGB(0, 85, 255);
+						Light.Parent = Sword;
+						
+						-- Particles
+						
+						local SoulFire = Instance.new("ParticleEmitter")
+						SoulFire.Brightness = 13;
+						SoulFire.Color = Color3.fromRGB(0, 85, 255);
+						SoulFire.LightEmission = 0;
+						SoulFire.LightInfluence = 0;
+						SoulFire.Orientation = Enum.ParticleOrientation.FacingCamera;
+						SoulFire.Size = NumberSequence.new({
+							NumberSequenceKeypoint.new(0, 0.938, 0),
+							NumberSequenceKeypoint.new(1, 0.125, 0)
+						});
+						SoulFire.Texture = "rbxassetid://241594419";
+						SoulFire.Transparency = NumberSequence.new({
+							NumberSequenceKeypoint.new(0, 0, 0),
+							NumberSequenceKeypoint.new(0.133, 0.544, 0),
+							NumberSequenceKeypoint.new(0.321, 0.737, 0),
+							NumberSequenceKeypoint.new(0.388, 0, 0),
+							NumberSequenceKeypoint.new(0.469, 0.725, 0),
+							NumberSequenceKeypoint.new(0.522, 0.456, 0),
+							NumberSequenceKeypoint.new(0.616, 0.637, 0),
+							NumberSequenceKeypoint.new(0.64, 0, 0),
+							NumberSequenceKeypoint.new(0.745, 0.525, 0),
+							NumberSequenceKeypoint.new(1, 0, 0),
+						});
+						SoulFire.EmissionDirection = Enum.NormalId.Top;
+						SoulFire.LifeTime = NumberRange.new(0, 1)
+						SoulFire.Rate = 70;
+						SoulFire.Rotation = NumberRange.new(4, 9);
+						SoulFire.RotSpeed = NumberRange.new(5, 9);
+						SoulFire.Speed = NumberRange.new(0, 0);
+						SoulFire.SpreadAngle = Vector2.new(28, 28);
+						SoulFire.Shape = Enum.ParticleShape.Box;
+						SoulFire.ShapeInOut = Enum.ParticleShapeInOut.Outward;
+						SoulFire.ShapeStyle = Enum.ParticleShapeStyle.Volume;
+						SoulFire.Acceleration = Vector3.new(0, 6, 0);
+						SoulFire.Drag = 0;
+						SoulFire.LockedToPart = false;
+						SoulFire.Parent = Sword;
+						SoulFire.Enabled = true;
+						
+						local Effect = Instance.new("Attachment");
+						Effect.Name = "Effect";
+						Effect.Parent = Sword;
+						Effect.CFrame.Position = Vector3.new(0, -1.1, 0);
+						Effect.Axis = Vector3.new(1, 0, 0);
+						Effect.SecondaryAxis = Vector3.new(0, 1, 0);
+						
+						
+						local Flame = Instance.new("ParticleEmitter")
+						Flame.Brightness = 10;
+						Flame.Color = ColorSequence.new({
+							Color3.new(0, 0.133333, 1)
+						});
+						Flame.LightEmission = 0;
+						Flame.LightInfluence = 0;
+						Flame.Orientation = Enum.ParticleOrientation.FacingCamera;
+						Flame.Size = 0.7
+						Flame.Texture = "rbxassetid://241594419";
+						Flame.Transparency = NumberSequence.new({
+							NumberSequenceKeypoint.new(0, 1, 0),
+							NumberSequenceKeypoint.new(0.0206659, 0.705556, 0),
+							NumberSequenceKeypoint.new(0.0769231, 0.338889, 0),
+							NumberSequenceKeypoint.new(0.137773, 0.127778, 0),
+							NumberSequenceKeypoint.new(0.253731, 0, 0),
+							NumberSequenceKeypoint.new(0.647532, 0, 0),
+							NumberSequenceKeypoint.new(0.754305, 0.0611111, 0),
+							NumberSequenceKeypoint.new(0.825488, 0.211111, 0),
+							NumberSequenceKeypoint.new(0.901263, 0.505556, 0),
+							NumberSequenceKeypoint.new(0.956372, 0.788889, 0),
+							NumberSequenceKeypoint.new(1, 1, 0),
+						});
+						Flame.EmissionDirection = Enum.NormalId.Top;
+						Flame.Lifetime = NumberRange.new(1.1, 1.1)
+						Flame.Rate = 40;
+						Flame.Rotation = NumberRange.new(-180, 180);
+						Flame.RotSpeed = NumberRange.new(-90, 90);
+						Flame.Speed = NumberRange.new(1, 1);
+						Flame.SpreadAngle = Vector2.new(-30, 30);
+						Flame.Shape = Enum.ParticleShape.Box;
+						Flame.ShapeInOut = Enum.ParticleShapeInOut.Outward;
+						Flame.ShapeStyle = Enum.ParticleShapeStyle.Volume;
+						Flame.Acceleration = Vector3.new(0, 10, 0);
+						Flame.Drag = 0;
+						Flame.LockedToPart = false;
+						Flame.WindAffectsDrag = true;
+						Flame.ZOffset = 0;
+						Flame.TimeScale = 1;
+						Flame.VelocityInheritance = 0;
+						Flame.Squash = NumberSequence.new({
+							NumberSequenceKeypoint.new(0, 0, 0),
+							NumberSequenceKeypoint.new(1, 0, 0)
+						});
+						Flame.FlipbookMode = Enum.ParticleFlipbookMode.Loop;
+						Flame.FlipbookLayout = Enum.ParticleFlipbookLayout.None;
+						Flame.FlipbookFramerate = NumberRange.new(1, 1);
+						Flame.FlipbookBlendFrames = true;
+						Flame.FlipbookStartRandom = false;
+						Flame.FlipbookSizeX = 1;
+						Flame.FlipbookSizeY = 1;
+						Flame.ShapePartial = 1;
+						Flame.Parent = Effect;
+						Flame.Enabled = true;
+						
+						local InnerFlame = Instance.new("ParticleEmitter")
+						InnerFlame.Brightness = 10;
+						InnerFlame.Color = ColorSequence.new({
+							Color3.fromRGB(0, 123, 255)
+						});
+						InnerFlame.ZOffset = 0.4;
+						InnerFlame.LightEmission = 0.7;
+						InnerFlame.LightInfluence = 0;
+						InnerFlame.Orientation = Enum.ParticleOrientation.FacingCamera;
+						InnerFlame.Size = 0.3
+						InnerFlame.Texture = "rbxassetid://241594419";
+						InnerFlame.Transparency = NumberSequence.new({
+							NumberSequenceKeypoint.new(0, 1, 0),
+							NumberSequenceKeypoint.new(0.0206659, 0.705556, 0),
+							NumberSequenceKeypoint.new(0.0769231, 0.338889, 0),
+							NumberSequenceKeypoint.new(0.137773, 0.127778, 0),
+							NumberSequenceKeypoint.new(0.253731, 0, 0),
+							NumberSequenceKeypoint.new(0.647532, 0, 0),
+							NumberSequenceKeypoint.new(0.754305, 0.0611111, 0),
+							NumberSequenceKeypoint.new(0.825488, 0.211111, 0),
+							NumberSequenceKeypoint.new(0.901263, 0.505556, 0),
+							NumberSequenceKeypoint.new(0.956372, 0.788889, 0),
+							NumberSequenceKeypoint.new(1, 1, 0),
+						});
+						InnerFlame.EmissionDirection = Enum.NormalId.Top;
+						InnerFlame.Lifetime = NumberRange.new(0.7, 0.7)
+						InnerFlame.Rate = 40;
+						InnerFlame.Rotation = NumberRange.new(-180, 180);
+						InnerFlame.RotSpeed = NumberRange.new(-90, 90);
+						InnerFlame.Speed = NumberRange.new(0.5, 0.5);
+						InnerFlame.SpreadAngle = Vector2.new(-30, 30);
+						InnerFlame.Shape = Enum.ParticleShape.Box;
+						InnerFlame.ShapeInOut = Enum.ParticleShapeInOut.Outward;
+						InnerFlame.ShapeStyle = Enum.ParticleShapeStyle.Volume;
+						InnerFlame.Acceleration = Vector3.new(0, 10, 0);
+						InnerFlame.Drag = 0;
+						InnerFlame.LockedToPart = false;
+						InnerFlame.WindAffectsDrag = true;
+						InnerFlame.TimeScale = 1;
+						InnerFlame.VelocityInheritance = 0;
+						InnerFlame.Squash = NumberSequence.new({
+							NumberSequenceKeypoint.new(0, 0, 0),
+							NumberSequenceKeypoint.new(1, 0, 0)
+						});
+						InnerFlame.FlipbookMode = Enum.ParticleFlipbookMode.Loop;
+						InnerFlame.FlipbookLayout = Enum.ParticleFlipbookLayout.None;
+						InnerFlame.FlipbookFramerate = NumberRange.new(1, 1);
+						InnerFlame.FlipbookBlendFrames = true;
+						InnerFlame.FlipbookStartRandom = false;
+						InnerFlame.FlipbookSizeX = 1;
+						InnerFlame.FlipbookSizeY = 1;
+						InnerFlame.ShapePartial = 1;
+						InnerFlame.Parent = Effect;
+						InnerFlame.Enabled = true;
+						
+						-- Weld
+						local Weld = Instance.new("Weld")
+						Weld.Part0 = Sword
+						Weld.Part1 = rightArm
+						Weld.C0 = CFrame.new(0, -2.7, 0.9) * CFrame.Angles(math.rad(90), math.rad(0), 0)
+						Weld.C1 = CFrame.new(0, 0, 0) * CFrame.Angles(math.rad(0), math.rad(0), 0)
+						Weld.Parent = Sword
+						
+
+						print("Sword created successfully!")
+					end
+				end
+				for _, part in ipairs(parts) do
+					if part:IsA("BasePart") or (part:IsA("Part") and part.Name ~= "HumanoidRootPart") then
+						part.Color = Color3.fromRGB(0, 0, 0)
+						for _, face in ipairs(faces) do
+							if part.Name ~= "Head" then
+								local faceName = tostring(face):match("%.(.+)$") or tostring(face)
+								local textureName = "Texture_" .. faceName
+								local existingTexture = part:FindFirstChild(textureName)
+								if not existingTexture then
+									for _, child in ipairs(part:GetChildren()) do
+										if child:IsA("Texture") and child.Face == face then
+											existingTexture = child
+											break
+										end
+									end
+								end
+								if not existingTexture then
+									local texture = Instance.new("Texture")
+									texture.Name = textureName
+									texture.Texture = textureId
+									texture.Face = face
+									texture.StudsPerTileU = 5
+									texture.StudsPerTileV = 5
+									texture.Transparency = 0.12
+									texture.ZIndex = 1
+									texture.Parent = part
+								end
+							end
+						end
+						if part.Name == "Head" then
+							headPart = part
+						end
+						if part.Name == "Right Arm" then
+							RightArmPart = part
+						end
+						if part.Name == "Torso" or part.Name == "Left Leg" or part.Name == "Right Leg" or 
+							part.Name == "Left Arm" or part.Name == "Right Arm" or part.Name == "Head" then
+							table.insert(rigParts, part)
+						end
+						if part.Name == "Torso" or part.Name:find("Leg") or part.Name:find("Arm") then
+							for _, child in ipairs(part:GetChildren()) do
+								if child:IsA("SpecialMesh") and child.Name ~= "Sword" then
+									table.insert(meshesToRemove, child)
+								end
+							end
+						end
+						if part.Name ~= "HumanoidRootPart" then
+							part.Transparency = 0
+							part.Material = Enum.Material.Glass
+						end
+					end
+				end
+				for _, mesh in ipairs(meshesToRemove) do
+					mesh:Destroy()
+				end
+				if #rigParts > 0 then
+					spawn(function()
+						for _, rigPart in ipairs(rigParts) do
+							rigPart.Color = Color3.fromRGB(0, 0, 0)
+							rigPart.Material = Enum.Material.Glass
+						end
+					end)
+				end
+				-- we will continue this later | 07/23/2026 | 02:13 AM
+				local function addOutlineHead(head)
+						if not head then return end
+						local Name = "Accessory (BestOutlineHead)"
+						if head.Parent:FindFirstChild(Name) then return end
+						for _, child in ipairs(head.Parent:GetChildren()) do
+							if child.Name == Name then
+								child:Destroy()
+							end
+						end
+						local hatAccessory = Instance.new("Accessory")
+						hatAccessory.Name = Name
+						local handle = Instance.new("MeshPart")
+						handle.Name = "Handle"
+						handle.CanCollide = false
+						handle.Transparency = 0
+						handle.Massless = true
+						handle.Parent = hatAccessory
+						handle.MeshId = "rbxassetid://89020373682473";
+						handle.TextureID = "rbxassetid://92408191024626";
+						handle.Size = Vector3.new(1.314, 1.319, 1.314)
+
+						local accessoryWeld = Instance.new("Weld")
+						accessoryWeld.Name = "AccessoryWeld"
+						accessoryWeld.Part0 = handle
+						accessoryWeld.Part1 = head
+						accessoryWeld.C0 = CFrame.new(0, 0, 0) * CFrame.Angles(0, 0, 0)
+						accessoryWeld.C1 = CFrame.new(0, 0, 0) * CFrame.Angles(0, 0, 0)
+						accessoryWeld.Enabled = true
+						accessoryWeld.Parent = handle
+						hatAccessory.Parent = head.Parent
+					local face = head:FindFirstChild("face")
+					if face and face:IsA("Decal") then
+						local NewFace = face:Clone();
+						NewFace.Parent = handle
+					end
+					return hatAccessory
+				end
+				local function addHairToHead(head)
+					if not head then return end
+					local Name = "Accessory (Hair)"
+					if head.Parent:FindFirstChild(Name) then return end
+					for _, child in ipairs(head.Parent:GetChildren()) do
+						if child.Name == Name then
+							child:Destroy()
+						end
+					end
+					local hatAccessory = Instance.new("Accessory")
+					hatAccessory.Name = Name
+					local handle = Instance.new("MeshPart")
+					handle.Name = "Handle"
+					handle.CanCollide = false
+					handle.Transparency = 0
+					handle.Massless = true
+					handle.Parent = hatAccessory
+					handle.MeshId = "rbxassetid://119095015686626";
+					handle.TextureID = "rbxassetid://77865274768537";
+					handle.Size = Vector3.new(1.825, 1.606, 1.513)
+
+					local accessoryWeld = Instance.new("Weld")
+					accessoryWeld.Name = "AccessoryWeld"
+					accessoryWeld.Part0 = handle
+					accessoryWeld.Part1 = head
+					accessoryWeld.C0 = CFrame.new(0.163, 0.1, 0) * CFrame.Angles(-0, 180, -0)
+					accessoryWeld.C1 = CFrame.new(0, 0, 0) * CFrame.Angles(0, 0, 0)
+					accessoryWeld.Enabled = true
+					accessoryWeld.Parent = handle
+					hatAccessory.Parent = head.Parent
+					return hatAccessory
+				end
+				local function addSunGlassesToHead(head)
+					if not head then return end
+					local Name = "Accessory (sunglasses)"
+					if head.Parent:FindFirstChild(Name) then return end
+					for _, child in ipairs(head.Parent:GetChildren()) do
+						if child.Name == Name then
+							child:Destroy()
+						end
+					end
+					local hatAccessory = Instance.new("Accessory")
+					hatAccessory.Name = Name
+					local handle = Instance.new("MeshPart")
+					handle.Name = "Handle"
+					handle.CanCollide = false
+					handle.Transparency = 0
+					handle.Massless = true
+					handle.Parent = hatAccessory
+					handle.MeshId = "rbxassetid://105124231387241";
+					handle.TextureID = "rbxassetid://76074521816444";
+					handle.Size = Vector3.new(0.694, 0.455, 1.221)
+
+					local accessoryWeld = Instance.new("Weld")
+					accessoryWeld.Name = "AccessoryWeld"
+					accessoryWeld.Part0 = handle
+					accessoryWeld.Part1 = head
+					accessoryWeld.C0 = CFrame.new(0.288, -0.15, -0) * CFrame.Angles(-4, -90, -0)
+					accessoryWeld.C1 = CFrame.new(0, 0, -0.6) * CFrame.Angles(0, 0, 0)
+					accessoryWeld.Enabled = true
+					accessoryWeld.Parent = handle
+					hatAccessory.Parent = head.Parent
+					return hatAccessory
+				end
+				local function addHeadphonesToHead(head)
+					if not head then return end
+					local Name = "Shiny Basic Headphones"
+					if head.Parent:FindFirstChild(Name) then return end
+					for _, child in ipairs(head.Parent:GetChildren()) do
+						if child.Name == Name then
+							child:Destroy()
+						end
+					end
+					local hatAccessory = Instance.new("Accessory")
+					hatAccessory.Name = Name
+					local handle = Instance.new("Part")
+					handle.Name = "Handle"
+					handle.Size = Vector3.new(1, 1, 1)
+					handle.CanCollide = false
+					handle.Transparency = 0
+					handle.Massless = true
+					handle.Parent = hatAccessory
+					local specialMesh = Instance.new("SpecialMesh")
+					specialMesh.MeshId = "rbxassetid://14066339505"
+					specialMesh.TextureId = "rbxassetid://76074521816444"
+					specialMesh.Scale = Vector3.new(1, 1, 1)
+					specialMesh.VertexColor = Vector3.new(1, 1, 1)
+					specialMesh.MeshType = Enum.MeshType.FileMesh
+					specialMesh.Parent = handle
+					local accessoryWeld = Instance.new("Weld")
+					accessoryWeld.Name = "AccessoryWeld"
+					accessoryWeld.Part0 = handle
+					accessoryWeld.Part1 = head
+					accessoryWeld.C0 = CFrame.new(0, 0.263, 0.005) * CFrame.Angles(0, 0, 0)
+					accessoryWeld.C1 = CFrame.new(0, 0.6, 0) * CFrame.Angles(0, 0, 0)
+					accessoryWeld.Enabled = true
+					accessoryWeld.Parent = handle
+					hatAccessory.Parent = head.Parent
+					return hatAccessory
+				end
+				if parts[1] and parts[1].Parent then
+					if headPart then
+						addOutlineHead(headPart);
+						addHairToHead(headPart);
+						addHeadphonesToHead(headPart);
+						addSunGlassesToHead(headPart);
+					end
+					if RightArmPart then
+						replaceGloveWithSword(RightArmPart);
+					end
+				end
+			end
+		},
 	}
 	-- LIGHTING:
 	local function saveCurrentSettings()
@@ -2455,7 +2921,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 		return Part
 	end
 	
-	local function CreateLightning(StartPosition, EndPosition, TotalDuration)
+	local function CreateLightning(StartPosition, EndPosition, TotalDuration, Color)
 		TotalDuration = TotalDuration or 2
 
 		local Model = Instance.new("Model", game.Workspace);
@@ -2466,7 +2932,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 
 		-- Create a single lightning bolt (straight line with slight randomness)
 		local points = {}
-		local numSegments = 10
+		local numSegments = 11
 
 		for i = 0, numSegments do
 			local progress = i / numSegments
@@ -2514,7 +2980,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 
 		-- Create point light for flickering
 		local pointLight = Instance.new("PointLight")
-		pointLight.Color = Color3.fromRGB(187, 14, 255)
+		pointLight.Color = Color or Color3.fromRGB(187, 14, 255)
 		pointLight.Brightness = 0
 		pointLight.Range = 30
 		pointLight.Parent = Model
@@ -2630,7 +3096,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 			})
 			lightTween:Play()
 
-			task.wait(0.6)
+			lightTween.Completed:Wait();
 			Model:Destroy()
 		end
 
@@ -6253,6 +6719,112 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 										if s.Name ~= "explosion2" and s.Name ~= "Hit" and 
 											soundName ~= "Implosion" and soundName ~= "Male Scream Short Yelling Bursts Death Cries (SFX)" then
 											s.PlaybackSpeed = modelData.soundSpeed
+										end
+									end
+								elseif modelData.id == "RefRayDown_beatdown" then
+									if soundName == "Nukem" and s.IsPlaying then
+										if not s:FindFirstChildOfClass("ReverbSoundEffect") then
+											for _, child in ipairs(game.Lighting:GetChildren()) do
+												if not child.Name:find("CutsenseJoJo") then
+													if SettingsScript.DisplayLogs then
+														print("Send Signal")
+													end
+													-- hook event if standModel destroyed
+													local connection = nil
+													if StandModel then
+														connection = StandModel.Destroying:Connect(function()
+															if CurrentPlayer == lpr then
+																setDayNight(false);
+																connection:Disconnect()
+															end
+														end)
+													else
+														if CurrentPlayer == lpr then
+															setDayNight(false);
+															warn("StandModel is nil")
+														end
+													end
+													break
+												end
+											end
+											if CurrentPlayer == lpr then
+												setDayNight(true)
+												spawn(function()
+													if StandModel and StandModel:FindFirstChild("Torso") then
+														local rootPart = StandModel.Torso
+														-- Lightning from sky to player
+														local startPos = rootPart.Position + Vector3.new(0, 90, 0)
+														local endPos = rootPart.Position + Vector3.new(0, -10, 0)
+														-- Create the lightning
+														CreateLightning(startPos, endPos, 4, Color3.fromRGB(17, 203, 255))
+													end
+												end)
+											end
+											spawn(function()
+												local Muda = Instance.new("Sound", s);
+												Muda.Name = "CutsenceMuda";
+												Muda.SoundId = "rbxassetid://107803292318686";
+												Muda.Volume = 0.8;
+												Muda.PlaybackSpeed = 0.8;
+												Muda.TimePosition = 0;
+												Muda.RollOffMode = Enum.RollOffMode.Inverse;
+												Muda.RollOffMaxDistance = 100;
+												Muda.RollOffMinDistance = 10;
+												Muda:Play();
+												
+												local Muda2 = Instance.new("Sound", s);
+												Muda2.Name = "CutsenceMuda2";
+												Muda2.SoundId = "rbxassetid://1845799357";
+												Muda2.Volume = 1.1;
+												Muda2.PlaybackSpeed = 0.8;
+												Muda2.TimePosition = 0;
+												Muda2.RollOffMode = Enum.RollOffMode.Inverse;
+												Muda2.RollOffMaxDistance = 200;
+												Muda2.RollOffMinDistance = 10;
+												Muda2:Play();
+												Muda2.TimePosition.Changed:Connect(function()
+													if Muda2.TimePosition >= 4.712 then
+														Muda2:Stop();
+														Muda2:Destroy();
+													end
+												end)
+											end)
+										end
+										if modelData.customSounds and modelData.customSounds[soundName] then
+											if s.Name == "Male Scream Short Yelling Bursts Death Cries (SFX)" then
+												s.PlaybackSpeed = modelData.soundSpeed
+												--print("Send Signal | ColorCorrectionEffect FadeOut")
+											elseif s.Name == "Yell" then
+												s.PlaybackSpeed = modelData.soundSpeed
+												--print("Send Signal | ColorCorrectionEffect FadeOut")
+											elseif s.Name == "Gun1" then
+												s.SoundId = "rbxassetid://108650555785024";
+												s.PlaybackSpeed = modelData.soundSpeed
+											elseif s.Name == "Gun2" then
+												s.SoundId = "rbxassetid://137392628136734"
+												s.PlaybackSpeed = modelData.soundSpeed
+											elseif s.Name == "explosion2" then
+												s.SoundId = "rbxassetid://120279413309459"
+												s.PlaybackSpeed = modelData.soundSpeed
+											else
+												s.PlaybackSpeed = modelData.customSounds[soundName]
+											end
+										else
+											if s.Name ~= "explosion2" and s.Name ~= "Hit" and 
+												soundName ~= "Implosion" and soundName ~= "Male Scream Short Yelling Bursts Death Cries (SFX)" then
+												s.PlaybackSpeed = modelData.soundSpeed
+											end
+										end
+									else
+										if modelData.customSounds and modelData.customSounds[soundName] then
+											s.PlaybackSpeed = modelData.customSounds[soundName]
+										else
+											if soundName == "Yell" or "Male Scream Short Yelling Bursts Death Cries (SFX)" then
+												s.PlaybackSpeed = modelData.soundSpeed
+											elseif soundName ~= "explosion2" and soundName ~= "Hit" and 
+												soundName ~= "Implosion" and soundName ~= "Male Scream Short Yelling Bursts Death Cries (SFX)" then
+												s.PlaybackSpeed = modelData.soundSpeed
+											end
 										end
 									end
 								elseif modelData.id == "mhe_beatdown" then
