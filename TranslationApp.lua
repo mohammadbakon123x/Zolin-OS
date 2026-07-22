@@ -5,7 +5,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 	local l__TweenService__5 = game:GetService("TweenService");
 	local UIS = game:GetService("UserInputService");
 	local u6 = game:GetService("RunService")
-	local BuildVersion = "3.22.8"
+	local BuildVersion = "3.22.9"
 	local versionLabel = "v"..BuildVersion;
 	local SettingsScript = {
 		DisplayLogs = true,
@@ -2921,7 +2921,8 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 		return Part
 	end
 	
-	local function CreateLightning(StartPosition, EndPosition, TotalDuration, Color)
+	local function CreateLightning(StartPosition, EndPosition, TotalDuration, colorThunder)
+		
 		TotalDuration = TotalDuration or 2
 
 		local Model = Instance.new("Model", game.Workspace);
@@ -2980,7 +2981,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 
 		-- Create point light for flickering
 		local pointLight = Instance.new("PointLight")
-		pointLight.Color = Color or Color3.fromRGB(187, 14, 255)
+		pointLight.Color = colorThunder or Color3.fromRGB(187, 14, 255)
 		pointLight.Brightness = 0
 		pointLight.Range = 30
 		pointLight.Parent = Model
@@ -6726,6 +6727,9 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 										if not s:FindFirstChildOfClass("ReverbSoundEffect") then
 											for _, child in ipairs(game.Lighting:GetChildren()) do
 												if not child.Name:find("CutsenseJoJo") then
+													if CurrentPlayer == lpr then
+														initializeColorCorrectionGalaxy();
+													end
 													if SettingsScript.DisplayLogs then
 														print("Send Signal")
 													end
@@ -6782,10 +6786,10 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 												Muda2.RollOffMaxDistance = 200;
 												Muda2.RollOffMinDistance = 10;
 												Muda2:Play();
-												Muda2.TimePosition.Changed:Connect(function()
+												Muda2:GetPropertyChangedSignal("TimePosition"):Connect(function()
 													if Muda2.TimePosition >= 4.712 then
-														Muda2:Stop();
-														Muda2:Destroy();
+														Muda2:Stop()
+														Muda2:Destroy()
 													end
 												end)
 											end)
