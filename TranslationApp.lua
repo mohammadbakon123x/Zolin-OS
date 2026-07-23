@@ -5,7 +5,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 	local l__TweenService__5 = game:GetService("TweenService");
 	local UIS = game:GetService("UserInputService");
 	local u6 = game:GetService("RunService")
-	local BuildVersion = "3.23.2"
+	local BuildVersion = "3.23.3"
 	local versionLabel = "v"..BuildVersion;
 	local SettingsScript = {
 		DisplayLogs = true,
@@ -2906,23 +2906,13 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 		end
 	end
 	
-	-- STRIKE LIGHTNING:
-	local function Draw(p1, p2, Parent, LifeTime)
-		LifeTime = LifeTime or 1
-		local Dist = (p2.Position - p1.Position).Magnitude
-		local Part = Instance.new("Part", Parent);
-		Part.Anchored = true
-		Part.CanCollide = false
-		Part.Material = Enum.Material.Neon
-		Part.Color = Color3.fromRGB(187, 14, 255)
-		Part.Size = Vector3.new(0.8, 0.8, Dist)
-		Part.CFrame = CFrame.new(p1.Position, p2.Position) * CFrame.new(0, 0, -Dist / 2)
-		game.Debris:AddItem(Part, LifeTime)
-		return Part
-	end
-	
 	local function CreateLightning(StartPosition, EndPosition, TotalDuration, r, g ,b)
-		
+		local currentColor = nil
+		if not r and not g and not b then
+			currentColor = Color3.fromRGB(187, 14, 255);
+			elseif r and g and b then
+			currentColor = Color3.fromRGB(r, g, b);
+		end
 		TotalDuration = TotalDuration or 2
 
 		local Model = Instance.new("Model", game.Workspace);
@@ -2955,7 +2945,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 			Part.Anchored = true
 			Part.CanCollide = false
 			Part.Material = Enum.Material.Neon
-			Part.Color = Color3.fromRGB(r, g, b)
+			Part.Color = currentColor
 			Part.Size = Vector3.new(0.8, 0.8, 0.8)
 			Part.Transparency = 1
 			Part.Position = pos + Offset
@@ -2971,7 +2961,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 			segment.Anchored = true
 			segment.CanCollide = false
 			segment.Material = Enum.Material.Neon
-			segment.Color = Color3.fromRGB(r, g, b)
+			segment.Color = currentColor
 			segment.Size = Vector3.new(0.8, 0.8, Dist)
 			segment.CFrame = CFrame.new(p1.Position, p2.Position) * CFrame.new(0, 0, -Dist / 2)
 			segment.Transparency = 1
@@ -2981,7 +2971,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 
 		-- Create point light for flickering
 		local pointLight = Instance.new("PointLight")
-		pointLight.Color = Color3.fromRGB(r, g ,b) or Color3.fromRGB(187, 14, 255)
+		pointLight.Color = currentColor
 		pointLight.Brightness = 0
 		pointLight.Range = 30
 		pointLight.Parent = Model
