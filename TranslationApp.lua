@@ -5,7 +5,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 	local l__TweenService__5 = game:GetService("TweenService");
 	local UIS = game:GetService("UserInputService");
 	local u6 = game:GetService("RunService")
-	local BuildVersion = "3.23.1"
+	local BuildVersion = "3.23.2"
 	local versionLabel = "v"..BuildVersion;
 	local SettingsScript = {
 		DisplayLogs = true,
@@ -2921,7 +2921,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 		return Part
 	end
 	
-	local function CreateLightning(StartPosition, EndPosition, TotalDuration, colorThunder)
+	local function CreateLightning(StartPosition, EndPosition, TotalDuration, r, g ,b)
 		
 		TotalDuration = TotalDuration or 2
 
@@ -2955,7 +2955,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 			Part.Anchored = true
 			Part.CanCollide = false
 			Part.Material = Enum.Material.Neon
-			Part.Color = Color3.fromRGB(187, 14, 255)
+			Part.Color = Color3.fromRGB(r, g, b)
 			Part.Size = Vector3.new(0.8, 0.8, 0.8)
 			Part.Transparency = 1
 			Part.Position = pos + Offset
@@ -2971,7 +2971,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 			segment.Anchored = true
 			segment.CanCollide = false
 			segment.Material = Enum.Material.Neon
-			segment.Color = Color3.fromRGB(187, 14, 255)
+			segment.Color = Color3.fromRGB(r, g, b)
 			segment.Size = Vector3.new(0.8, 0.8, Dist)
 			segment.CFrame = CFrame.new(p1.Position, p2.Position) * CFrame.new(0, 0, -Dist / 2)
 			segment.Transparency = 1
@@ -2981,7 +2981,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 
 		-- Create point light for flickering
 		local pointLight = Instance.new("PointLight")
-		pointLight.Color = colorThunder or Color3.fromRGB(187, 14, 255)
+		pointLight.Color = Color3.fromRGB(r, g ,b) or Color3.fromRGB(187, 14, 255)
 		pointLight.Brightness = 0
 		pointLight.Range = 30
 		pointLight.Parent = Model
@@ -6746,9 +6746,10 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 																local rootPart = StandModel.Torso
 																local startPos = rootPart.Position + Vector3.new(0, 90, 0)
 																local endPos = rootPart.Position + Vector3.new(0, -10, 0)
-																local color = Color3.fromRGB(0, 255, 238)
-																-- Use default color (or pass if your module supports it)
-																CreateLightning(startPos, endPos, 4, color)  -- adjust duration as needed
+																local r = 0
+																local g = 255
+																local b = 238							
+																CreateLightning(startPos, endPos, 4, r, g, b)
 															end
 														end)
 													end
@@ -6771,7 +6772,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 														local Muda = Instance.new("Sound", s)
 														Muda.Name = "CutsenceMuda"
 														Muda.SoundId = "rbxassetid://107803292318686"
-														Muda.Volume = 0.8
+														Muda.Volume = 1.5
 														Muda.PlaybackSpeed = 0.8
 														Muda.RollOffMode = Enum.RollOffMode.Inverse
 														Muda.RollOffMaxDistance = 100
@@ -6781,7 +6782,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 														local Muda2 = Instance.new("Sound", s)
 														Muda2.Name = "CutsenceMuda2"
 														Muda2.SoundId = "rbxassetid://1845799357"
-														Muda2.Volume = 1.1
+														Muda2.Volume = 2
 														Muda2.PlaybackSpeed = 0.8
 														Muda2.RollOffMode = Enum.RollOffMode.Inverse
 														Muda2.RollOffMaxDistance = 200
@@ -6802,18 +6803,16 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 									end
 									if modelData.customSounds and modelData.customSounds[soundName] then
 										if s.Name == "Male Scream Short Yelling Bursts Death Cries (SFX)" then
-											s.SoundId = "rbxassetid://1939827707"
 											s.PlaybackSpeed = modelData.soundSpeed
 											--print("Send Signal | ColorCorrectionEffect FadeOut")
 										elseif s.Name == "Yell" then
-											s.SoundId = "rbxassetid://7553397015"
 											s.PlaybackSpeed = modelData.soundSpeed
 											--print("Send Signal | ColorCorrectionEffect FadeOut")
 										elseif s.Name == "Gun1" then
-											s.SoundId = "rbxassetid://8255306220";
+											s.SoundId = "rbxassetid://108650555785024";
 											s.PlaybackSpeed = modelData.soundSpeed
 										elseif s.Name == "Gun2" then
-											s.SoundId = "rbxassetid://75350494050797"
+											s.SoundId = "rbxassetid://137392628136734"
 											s.PlaybackSpeed = modelData.soundSpeed
 										else
 											s.PlaybackSpeed = modelData.customSounds[soundName]
