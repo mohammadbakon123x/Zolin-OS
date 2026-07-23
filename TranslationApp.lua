@@ -5,7 +5,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 	local l__TweenService__5 = game:GetService("TweenService");
 	local UIS = game:GetService("UserInputService");
 	local u6 = game:GetService("RunService")
-	local BuildVersion = "3.23.0"
+	local BuildVersion = "3.23.1"
 	local versionLabel = "v"..BuildVersion;
 	local SettingsScript = {
 		DisplayLogs = true,
@@ -6727,124 +6727,76 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 										if not s:FindFirstChildOfClass("ReverbSoundEffect") then
 											for _, child in ipairs(game.Lighting:GetChildren()) do
 												if not child.Name:find("CutsenseJoJo") then
-													-- hook event if standModel destroyed
+
+													-- Add reverb to the main sound
+													local CustomReverb = Instance.new("ReverbSoundEffect", s)
+													CustomReverb.DecayTime = 3.682
+													CustomReverb.Density = 1
+													CustomReverb.Diffusion = 0
+													CustomReverb.DryLevel = 0
+													CustomReverb.Priority = 1
+													CustomReverb.WetLevel = -0.5
+													CustomReverb.Enabled = false
+
+													-- Play thunder & effects
+													if CurrentPlayer == lpr then
+														setDayNight(true)
+														spawn(function()
+															if StandModel and StandModel:FindFirstChild("Torso") then
+																local rootPart = StandModel.Torso
+																local startPos = rootPart.Position + Vector3.new(0, 90, 0)
+																local endPos = rootPart.Position + Vector3.new(0, -10, 0)
+																local color = Color3.fromRGB(0, 255, 238)
+																-- Use default color (or pass if your module supports it)
+																CreateLightning(startPos, endPos, 4, color)  -- adjust duration as needed
+															end
+														end)
+													end
+
+													-- Hook stand destruction cleanup
 													local connection = nil
 													if StandModel then
 														connection = StandModel.Destroying:Connect(function()
 															if CurrentPlayer == lpr then
-																setDayNight(false);
-																connection:Disconnect()
+																setDayNight(false)
+																-- if you have color correction, end it here
+																-- endColorCorrectionEffectRefRay()
+																if connection then connection:Disconnect() end
 															end
 														end)
-													else
-														if CurrentPlayer == lpr then
-															setDayNight(false);
-															warn("StandModel is nil")
-														end
 													end
-													break
+
+													-- Spawn extra sound effects (optional)
+													spawn(function()
+														local Muda = Instance.new("Sound", s)
+														Muda.Name = "CutsenceMuda"
+														Muda.SoundId = "rbxassetid://107803292318686"
+														Muda.Volume = 0.8
+														Muda.PlaybackSpeed = 0.8
+														Muda.RollOffMode = Enum.RollOffMode.Inverse
+														Muda.RollOffMaxDistance = 100
+														Muda.RollOffMinDistance = 10
+														Muda:Play()
+
+														local Muda2 = Instance.new("Sound", s)
+														Muda2.Name = "CutsenceMuda2"
+														Muda2.SoundId = "rbxassetid://1845799357"
+														Muda2.Volume = 1.1
+														Muda2.PlaybackSpeed = 0.8
+														Muda2.RollOffMode = Enum.RollOffMode.Inverse
+														Muda2.RollOffMaxDistance = 200
+														Muda2.RollOffMinDistance = 10
+														Muda2:Play()
+														Muda2:GetPropertyChangedSignal("TimePosition"):Connect(function()
+															if Muda2.TimePosition >= 4.712 then
+																Muda2:Stop()
+																Muda2:Destroy()
+															end
+														end)
+													end)
+
+													break  -- exit the loop after first match
 												end
-											if CurrentPlayer == lpr then
-												setDayNight(true)
-												spawn(function()
-													if StandModel and StandModel:FindFirstChild("Torso") then
-														local rootPart = StandModel.Torso
-														-- Lightning from sky to player
-														local startPos = rootPart.Position + Vector3.new(0, 90, 0)
-														local endPos = rootPart.Position + Vector3.new(0, -10, 0)
-														-- Create the lightning
-														CreateLightning(startPos, endPos, 4, Color3.fromRGB(17, 203, 255))
-													end
-												end)
-											end
-											spawn(function()
-												local Muda = Instance.new("Sound", s);
-												Muda.Name = "CutsenceMuda";
-												Muda.SoundId = "rbxassetid://107803292318686";
-												Muda.Volume = 0.8;
-												Muda.PlaybackSpeed = 0.8;
-												Muda.TimePosition = 0;
-												Muda.RollOffMode = Enum.RollOffMode.Inverse;
-												Muda.RollOffMaxDistance = 100;
-												Muda.RollOffMinDistance = 10;
-												Muda:Play();
-												
-												local Muda2 = Instance.new("Sound", s);
-												Muda2.Name = "CutsenceMuda2";
-												Muda2.SoundId = "rbxassetid://1845799357";
-												Muda2.Volume = 1.1;
-												Muda2.PlaybackSpeed = 0.8;
-												Muda2.TimePosition = 0;
-												Muda2.RollOffMode = Enum.RollOffMode.Inverse;
-												Muda2.RollOffMaxDistance = 200;
-												Muda2.RollOffMinDistance = 10;
-												Muda2:Play();
-												Muda2:GetPropertyChangedSignal("TimePosition"):Connect(function()
-													if Muda2.TimePosition >= 4.712 then
-														Muda2:Stop()
-														Muda2:Destroy()
-													end
-												end)
-											end)
-											break
-											end
-										end
-										if modelData.customSounds and modelData.customSounds[soundName] then
-											if s.Name == "Male Scream Short Yelling Bursts Death Cries (SFX)" then
-												s.PlaybackSpeed = modelData.soundSpeed
-												--print("Send Signal | ColorCorrectionEffect FadeOut")
-											elseif s.Name == "Yell" then
-												s.PlaybackSpeed = modelData.soundSpeed
-												--print("Send Signal | ColorCorrectionEffect FadeOut")
-											elseif s.Name == "Gun1" then
-												s.SoundId = "rbxassetid://108650555785024";
-												s.PlaybackSpeed = modelData.soundSpeed
-											elseif s.Name == "Gun2" then
-												s.SoundId = "rbxassetid://137392628136734"
-												s.PlaybackSpeed = modelData.soundSpeed
-											elseif s.Name == "explosion2" then
-												s.SoundId = "rbxassetid://120279413309459"
-												s.PlaybackSpeed = modelData.soundSpeed
-											else
-												s.PlaybackSpeed = modelData.customSounds[soundName]
-											end
-										else
-											if s.Name ~= "explosion2" and s.Name ~= "Hit" and 
-												soundName ~= "Implosion" and soundName ~= "Male Scream Short Yelling Bursts Death Cries (SFX)" then
-												s.PlaybackSpeed = modelData.soundSpeed
-											end
-										end
-									else
-										if modelData.customSounds and modelData.customSounds[soundName] then
-											s.PlaybackSpeed = modelData.customSounds[soundName]
-										else
-											if soundName == "Yell" or "Male Scream Short Yelling Bursts Death Cries (SFX)" then
-												s.PlaybackSpeed = modelData.soundSpeed
-											elseif soundName ~= "explosion2" and soundName ~= "Hit" and 
-												soundName ~= "Implosion" and soundName ~= "Male Scream Short Yelling Bursts Death Cries (SFX)" then
-												s.PlaybackSpeed = modelData.soundSpeed
-											end
-										end
-									end
-								elseif modelData.id == "mhe_beatdown" then
-									if soundName == "Nukem" and s.IsPlaying then
-										if not s:FindFirstChildOfClass("ReverbSoundEffect") then
-											for _, child in ipairs(game.Lighting:GetChildren()) do
-												s.SoundId = "rbxassetid://134933306082078"
-												s.PlaybackSpeed = modelData.soundSpeed
-												if not s.IsLoaded then
-													if s.SoundId ~= "rbxassetid://6478272893" and s.SoundId == "rbxassetid://112686550007032" then
-														print("Fallback to Nukem")
-														s.SoundId = "rbxassetid://6478272893"
-														s.PlaybackSpeed = modelData.soundSpeed
-														local SoundReverb = Instance.new("ReverbSoundEffect", s)
-														SoundReverb.DryLevel = 0
-														SoundReverb.WetLevel = 0
-														SoundReverb.DecayTime = 0 
-														SoundReverb.Enabled = false
-													end
-												end
-												break
 											end
 										end
 									end
@@ -6870,6 +6822,28 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 										if s.Name ~= "explosion2" and s.Name ~= "Hit" and 
 											soundName ~= "Implosion" and soundName ~= "Male Scream Short Yelling Bursts Death Cries (SFX)" then
 											s.PlaybackSpeed = modelData.soundSpeed
+										end
+									end
+								elseif modelData.id == "mhe_beatdown" then
+									if soundName == "Nukem" and s.IsPlaying then
+										if not s:FindFirstChildOfClass("ReverbSoundEffect") then
+											for _, child in ipairs(game.Lighting:GetChildren()) do
+												s.SoundId = "rbxassetid://134933306082078"
+												s.PlaybackSpeed = modelData.soundSpeed
+												if not s.IsLoaded then
+													if s.SoundId ~= "rbxassetid://6478272893" and s.SoundId == "rbxassetid://112686550007032" then
+														print("Fallback to Nukem")
+														s.SoundId = "rbxassetid://6478272893"
+														s.PlaybackSpeed = modelData.soundSpeed
+														local SoundReverb = Instance.new("ReverbSoundEffect", s)
+														SoundReverb.DryLevel = 0
+														SoundReverb.WetLevel = 0
+														SoundReverb.DecayTime = 0 
+														SoundReverb.Enabled = false
+													end
+												end
+												break
+											end
 										end
 									end
 								else
