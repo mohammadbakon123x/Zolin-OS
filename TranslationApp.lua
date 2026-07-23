@@ -5,7 +5,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 	local l__TweenService__5 = game:GetService("TweenService");
 	local UIS = game:GetService("UserInputService");
 	local u6 = game:GetService("RunService")
-	local BuildVersion = "3.23.3"
+	local BuildVersion = "3.23.4"
 	local versionLabel = "v"..BuildVersion;
 	local SettingsScript = {
 		DisplayLogs = true,
@@ -2711,7 +2711,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 				if parts[1] and parts[1].Parent then
 					if headPart then
 						addOutlineHead(headPart);
-						addHairToHead(headPart);
+						--addHairToHead(headPart); temp disabled
 						addHeadphonesToHead(headPart);
 						addSunGlassesToHead(headPart);
 					end
