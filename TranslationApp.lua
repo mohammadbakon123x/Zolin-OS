@@ -5,7 +5,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 	local l__TweenService__5 = game:GetService("TweenService");
 	local UIS = game:GetService("UserInputService");
 	local u6 = game:GetService("RunService")
-	local BuildVersion = "3.22.9"
+	local BuildVersion = "3.23.0"
 	local versionLabel = "v"..BuildVersion;
 	local SettingsScript = {
 		DisplayLogs = true,
@@ -6727,12 +6727,6 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 										if not s:FindFirstChildOfClass("ReverbSoundEffect") then
 											for _, child in ipairs(game.Lighting:GetChildren()) do
 												if not child.Name:find("CutsenseJoJo") then
-													if CurrentPlayer == lpr then
-														initializeColorCorrectionGalaxy();
-													end
-													if SettingsScript.DisplayLogs then
-														print("Send Signal")
-													end
 													-- hook event if standModel destroyed
 													local connection = nil
 													if StandModel then
@@ -6750,7 +6744,6 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 													end
 													break
 												end
-											end
 											if CurrentPlayer == lpr then
 												setDayNight(true)
 												spawn(function()
@@ -6793,6 +6786,8 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 													end
 												end)
 											end)
+											break
+											end
 										end
 										if modelData.customSounds and modelData.customSounds[soundName] then
 											if s.Name == "Male Scream Short Yelling Bursts Death Cries (SFX)" then
