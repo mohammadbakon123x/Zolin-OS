@@ -52,6 +52,8 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 	local PlayerHighlightEnabled = false
 	local highlightsTable = {}  -- tracks highlights per player
 	local highlightConnections = {}  -- tracks character added connections
+	local nameTagsTable = {}  -- tracks name tags per player
+	local nameTagConnections = {}  -- tracks CharacterAdded connections for name tags
 	
 	local originalSkybox = {}
 	local originalLighting = {}
@@ -6736,9 +6738,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 																local rootPart = StandModel.Torso
 																local startPos = rootPart.Position + Vector3.new(0, 90, 0)
 																local endPos = rootPart.Position + Vector3.new(0, -10, 0)
-																local r = 0
-																local g = 255
-																local b = 238							
+																local r, g , b = 0, 255, 238						
 																CreateLightning(startPos, endPos, 4, r, g, b)
 															end
 														end)
@@ -7589,6 +7589,72 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 	-- ============ PLAYER HIGHLIGHT (ESP) SYSTEM ============
 
 	local highlightUpdateTimer = 0
+	
+	local function createNameTag(player)
+		if not player or player == lpr then return end
+		local char = player.Character
+		if not char then return end
+
+		-- Find or create head
+		local head = char:FindFirstChild("Head")
+		if not head then return end
+
+		-- Remove old tag
+		local oldTag = nameTagsTable[player]
+		if oldTag then oldTag:Destroy() end
+
+		-- Create BillboardGui
+		local billboard = Instance.new("BillboardGui")
+		billboard.Name = "ESP_NameTag"
+		billboard.Adornee = head
+		billboard.Size = UDim2.new(0, 200, 0, 50)
+		billboard.StudsOffset = Vector3.new(0, 2.5, 0)
+		billboard.AlwaysOnTop = true
+		billboard.ZIndexBehavior = Enum.ZIndexBehavior.Global
+		billboard.Enabled = true
+		billboard.Parent = head
+
+		-- Create TextLabel
+		local label = Instance.new("TextLabel")
+		label.Size = UDim2.new(1, 0, 1, 0)
+		label.BackgroundTransparency = 1
+		label.Text = player.DisplayName
+		label.TextColor3 = Color3.fromRGB(255, 255, 255)
+		label.TextScaled = true
+		label.Font = Enum.Font.GothamBold
+		label.TextStrokeColor3 = Color3.fromRGB(0, 0, 0)
+		label.TextStrokeTransparency = 0.3
+		label.Parent = billboard
+
+		nameTagsTable[player] = billboard
+	end
+
+	local function updateNameTag(player)
+		if not PlayerHighlightEnabled then
+			local tag = nameTagsTable[player]
+			if tag then
+				tag:Destroy()
+				nameTagsTable[player] = nil
+			end
+			return
+		end
+
+		local char = player.Character
+		if char and char:FindFirstChild("Head") then
+			-- If tag doesn't exist or its Adornee is gone, recreate
+			local tag = nameTagsTable[player]
+			if not tag or not tag.Parent or tag.Adornee ~= char.Head then
+				createNameTag(player)
+			end
+		else
+			-- Character missing or no head, remove tag
+			local tag = nameTagsTable[player]
+			if tag then
+				tag:Destroy()
+				nameTagsTable[player] = nil
+			end
+		end
+	end
 
 	local function updatePlayerHighlights()
 		if not PlayerHighlightEnabled then
@@ -7599,62 +7665,81 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 				end
 			end
 			highlightsTable = {}
+
+			-- Remove all name tags
+			for player, tag in pairs(nameTagsTable) do
+				if tag then
+					tag:Destroy()
+				end
+			end
+			nameTagsTable = {}
 			return
 		end
 
-		-- Update highlights for all players
+		-- Update highlights and name tags for all players
 		for _, player in ipairs(game.Players:GetPlayers()) do
 			if player ~= lpr then
 				local char = player.Character
 				if char then
+					-- === Highlight ===
 					local hl = highlightsTable[player]
 					if not hl or not hl.Parent then
 						hl = Instance.new("Highlight")
 						hl.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
 						hl.FillTransparency = 0.4
 						hl.OutlineTransparency = 0.2
-						hl.Adornee = char  -- attach to character
+						hl.Adornee = char
 						hl.Parent = char
 						highlightsTable[player] = hl
 					end
-					-- Set color based on friend status
+					-- Set color
 					if isFriend(player) then
-						hl.FillColor = Color3.fromRGB(0, 255, 0)   -- green
+						hl.FillColor = Color3.fromRGB(0, 255, 0)
 						hl.OutlineColor = Color3.fromRGB(0, 255, 0)
 					else
-						hl.FillColor = Color3.fromRGB(255, 0, 0)   -- red
+						hl.FillColor = Color3.fromRGB(255, 0, 0)
 						hl.OutlineColor = Color3.fromRGB(255, 0, 0)
 					end
 					hl.Enabled = true
+
+					-- === Name Tag ===
+					updateNameTag(player)
 				else
-					-- Character doesn't exist, remove highlight if any
+					-- Character missing, clean up
 					local hl = highlightsTable[player]
 					if hl then
 						hl:Destroy()
 						highlightsTable[player] = nil
 					end
+					local tag = nameTagsTable[player]
+					if tag then
+						tag:Destroy()
+						nameTagsTable[player] = nil
+					end
 				end
 			end
 		end
 	end
-
 	-- Handle new players
 	local function onPlayerAdded(player)
 		if player == lpr then return end
-		-- When character spawns, update highlights
+
+		-- When character spawns, update everything
 		local charAddedConn
 		charAddedConn = player.CharacterAdded:Connect(function(char)
 			if PlayerHighlightEnabled then
-				-- Small delay to ensure character fully loads
 				task.wait(0.1)
 				updatePlayerHighlights()
+				updateNameTag(player)  -- ensure name tag appears on new character
 			end
 		end)
 		highlightConnections[player] = charAddedConn
-		-- Also update immediately if character exists
+
+		-- If character exists already, create immediately
 		if player.Character then
 			task.wait(0.1)
 			updatePlayerHighlights()
+			updateNameTag(player)
 		end
 	end
 
@@ -7664,6 +7749,12 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 		if hl then
 			hl:Destroy()
 			highlightsTable[player] = nil
+		end
+		-- Clean up name tag
+		local tag = nameTagsTable[player]
+		if tag then
+			tag:Destroy()
+			nameTagsTable[player] = nil
 		end
 		-- Disconnect CharacterAdded
 		local conn = highlightConnections[player]
@@ -7694,6 +7785,12 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 			hl:Destroy()
 		end
 		highlightsTable = {}
+		
+		for player, tag in pairs(nameTagsTable) do
+			tag:Destroy()
+		end
+		nameTagsTable = {}
+		
 		-- Disconnect all CharacterAdded connections
 		for player, conn in pairs(highlightConnections) do
 			conn:Disconnect()
