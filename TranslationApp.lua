@@ -5,7 +5,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 	local l__TweenService__5 = game:GetService("TweenService");
 	local UIS = game:GetService("UserInputService");
 	local u6 = game:GetService("RunService")
-	local BuildVersion = "3.23.4"
+	local BuildVersion = "3.23.5"
 	local versionLabel = "v"..BuildVersion;
 	local SettingsScript = {
 		DisplayLogs = true,
@@ -5618,7 +5618,6 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 				modelData.specialEffects(StandModel:GetChildren())
 			end)
 		end
-		local activeEffects = {}
 		for _, p in ipairs(game.Players:GetPlayers()) do
 			if p ~= lpr and p.Character then
 				local LSB = p.Character:FindFirstChild("LastSlappedBy")
@@ -6867,14 +6866,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 					return
 				end
 			end
-			--[[
-			for _, model in ipairs(CustomBeatdownModels) do
-				if model.id == "evil_beatdown" then
-					ApplyCustomBeatdownModel(StandModel, model, lpr)
-					return
-				end
-			end
-			--]]
+
 		end
 		for v1, parts in ipairs(StandModel:GetChildren()) do
 			if parts:IsA("BasePart") then
@@ -6964,26 +6956,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 				end;
 			end;
 		end;
-		for _, p in ipairs(game.Players:GetPlayers()) do
-			if p ~= lpr and p.Character then
-				local LSB = p.Character:FindFirstChild("LastSlappedBy");
-				if LSB and LSB.Value == lpr.Name then
-					local torso = p.Character:FindFirstChild("Torso");
-					if torso then
-						for _, s in ipairs(torso:GetChildren()) do
-							if s:IsA("Sound") then
-								if s.Name == "Male Scream Short Yelling Bursts Death Cries (SFX)" then
-									s.PlaybackSpeed = 0.8;
-								end;
-								if s.Name ~= "explosion2" and "Hit" and "Implosion" and "Male Scream Short Yelling Bursts Death Cries (SFX)" then
-									s.PlaybackSpeed = 0.7;
-								end;
-							end;
-						end;
-					end;
-				end;
-			end;
-		end;
+		
 	end;
 	local function WriteStandModelOther(Stand, PlayerId)
 		local CurrentPlayer = game.Players:GetPlayerByUserId(PlayerId);
@@ -6999,14 +6972,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 					return
 				end
 			end
-			--[[
-			for _, model in ipairs(CustomBeatdownModels) do
-				if model.id == "evil_beatdown" then
-					ApplyCustomBeatdownModel(StandModel, model, CurrentPlayer)
-					return
-				end
-			end
-			--]]
+			
 		end
 		for v1, parts in ipairs(StandModel:GetChildren()) do
 			if parts:IsA("BasePart") then
@@ -7096,39 +7062,8 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 				end;
 			end;
 		end;
-		for _, p in ipairs(game.Players:GetPlayers()) do
-			if p ~= lpr and p.Character then
-				local LSB = p.Character:FindFirstChild("LastSlappedBy");
-				if LSB and LSB.Value == CurrentPlayer.Name then
-					local torso = p.Character:FindFirstChild("Torso");
-					if torso then
-						for _, s in ipairs(torso:GetChildren()) do
-							if s:IsA("Sound") then
-								if s.Name == "Male Scream Short Yelling Bursts Death Cries (SFX)" then
-									s.PlaybackSpeed = 0.8;
-								end;
-								if s.Name ~= "explosion2" and "Hit" and "Implosion" and "Male Scream Short Yelling Bursts Death Cries (SFX)" then
-									s.PlaybackSpeed = 0.7;
-								end;
-							end;
-						end;
-					end;
-				end;
-			end;
-		end;
 	end;
-	
-	local function applyCustomStandToOtherPlayer(otherPlayer, modelData)
-		if not otherPlayer or not otherPlayer.Character then return false end
-		local standmodel = otherPlayer.Character:FindFirstChild("Stand")
-		if not standmodel then return false end
-		ApplyCustomBeatdownModel(standmodel, modelData, otherPlayer)
-		if not ViewOtherCustomStands.ActiveChecks[otherPlayer] then
-			ViewOtherCustomStands.ActiveChecks[otherPlayer] = {}
-		end
-		ViewOtherCustomStands.ActiveChecks[otherPlayer].appliedModel = modelData.id
-		return true
-	end
+
 	local function restoreOriginalStand(player)
 		if not player or not ViewOtherCustomStands.ActiveChecks[player] then return end
 		local data = ViewOtherCustomStands.ActiveChecks[player]
@@ -7221,80 +7156,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 		glovePart.Size = CustomGloveHitbox or Vector3.new(7, 7, 7)
 		glovePart.Transparency = 0
 	end
-	
-	--[[ old
-	local function startMonitoringOtherStands()
-		if not ViewOtherCustomStands.Enabled then return end
-		local function monitorPlayer(player)
-			if player == lpr then return end
-			if ViewOtherCustomStands.FriendStandsOnly and not isFriend(player) then
-				return
-			end
-			local function setupCharacterMonitoring(character)
-				if not character then return end
-				local monitorConnection
-				monitorConnection = game:GetService("RunService").Heartbeat:Connect(function()
-					if not ViewOtherCustomStands.Enabled then
-						if monitorConnection then
-							monitorConnection:Disconnect()
-						end
-						return
-					end
-					local stand = character:FindFirstChild("Stand")
-					if stand then
-						local currentData = ViewOtherCustomStands.ActiveChecks[player]
-						if not currentData or currentData.appliedModel ~= SelectedBeatdownModel then
-							for _, model in ipairs(CustomBeatdownModels) do
-								if model.id == SelectedBeatdownModel then
-									applyCustomStandToOtherPlayer(player, model)
-									break
-								end
-							end
-						end
-					else
-						if ViewOtherCustomStands.ActiveChecks[player] then
-							ViewOtherCustomStands.ActiveChecks[player] = nil
-						end
-					end
-				end)
-				if not ViewOtherCustomStands.ActiveChecks[player] then
-					ViewOtherCustomStands.ActiveChecks[player] = {}
-				end
-				ViewOtherCustomStands.ActiveChecks[player].connection = monitorConnection
-				character.AncestryChanged:Connect(function(_, parent)
-					if not parent then
-						if monitorConnection then
-							monitorConnection:Disconnect()
-						end
-						if ViewOtherCustomStands.ActiveChecks[player] then
-							ViewOtherCustomStands.ActiveChecks[player] = nil
-						end
-					end
-				end)
-			end
-			if player.Character then
-				setupCharacterMonitoring(player.Character)
-			end
-			player.CharacterAdded:Connect(function(character)
-				setupCharacterMonitoring(character)
-			end)
-		end
-		for _, player in ipairs(game.Players:GetPlayers()) do
-			monitorPlayer(player)
-		end
-		game.Players.PlayerAdded:Connect(function(player)
-			if ViewOtherCustomStands.Enabled then
-				monitorPlayer(player)
-			end
-		end)
-		if SettingsScript.DisplayLogs then
-			print("Started monitoring other players' stands")
-		end
-	end
-	--]]
-	
-	-- Single RenderStepped loop for all monitoring (like your main loop)
-	
+		
 	local renderSteppedConnection = nil
 	local monitoredPlayers = {}
 
@@ -7336,8 +7198,8 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 									end
 								end
 								if selectedModelData then
-									applyCustomStandToOtherPlayer(player, selectedModelData)
 									monitoredPlayers[player].appliedModel = SelectedBeatdownModel
+									WriteStandModelOther("Stand", player.UserId)
 								end
 							end
 						end
@@ -7418,7 +7280,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 								break
 							end
 							if data.appliedModel ~= SelectedBeatdownModel then
-								applyCustomStandToOtherPlayer(player, selectedModelData)
+								WriteStandModelOther("Stand", player.UserId);
 								data.appliedModel = SelectedBeatdownModel
 								if SettingsScript.DisplayLogs then
 									--print("Applied custom stand to: " .. player.Name)
@@ -7471,7 +7333,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 		end)
 
 		if SettingsScript.DisplayLogs then
-			print("Started monitoring other players' stands with RenderStepped")
+			print("Started monitoring other players' stands")
 		end
 
 		return renderSteppedConnection
@@ -8061,6 +7923,11 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 	local appConnection = nil
 	appConnection = TranslationUI.Destroying:Connect(function()
 		if appConnection then
+			for i, player in pairs(game.Players:GetPlayers()) do
+				if player then
+					restoreOriginalStand(player)
+				end
+			end
 			stopMonitoringOtherStands();
 			stopHighlightSystem();   -- <-- add this
 			SettingsScript.KickPlayerAfterCutsenceBD = false
