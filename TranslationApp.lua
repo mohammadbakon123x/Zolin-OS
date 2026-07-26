@@ -5621,7 +5621,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 		for _, p in ipairs(game.Players:GetPlayers()) do
 			if p ~= lpr and p.Character then
 				local LSB = p.Character:FindFirstChild("LastSlappedBy")
-				if LSB and LSB.Value == CurrentPlayer.Name then
+				if LSB --[[and LSB.Value == CurrentPlayer.Name--]] then
 					local torso = p.Character:FindFirstChild("Torso")
 					local head = p.Character:FindFirstChild("Head");
 					local beatdownHead = StandModel:FindFirstChild("Head") or p.Character:FindFirstChild("Stand").Head;
