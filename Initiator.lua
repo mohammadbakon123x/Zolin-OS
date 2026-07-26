@@ -2750,6 +2750,7 @@ local function createChunk25()
 	bootloader.BackgroundTransparency = 0;
 	bootloader.BackgroundColor3 = Color3.fromRGB(0, 0, 0);
 	bootloader.ZIndex = -999999999;
+	bootloader.Visible = true;
 	bootloader.Parent = MainUI;
 	createUICorner(bootloader, "UICorner", UDim.new(0, 5));
 	createUIScale(bootloader, "UIScale", 1);
