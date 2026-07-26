@@ -1,5 +1,5 @@
 local v1 = {};
-v1.ver = "1.3.9" -- versionOS
+v1.ver = "1.4.0" -- versionOS
 
 -- ============================================
 -- HELPER FUNCTIONS
@@ -1899,6 +1899,64 @@ local function createChunk16()
 	ImageLabel_ButtonSettings.ImageColor3 = Color3.fromRGB(48, 48, 48)
 	ImageLabel_ButtonSettings.ScaleType = Enum.ScaleType.Fit
 	ImageLabel_ButtonSettings.Parent = ButtonSettings
+	
+	if game:GetService("UserInputService").TouchEnabled then
+	local ButtonChatUI = Instance.new("TextButton")
+	ButtonChatUI.AnchorPoint = Vector2.new(0.05, 0.5)
+	ButtonChatUI.AutoButtonColor = true
+	ButtonChatUI.Active = true
+	ButtonChatUI.BackgroundColor3 = Color3.fromRGB(38, 38, 38)
+	ButtonChatUI.BackgroundTransparency = 0.3
+	ButtonChatUI.Name = "ButtonChatUI"
+	ButtonChatUI.Size = UDim2.new(0.42, 0, 0.3, 0)
+	ButtonChatUI.SizeConstraint = Enum.SizeConstraint.RelativeYY
+	ButtonChatUI.ZIndex = 1
+	ButtonChatUI.Visible = true
+	ButtonChatUI.Font = Enum.Font.Oswald
+	ButtonChatUI.Text = ""
+	ButtonChatUI.TextColor3 = Color3.fromRGB(255, 255, 189)
+	ButtonChatUI.TextScaled = true
+	ButtonChatUI.TextSize = 14
+	ButtonChatUI.TextYAlignment = Enum.TextYAlignment.Center
+	ButtonChatUI.TextXAlignment = Enum.TextXAlignment.Left
+	ButtonChatUI.TextWrapped = true
+	ButtonChatUI.Parent = SideButtons
+
+	createUICorner(ButtonChatUI, "UICorner_ButtonChatUI", UDim.new(0.15, 0))
+
+	local UIPaddding_ButtonChatUI = Instance.new("UIPadding")
+	UIPaddding_ButtonChatUI.PaddingLeft = UDim.new(0.05, 0)
+	UIPaddding_ButtonChatUI.PaddingRight = UDim.new(0.05, 0)
+	UIPaddding_ButtonChatUI.PaddingTop = UDim.new(0, 0)
+	UIPaddding_ButtonChatUI.PaddingBottom = UDim.new(0, 0)
+	UIPaddding_ButtonChatUI.Parent = ButtonChatUI
+
+	local UIStroke_ButtonChatUI = Instance.new("UIStroke")
+	UIStroke_ButtonChatUI.Color = Color3.fromRGB(157, 157, 157)
+	UIStroke_ButtonChatUI.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+	UIStroke_ButtonChatUI.Thickness = 3
+	UIStroke_ButtonChatUI.LineJoinMode = Enum.LineJoinMode.Round
+	UIStroke_ButtonChatUI.StrokeSizingMode = Enum.StrokeSizingMode.FixedSize
+	UIStroke_ButtonChatUI.BorderStrokePosition = Enum.BorderStrokePosition.Outer
+	UIStroke_ButtonChatUI.ZIndex = 1
+	UIStroke_ButtonChatUI.Transparency = 0
+	UIStroke_ButtonChatUI.Parent = ButtonChatUI
+
+	local ImageLabel_ButtonChatUI = Instance.new("ImageLabel")
+	ImageLabel_ButtonChatUI.AnchorPoint = Vector2.new(1, 0.5)
+	ImageLabel_ButtonChatUI.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+	ImageLabel_ButtonChatUI.BackgroundTransparency = 1
+	ImageLabel_ButtonChatUI.BorderColor3 = Color3.fromRGB(27, 42, 53)
+	ImageLabel_ButtonChatUI.Position = UDim2.new(1, 0, 0.5, 0)
+	ImageLabel_ButtonChatUI.Size = UDim2.new(1, 0, 0.7, 0)
+	ImageLabel_ButtonChatUI.SizeConstraint = Enum.SizeConstraint.RelativeYY
+	ImageLabel_ButtonChatUI.ZIndex = 2
+	ImageLabel_ButtonChatUI.Visible = true
+	ImageLabel_ButtonChatUI.Image = "rbxassetid://116182575062729"
+	ImageLabel_ButtonChatUI.ImageColor3 = Color3.fromRGB(48, 48, 48)
+	ImageLabel_ButtonChatUI.ScaleType = Enum.ScaleType.Fit
+	ImageLabel_ButtonChatUI.Parent = ButtonChatUI
+	end
 end
 
 -- ============================================
@@ -2692,6 +2750,7 @@ local function createChunk25()
 	bootloader.BackgroundTransparency = 0;
 	bootloader.BackgroundColor3 = Color3.fromRGB(0, 0, 0);
 	bootloader.ZIndex = -999999999;
+	bootloader.Visible = false;
 	bootloader.Parent = MainUI;
 	createUICorner(bootloader, "UICorner", UDim.new(0, 5));
 	createUIScale(bootloader, "UIScale", 1);
