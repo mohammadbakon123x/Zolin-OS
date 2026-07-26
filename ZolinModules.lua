@@ -465,7 +465,7 @@ function ZolinModules.AppLoader()
 
 		local appFile = AppDataFolder:FindFirstChild(appName)
 		if not appFile then
-			if appName == "ExampleWindow" then return false end
+			if appName == "ExampleWindow" and appName == "ExampleWindowV2" then return false end
 			appFile = Instance.new("Folder")
 			appFile.Name = appName
 			appFile.Parent = AppDataFolder
@@ -496,7 +496,7 @@ function ZolinModules.AppLoader()
 	function AppLoader.GetAllApps()
 		local apps = {}
 		for name, meta in pairs(registeredApps) do
-			if meta.enabled ~= false and name ~= "ExampleWindow" then
+			if meta.enabled ~= false and name ~= "ExampleWindow" and name ~= "ExampleWindowV2" then
 				table.insert(apps, { name = name, metadata = meta })
 			end
 		end
@@ -647,7 +647,7 @@ function ZolinModules.NotificationManager(dependencies)
 		end
 		sound:Play()
 		sound.Ended:Connect(function() sound:Destroy() end)
-		task.delay(2, function() if sound and sound.Parent then sound:Destroy() end end)
+		task.delay(sound.TimeLength + 0.1, function() if sound and sound.Parent then sound:Destroy() end end)
 	end
 
 	function NotificationManager.OpenPanel()
@@ -741,6 +741,7 @@ function ZolinModules.NotificationManager(dependencies)
 						child.TextTransparency = 1 - alpha
 					elseif child:IsA("ImageLabel") or child:IsA("ImageButton") then
 						child.ImageTransparency = 1 - alpha
+						child.BackgroundTransparency = 1 - alpha
 					elseif child:IsA("Frame") or child:IsA("ScrollingFrame") then
 						child.BackgroundTransparency = 1 - alpha
 					end
@@ -764,6 +765,7 @@ function ZolinModules.NotificationManager(dependencies)
 							child.TextTransparency = 0
 						elseif child:IsA("ImageLabel") or child:IsA("ImageButton") then
 							child.ImageTransparency = 0
+							child.BackgroundTransparency = 0
 						elseif child:IsA("Frame") or child:IsA("ScrollingFrame") then
 							child.BackgroundTransparency = 0
 						end
@@ -990,7 +992,6 @@ function ZolinModules.AppManager(dependencies)
 	local NotificationManager = dependencies and dependencies.NotificationManager or ZolinModules.NotificationManager({ CooldownManager = ZolinModules.CooldownManager() })
 	local AppLoader = dependencies and dependencies.AppLoader or ZolinModules.AppLoader()
 	
-	
 	local function triggerEvent(eventName, ...)
 		if eventListeners[eventName] then
 			for _, callback in ipairs(eventListeners[eventName]) do
@@ -1117,17 +1118,6 @@ function ZolinModules.AppManager(dependencies)
 		elseif MainUI.__ZolinDesktop and MainUI.__ZolinDesktop.__ScreenFrame and MainUI.__ZolinDesktop.__ScreenFrame.Applications and ZolinModules.Mode == "Desktop" then
 			clonedApp.Parent = MainUI.__ZolinDesktop.__ScreenFrame.Applications
 		end
-		local ModuleScript = clonedApp:FindFirstChildOfClass("ModuleScript")
-
-		--[[ old method we used for loading modules
-		if ModuleScript then
-			local module = require(ModuleScript)
-			if module and module.Init then
-				local ui = clonedApp:FindFirstChild("UI")
-				if ui then module.Init(ui, {}, clonedApp) else module.Init(clonedApp, {}, clonedApp) end
-			end
-		end
-		--]]
 		
 		-- Check if this app should use ZolinModules launch type (built-in module)
 		local launchType = ZolinModules.AppLaunchType and ZolinModules.AppLaunchType[p1]
@@ -2744,22 +2734,6 @@ function ZolinModules.VolumeManager()
 	local __Zolin = MainUI and MainUI:FindFirstChild("__Zolin")
 	local Remotes = __Zolin and __Zolin:FindFirstChild("Remotes")
 	local moreOptionsVolStyleEvent = Remotes and Remotes:FindFirstChild("moreOptionsVolStyle")
-
-	--[[
-	local currentVolume = 0.5
-	local currentNotificationVolume = 0.5
-	local isMuted = false
-	local isNotificationsMuted = false
-	local dragging = false
-	local isOpen = false
-	local lastInteraction = 0
-	local inactivityThread = nil
-	local minusHeld = false
-	local plusHeld = false
-	local adjusting = false
-	local inVolumeOptionsFrameUI = false
-	local SliderButton = nil
-	--]]
 	
 	local function getTrackSize()
 		if OutlineStyle then return OutlineStyle.AbsoluteSize
@@ -7199,8 +7173,794 @@ function ZolinModules.TaskManagerApp()
 end
 
 -- ============================================
+-- MESSAGES APP
+-- ============================================
+
+function ZolinModules.MessagesApp()
+	local MessagesApp = {}
+
+	local Players = game:GetService	("Players")
+	local TextChatService = game:GetService("TextChatService")
+	local UserInputService = game:GetService("UserInputService")
+	local mobileToggleButton = nil
+	local isMobile = UserInputService.TouchEnabled and not UserInputService.MouseEnabled
+	local HttpService = game:GetService("HttpService")
+	local RunService = game:GetService("RunService")
+	local TweenService = game:GetService("TweenService")
+	
+	-- ======================
+	-- CONFIGURATION
+	-- ======================
+	local CHAT_CHANNEL = "RBXGeneral"
+	local WHISPER_PREFIX = "/w "
+	local KEY_TOGGLE = Enum.KeyCode.Slash
+
+	-- ======================
+	-- INTERNAL STATE
+	-- ======================
+	local chatGui = nil
+	local chatLog = nil
+	local chatInput = nil
+	local messageTemplate = nil
+	local textChannel = nil
+	local isVisible = true
+	local connections = {}
+	local isInitialized = false
+	local defaultChatUI = nil
+	local defaultChatButton = nil
+	local fadeTimerConnection = nil
+	local lastActivity = tick()
+	local INACTIVITY_DELAY = 3  -- seconds
+	local isTyping = false      -- input focused
+
+	-- Settings
+	local storeMessages = false
+	local chatHistory = {}   -- array of { sender, text, timestamp }
+
+	-- ======================
+	-- HELPER FUNCTIONS
+	-- ======================
+	local COLOR_PALETTE = {
+		Color3.fromRGB(255, 64, 64),    -- Red
+		Color3.fromRGB(255, 176, 79),   -- Orange
+		Color3.fromRGB(255, 255, 85),   -- Yellow
+		Color3.fromRGB(85, 255, 85),    -- Green
+		Color3.fromRGB(85, 255, 255),   -- Cyan
+		Color3.fromRGB(85, 170, 255),   -- Light Blue
+		Color3.fromRGB(170, 85, 255),   -- Purple
+		Color3.fromRGB(255, 85, 255),   -- Magenta
+		Color3.fromRGB(255, 170, 200),  -- Pink
+		Color3.fromRGB(170, 255, 170),  -- Light Green
+		Color3.fromRGB(170, 170, 255),  -- Periwinkle
+		Color3.fromRGB(255, 200, 150),  -- Peach
+		Color3.fromRGB(200, 255, 200),  -- Mint
+		Color3.fromRGB(200, 200, 255),  -- Lavender
+	}
+
+	local function getPlayerColor(player)
+		local userId = player.UserId
+		local index = (userId % #COLOR_PALETTE) + 1
+		return COLOR_PALETTE[index]
+	end
+
+	local function addMessageToChat(text, isSystem, timestamp)
+		if not chatLog or not messageTemplate then return end
+		local label = messageTemplate:Clone()
+		label.RichText = true
+		label.Text = text
+		label.Visible = true
+		label.TextColor3 = isSystem and Color3.fromRGB(200, 200, 200) or Color3.fromRGB(255, 255, 255)
+		label.Parent = chatLog
+		task.wait(0.02)
+		chatLog.CanvasPosition = Vector2.new(0, chatLog.AbsoluteCanvasSize.Y)
+	end
+
+	-- ======================
+	-- DATA PERSISTENCE (Client-side, via ZolinOS.AppData)
+	-- ======================
+	local function getChatDataFolder()
+		local player = Players.LocalPlayer
+		local zolinOS = player:FindFirstChild("ZolinOS")
+		if not zolinOS then return end
+		local appData = zolinOS:FindFirstChild("AppData")
+		if not appData then
+			warn("ZolinOS.AppData not found")
+			return
+		end
+		local messages = appData:FindFirstChild("Messages")
+		if not messages then
+			messages = Instance.new("Folder")
+			messages.Name = "Messages"
+			messages.Parent = appData
+		end
+		local chats = messages:FindFirstChild("Chats")
+		if not chats then
+			chats = Instance.new("Folder")
+			chats.Name = "Chats"
+			chats.Parent = messages
+		end
+		return chats
+	end
+
+	local function saveChatHistory()
+		if not storeMessages then return end
+		local chats = getChatDataFolder()
+		if not chats then return end
+		local json = HttpService:JSONEncode(chatHistory)
+		local dataVal = chats:FindFirstChild("ChatData")
+		if not dataVal then
+			dataVal = Instance.new("StringValue")
+			dataVal.Name = "ChatData"
+			dataVal.Parent = chats
+		end
+		dataVal.Value = json
+	end
+
+	local function loadChatHistory()
+		if not storeMessages then
+			-- Remove stored data
+			local chats = getChatDataFolder()
+			if chats then
+				local dataVal = chats:FindFirstChild("ChatData")
+				if dataVal then dataVal:Destroy() end
+			end
+			chatHistory = {}
+			return
+		end
+
+		local chats = getChatDataFolder()
+		if not chats then return end
+		local dataVal = chats:FindFirstChild("ChatData")
+		if dataVal and dataVal.Value ~= "" then
+			local success, decoded = pcall(function()
+				return HttpService:JSONDecode(dataVal.Value)
+			end)
+			if success and type(decoded) == "table" then
+				chatHistory = decoded
+				-- Display loaded messages
+				for _, msg in ipairs(chatHistory) do
+					local formatted
+					if msg.sender == "System" then
+						formatted = msg.text
+						addMessageToChat(formatted, true)
+					else
+						local player = Players:FindFirstChild(msg.sender)
+						if player then
+							local color = getPlayerColor(player)
+							formatted = string.format("<font color='#%s'>%s:</font> %s", color:ToHex(), msg.sender, msg.text)
+						else
+							formatted = msg.sender .. ": " .. msg.text
+						end
+						addMessageToChat(formatted, false)
+					end
+				end
+			end
+		end
+	end
+
+	local function clearChatHistory()
+		chatHistory = {}
+		local chats = getChatDataFolder()
+		if chats then
+			local dataVal = chats:FindFirstChild("ChatData")
+			if dataVal then dataVal:Destroy() end
+		end
+	end
+
+	-- ======================
+	-- MESSAGE HANDLING
+	-- ======================
+	local function handleWhisper(inputText)
+		if not inputText:lower():find(WHISPER_PREFIX, 1, true) then
+			return nil, nil
+		end
+		local rest = inputText:sub(#WHISPER_PREFIX + 1)
+		local spacePos = rest:find(" ")
+		if not spacePos then
+			addMessageToChat("Usage: /w <username> <message>", true)
+			return nil, nil
+		end
+		local targetName = rest:sub(1, spacePos - 1)
+		local message = rest:sub(spacePos + 1)
+		if message == "" then
+			addMessageToChat("You must type a message.", true)
+			return nil, nil
+		end
+		return targetName, message
+	end
+
+	local function sendMessage(inputText)
+		if not textChannel or inputText == "" then return end
+		local targetName, whisperMessage = handleWhisper(inputText)
+		if targetName then
+			local targetPlayer = Players:FindFirstChild(targetName)
+			if not targetPlayer then
+				addMessageToChat("User not found: " .. targetName, true)
+				return
+			end
+			local displayName = Players.LocalPlayer.DisplayName
+			local msg = string.format("[Whisper to %s] %s", targetName, whisperMessage)
+			textChannel:SendAsync(msg)
+		else
+			textChannel:SendAsync(inputText)
+		end
+	end
+
+	-- ======================
+	-- UI CREATION
+	-- ======================
+	local function createUI(parent)
+		local gui = Instance.new("ScreenGui")
+		gui.Name = "MessagesApp"
+		gui.ResetOnSpawn = false
+		gui.ZIndexBehavior = Enum.ZIndexBehavior.Global
+		gui.Parent = parent or Players.LocalPlayer.PlayerGui
+		gui.Enabled = false
+		
+		local mainFrame = Instance.new("Frame")
+		mainFrame.Name = "MainFrame"
+		mainFrame.Size = UDim2.new(0, 489,0, 246)
+		mainFrame.Position = UDim2.new(0.004, 0, 0.061, 0)
+		mainFrame.AnchorPoint = Vector2.new(0, 0)
+		mainFrame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+		mainFrame.BackgroundTransparency = 0.6
+		mainFrame.Parent = gui
+		
+		local UICorner = Instance.new("UICorner")
+		UICorner.CornerRadius = UDim.new(0, 10)
+		UICorner.Parent = mainFrame
+		
+		local UIStorke = Instance.new("UIStroke")
+		UIStorke.Color = Color3.fromRGB(163, 163, 163)
+		UIStorke.Thickness = 3
+		UIStorke.Parent = mainFrame
+		
+		local UIShadow = Instance.new("UIShadow");
+		UIShadow.Parent = mainFrame;
+		UIShadow.BlurRadius = UDim.new(0, 20);
+		UIShadow.Transparency = 0.5;
+		
+		local header = Instance.new("Frame")
+		header.Name = "Header"
+		header.Size = UDim2.new(1, 0, 0.126, 0)
+		header.Position = UDim2.new(0, 0, 0, 0)
+		header.BackgroundTransparency = 1
+		header.Parent = mainFrame
+
+		
+		-- Settings button (gear)
+		local settingsBtn = Instance.new("TextButton")
+		settingsBtn.Name = "SettingsButton"
+		settingsBtn.Size = UDim2.new(0.01, 0, 1, 0)
+		settingsBtn.Position = UDim2.new(0.05, 0, 0, 0)
+		settingsBtn.BackgroundTransparency = 1
+		settingsBtn.Text = "⚙"
+		settingsBtn.TextColor3 = Color3.fromRGB(200, 200, 200)
+		settingsBtn.Font = Enum.Font.GothamBold
+		settingsBtn.TextSize = 23
+		settingsBtn.Parent = header
+
+		-- ChatLog
+		local log = Instance.new("ScrollingFrame")
+		log.Name = "ChatLog"
+		log.Position = UDim2.new(0, 0, 0.1, 0)
+		log.Size = UDim2.new(1, 0 ,1, -60)
+		log.BackgroundTransparency = 1
+		log.BorderSizePixel = 0
+		log.CanvasSize = UDim2.new(0, 0, 0, 0)
+		log.AutomaticCanvasSize = Enum.AutomaticSize.Y
+		log.ScrollBarThickness = 6
+		log.ScrollBarImageColor3 = Color3.fromRGB(150, 150, 150)
+		log.ClipsDescendants = true
+		log.Parent = mainFrame
+
+		local listLayout = Instance.new("UIListLayout")
+		listLayout.SortOrder = Enum.SortOrder.LayoutOrder
+		listLayout.Padding = UDim.new(0, 2)
+		listLayout.Parent = log
+
+		local template = Instance.new("TextLabel")
+		template.Name = "MessageTemplate"
+		template.Size = UDim2.new(1, 0, 0, 20)
+		template.BackgroundTransparency = 1
+		template.Text = "Template"
+		template.TextColor3 = Color3.fromRGB(255, 255, 255)
+		template.TextXAlignment = Enum.TextXAlignment.Left
+		template.TextScaled = false
+		template.TextSize = 14
+		template.Font = Enum.Font.Gotham
+		template.TextWrapped = true
+		template.Visible = false
+		template.Parent = log
+
+		-- ChatInput
+		local input = Instance.new("TextBox")
+		input.Name = "ChatInput"
+		input.Size = UDim2.new(1, 0, 0, 35)
+		input.Position = UDim2.new(0, 0, 1, -35)
+		input.BackgroundColor3 = Color3.fromRGB(40, 40, 50)
+		input.BackgroundTransparency = 0.3
+		input.BorderSizePixel = 0
+		input.PlaceholderText = "Type a message... /w <user> <msg>"
+		input.Text = ""
+		input.TextColor3 = Color3.fromRGB(255, 255, 255)
+		input.Font = Enum.Font.Gotham
+		input.TextSize = 14
+		input.ClearTextOnFocus = false
+		input.Parent = mainFrame
+		
+		local inputUICorner = Instance.new("UICorner")
+		inputUICorner.CornerRadius = UDim.new(0, 10)
+		inputUICorner.Parent = input
+
+		-- Settings Panel (initially hidden)
+		local settingsPanel = Instance.new("Frame")
+		settingsPanel.Name = "SettingsPanel"
+		settingsPanel.Size = UDim2.new(0.5, 0, 0.3, 0)
+		settingsPanel.Position = UDim2.new(0.25, 0, 0.35, 0)
+		settingsPanel.AnchorPoint = Vector2.new(0.5, 0.5)
+		settingsPanel.BackgroundColor3 = Color3.fromRGB(25, 25, 40)
+		settingsPanel.BackgroundTransparency = 0.2
+		settingsPanel.BorderSizePixel = 0
+		settingsPanel.Visible = false
+		settingsPanel.Parent = mainFrame
+
+		local settingsTitle = Instance.new("TextLabel")
+		settingsTitle.Size = UDim2.new(1, 0, 0.2, 0)
+		settingsTitle.BackgroundTransparency = 1
+		settingsTitle.Text = "Settings"
+		settingsTitle.TextColor3 = Color3.fromRGB(255, 255, 255)
+		settingsTitle.Font = Enum.Font.GothamBold
+		settingsTitle.TextSize = 18
+		settingsTitle.Parent = settingsPanel
+
+		-- Toggle "Store Messages Data"
+		local toggleLabel = Instance.new("TextLabel")
+		toggleLabel.Size = UDim2.new(0.6, 0, 0.2, 0)
+		toggleLabel.Position = UDim2.new(0.05, 0, 0.25, 0)
+		toggleLabel.BackgroundTransparency = 1
+		toggleLabel.Text = "Store Messages Data"
+		toggleLabel.TextColor3 = Color3.fromRGB(220, 220, 220)
+		toggleLabel.Font = Enum.Font.Gotham
+		toggleLabel.TextSize = 14
+		toggleLabel.TextXAlignment = Enum.TextXAlignment.Left
+		toggleLabel.Parent = settingsPanel
+
+		local toggleBtn = Instance.new("TextButton")
+		toggleBtn.Name = "StoreToggle"
+		toggleBtn.Size = UDim2.new(0.2, 0, 0.2, 0)
+		toggleBtn.Position = UDim2.new(0.75, 0, 0.25, 0)
+		toggleBtn.BackgroundColor3 = Color3.fromRGB(70, 70, 90)
+		toggleBtn.BackgroundTransparency = 0.3
+		toggleBtn.BorderSizePixel = 0
+		toggleBtn.Text = "OFF"
+		toggleBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+		toggleBtn.Font = Enum.Font.GothamBold
+		toggleBtn.TextSize = 14
+		toggleBtn.Parent = settingsPanel
+
+		-- Delete button
+		local deleteBtn = Instance.new("TextButton")
+		deleteBtn.Name = "DeleteButton"
+		deleteBtn.Size = UDim2.new(0.4, 0, 0.2, 0)
+		deleteBtn.Position = UDim2.new(0.3, 0, 0.6, 0)
+		deleteBtn.BackgroundColor3 = Color3.fromRGB(150, 40, 40)
+		deleteBtn.BackgroundTransparency = 0.3
+		deleteBtn.BorderSizePixel = 0
+		deleteBtn.Text = "Delete All Chat"
+		deleteBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+		deleteBtn.Font = Enum.Font.GothamBold
+		deleteBtn.TextSize = 16
+		deleteBtn.Parent = settingsPanel
+
+		-- Close settings button (X)
+		local closeSettingsBtn = Instance.new("TextButton")
+		closeSettingsBtn.Name = "CloseSettings"
+		closeSettingsBtn.Size = UDim2.new(0.06, 0, 0.12, 0)
+		closeSettingsBtn.Position = UDim2.new(0.92, 0, 0, 0)
+		closeSettingsBtn.BackgroundTransparency = 1
+		closeSettingsBtn.Text = "X"
+		closeSettingsBtn.TextColor3 = Color3.fromRGB(200, 200, 200)
+		closeSettingsBtn.Font = Enum.Font.GothamBold
+		closeSettingsBtn.TextSize = 16
+		closeSettingsBtn.Parent = settingsPanel
+
+		-- Confirmation popup (initially hidden)
+		local confirmFrame = Instance.new("Frame")
+		confirmFrame.Name = "ConfirmFrame"
+		confirmFrame.Size = UDim2.new(0.6, 0, 0.3, 0)
+		confirmFrame.Position = UDim2.new(0.5, 0, 0.5, 0)
+		confirmFrame.AnchorPoint = Vector2.new(0.5, 0.5)
+		confirmFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 45)
+		confirmFrame.BackgroundTransparency = 0.2
+		confirmFrame.BorderSizePixel = 0
+		confirmFrame.Visible = false
+		confirmFrame.Parent = mainFrame
+
+		local confirmLabel = Instance.new("TextLabel")
+		confirmLabel.Size = UDim2.new(1, 0, 0.4, 0)
+		confirmLabel.Position = UDim2.new(0, 0, 0.1, 0)
+		confirmLabel.BackgroundTransparency = 1
+		confirmLabel.Text = "Delete all chat messages?"
+		confirmLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+		confirmLabel.Font = Enum.Font.GothamBold
+		confirmLabel.TextSize = 18
+		confirmLabel.Parent = confirmFrame
+
+		local confirmYes = Instance.new("TextButton")
+		confirmYes.Size = UDim2.new(0.3, 0, 0.25, 0)
+		confirmYes.Position = UDim2.new(0.1, 0, 0.6, 0)
+		confirmYes.BackgroundColor3 = Color3.fromRGB(150, 40, 40)
+		confirmYes.BackgroundTransparency = 0.3
+		confirmYes.BorderSizePixel = 0
+		confirmYes.Text = "Yes"
+		confirmYes.TextColor3 = Color3.fromRGB(255, 255, 255)
+		confirmYes.Font = Enum.Font.GothamBold
+		confirmYes.TextSize = 16
+		confirmYes.Parent = confirmFrame
+
+		local confirmNo = Instance.new("TextButton")
+		confirmNo.Size = UDim2.new(0.3, 0, 0.25, 0)
+		confirmNo.Position = UDim2.new(0.6, 0, 0.6, 0)
+		confirmNo.BackgroundColor3 = Color3.fromRGB(70, 70, 90)
+		confirmNo.BackgroundTransparency = 0.3
+		confirmNo.BorderSizePixel = 0
+		confirmNo.Text = "No"
+		confirmNo.TextColor3 = Color3.fromRGB(255, 255, 255)
+		confirmNo.Font = Enum.Font.GothamBold
+		confirmNo.TextSize = 16
+		confirmNo.Parent = confirmFrame
+
+		return gui, log, input, template, settingsBtn, settingsPanel, toggleBtn, deleteBtn, confirmFrame, confirmYes, confirmNo, closeSettingsBtn, mainFrame
+	end
+
+	local function resetActivityTimer()
+		lastActivity = tick()
+		if chatGui and not chatGui.Enabled then
+			chatGui.Enabled = true
+		end
+	end
+
+	local function startFadeTimer()
+		if fadeTimerConnection then
+			fadeTimerConnection:Disconnect()
+			fadeTimerConnection = nil
+		end
+		fadeTimerConnection = RunService.Heartbeat:Connect(function()
+			if not chatGui then
+				if fadeTimerConnection then fadeTimerConnection:Disconnect() end
+				fadeTimerConnection = nil
+				return
+			end
+			if chatGui.Enabled == false then return end
+			if isTyping then
+				resetActivityTimer()  -- keep alive while typing
+				return
+			end
+			if tick() - lastActivity > INACTIVITY_DELAY then
+				-- Fade out and hide
+				chatGui.Enabled = false
+				if fadeTimerConnection then fadeTimerConnection:Disconnect() end
+				fadeTimerConnection = nil
+			end
+		end)
+	end
+
+	-- ======================
+	-- PUBLIC API
+	-- ======================
+	function MessagesApp.Init()
+		if isInitialized then print("MessagesApp already initialized.") return end
+		isInitialized = true
+
+		local gui, log, input, template, settingsBtn, settingsPanel, toggleBtn, deleteBtn, confirmFrame, confirmYes, confirmNo, closeSettingsBtn, mainFrame = createUI(nil)
+		chatGui = gui
+		chatLog = log
+		chatInput = input
+		messageTemplate = template
+		isVisible = true
+
+		-- Load settings (storeMessages) from somewhere? For simplicity, default false.
+		
+		storeMessages = false
+		toggleBtn.Text = "OFF"
+		toggleBtn.BackgroundColor3 = Color3.fromRGB(70, 70, 90)
+
+		-- Load chat history if enabled
+		if storeMessages then
+			loadChatHistory()
+		else
+			-- Ensure no history is loaded
+			chatHistory = {}
+			clearChatHistory()
+		end
+
+		input.Focused:Connect(function()
+			isTyping = true
+			resetActivityTimer()
+			chatGui.Enabled = true
+		end)
+
+		input.FocusLost:Connect(function(enterPressed)
+			isTyping = false
+			resetActivityTimer()  -- last activity is now, so timer starts after this
+			if not enterPressed then
+				-- User clicked away; start fade timer
+				startFadeTimer()
+			end
+		end)
+
+		-- Any key press on input resets timer
+		input.InputBegan:Connect(function()
+			resetActivityTimer()
+		end)
+		
+		-- Settings button
+		settingsBtn.MouseButton1Click:Connect(function()
+			resetActivityTimer()
+			settingsPanel.Visible = not settingsPanel.Visible
+			confirmFrame.Visible = false
+		end)
+
+		-- Close settings
+		closeSettingsBtn.MouseButton1Click:Connect(function()
+			settingsPanel.Visible = false
+		end)
+
+		-- Toggle store
+		toggleBtn.MouseButton1Click:Connect(function()
+			storeMessages = not storeMessages
+			if storeMessages then
+				toggleBtn.Text = "ON"
+				toggleBtn.BackgroundColor3 = Color3.fromRGB(40, 180, 40)
+				loadChatHistory() -- load existing history
+			else
+				toggleBtn.Text = "OFF"
+				toggleBtn.BackgroundColor3 = Color3.fromRGB(70, 70, 90)
+				-- Clear stored data and chat history
+				chatHistory = {}
+				clearChatHistory()
+				-- Clear chat log UI (remove all messages)
+				for _, child in ipairs(chatLog:GetChildren()) do
+					if child:IsA("TextLabel") and child ~= messageTemplate then
+						child:Destroy()
+					end
+				end
+			end
+		end)
+
+		-- Delete button
+		deleteBtn.MouseButton1Click:Connect(function()
+			confirmFrame.Visible = true
+		end)
+
+		confirmYes.MouseButton1Click:Connect(function()
+			-- Delete all
+			chatHistory = {}
+			clearChatHistory()
+			-- Clear chat log UI
+			for _, child in ipairs(chatLog:GetChildren()) do
+				if child:IsA("TextLabel") and child ~= messageTemplate then
+					child:Destroy()
+				end
+			end
+			confirmFrame.Visible = false
+			settingsPanel.Visible = false
+			addMessageToChat("Chat history deleted.", true)
+		end)
+
+		confirmNo.MouseButton1Click:Connect(function()
+			confirmFrame.Visible = false
+		end)
+		
+		mainFrame.MouseEnter:Connect(function()
+			resetActivityTimer()
+		end)
+		
+		mainFrame.MouseLeave:Connect(function()
+			-- nothing, timer will handle hiding
+		end)
+
+		-- Toggle visibility with keybind
+		if not isMobile then
+		local toggleConnection = UserInputService.InputBegan:Connect(function(input, gameProcessed)
+			if gameProcessed then return end
+			if input.KeyCode == KEY_TOGGLE then
+				if chatGui.Enabled then
+					-- Hide UI and unfocus
+					chatGui.Enabled = false
+					chatInput:ReleaseFocus()
+					if fadeTimerConnection then
+						fadeTimerConnection:Disconnect()
+						fadeTimerConnection = nil
+					end
+				else
+					-- Show UI and focus input
+					chatGui.Enabled = true
+					resetActivityTimer()
+					chatInput:CaptureFocus()
+					isTyping = true
+				end
+			end
+		end)
+		table.insert(connections, toggleConnection)
+		else
+			local mainUI = getMainUI();
+			if not mainUI then print("no mainUI") return end
+			local SideButtons = mainUI:FindFirstChild("SideButtons")
+			if not SideButtons then return end
+			local toggleButton = SideButtons:FindFirstChild("ButtonChatUI")
+			if not toggleButton then warn("no toggleButton for mobile. im sorry") return end
+			toggleButton.MouseButton1Click:Connect(function()
+				print("toggle button clicked")
+				MessagesApp.Toggle()
+			end)
+		end
+
+		-- Get channel
+		local channels = TextChatService:FindFirstChild("TextChannels")
+		if channels then
+			textChannel = channels:FindFirstChild(CHAT_CHANNEL)
+		end
+		if not textChannel then
+			warn("[MessagesApp] RBXGeneral not found.")
+			return
+		end
+
+		-- Receive messages
+		local msgReceived = textChannel.MessageReceived:Connect(function(msgObj)
+			local sender = msgObj.PrefixText
+			local text = msgObj.Text
+			local player = Players:FindFirstChild(sender)
+			local formatted
+			if player then
+				local color = getPlayerColor(player)
+				formatted = string.format("<font color='#%s'>%s:</font> %s", color:ToHex(), sender, text)
+				addMessageToChat(formatted, false)
+				-- Store in history
+				table.insert(chatHistory, { sender = sender, text = text, timestamp = os.time() })
+				if storeMessages then
+					saveChatHistory()
+				end
+			else
+				formatted = sender .. ": " .. text
+				addMessageToChat(formatted, true)
+				-- Store system messages too? We'll skip to avoid clutter.
+			end
+		end)
+		table.insert(connections, msgReceived)
+
+		-- Send on Enter
+		local focusLost = input.FocusLost:Connect(function(enterPressed)
+			if enterPressed and input.Text ~= "" then
+				local msg = input.Text
+				input.Text = ""
+				sendMessage(msg)
+			end
+		end)
+		table.insert(connections, focusLost)
+
+		-- Join/Leave notifications
+		local playerAdded = Players.PlayerAdded:Connect(function(player)
+			addMessageToChat(player.DisplayName .. " joined the game.", true)
+		end)
+		table.insert(connections, playerAdded)
+
+		local playerRemoving = Players.PlayerRemoving:Connect(function(player)
+			addMessageToChat(player.DisplayName .. " left the game.", true)
+		end)
+		table.insert(connections, playerRemoving)
+		
+		pcall(function()
+			game:GetService("StarterGui"):SetCoreGuiEnabled(Enum.CoreGuiType.Chat, false)
+		end)
+		
+		print("[MessagesApp] Initialized.")
+	end
+
+	function MessagesApp.Stop()
+		if not isInitialized then return end
+
+		-- Save history if enabled
+		if storeMessages then
+			saveChatHistory()
+		end
+
+		-- Disconnect all internal connections
+		for _, conn in ipairs(connections) do
+			conn:Disconnect()
+		end
+		connections = {}
+
+		-- Restore default chat UI
+		if defaultChatUI then
+			defaultChatUI.Enabled = true
+			defaultChatUI = nil
+			defaultChatButton = nil
+		end
+
+		-- Destroy our GUI
+		if chatGui then
+			chatGui:Destroy()
+			chatGui = nil
+		end
+
+		-- Destroy mobile toggle button
+		if mobileToggleButton then
+			mobileToggleButton:Destroy()
+			mobileToggleButton = nil
+		end
+
+		-- Clean up timer
+		if fadeTimerConnection then
+			fadeTimerConnection:Disconnect()
+			fadeTimerConnection = nil
+		end
+		
+		pcall(function()
+			game:GetService("StarterGui"):SetCoreGuiEnabled(Enum.CoreGuiType.Chat, true)
+		end)
+
+		isInitialized = false
+		print("[MessagesApp] Stopped.")
+	end
+
+	function MessagesApp.Toggle()
+		if not isInitialized then return end
+		if chatGui.Enabled then
+			chatGui.Enabled = false
+			chatInput:ReleaseFocus()
+			if fadeTimerConnection then
+				fadeTimerConnection:Disconnect()
+				fadeTimerConnection = nil
+			end
+			isVisible = false
+		else
+			chatGui.Enabled = true
+			resetActivityTimer()
+			chatInput:CaptureFocus()
+			isTyping = true
+			isVisible = true
+		end
+	end
+
+	function MessagesApp.IsVisible()
+		return isVisible
+	end
+	
+	local function overrideChatButton()
+		local coreGui = game:GetService("CoreGui")
+		if not coreGui then return end
+
+		-- Find the default chat UI
+		defaultChatUI = coreGui:FindFirstChild("DefaultChat") or coreGui:FindFirstChild("Chat")
+
+		if defaultChatUI then
+			-- Hide the default chat UI so our app is the only one
+			defaultChatUI.Enabled = false
+
+			-- Find the chat toggle button
+			defaultChatButton = defaultChatUI:FindFirstChild("ChatButton") or defaultChatUI:FindFirstChild("OpenChatButton")
+
+			if defaultChatButton and defaultChatButton:IsA("TextButton") then
+				-- Override the click event
+				defaultChatButton.MouseButton1Click:Connect(function()
+					MessagesApp.Toggle()
+				end)
+				warn("[MessagesApp] Default chat button overridden.")
+			else
+				warn("[MessagesApp] Chat button not found in DefaultChat UI.")
+			end
+		end
+	end
+	overrideChatButton();
+	return MessagesApp
+end
+
+-- ============================================
 -- EXPORT ALL MODULES
 -- ============================================
+
 function ZolinModules.GetAll()
 	local modules = {
 		AnimationManager = ZolinModules.AnimationManager(),
@@ -7216,6 +7976,7 @@ function ZolinModules.GetAll()
 		WallpaperSysApp = ZolinModules.WallpaperSysApp(),  -- Add this
 		ZolinInstaller = ZolinModules.ZolinInstaller(),
 		TaskManager = ZolinModules.TaskManagerApp(),
+		MessagesApp = ZolinModules.MessagesApp(),
 	}
 	local deps = {
 		AnimationManager = modules.AnimationManager,
@@ -7248,6 +8009,7 @@ function ZolinModules.GetAll_Desktop()
 		StartMenuManager = ZolinModules.StartMenuManager(),
 		ContextMenuManager = ZolinModules.ContextMenuManager(),
 		TaskManager = ZolinModules.TaskManagerApp(),
+		MessagesApp = ZolinModules.MessagesApp(),
 	}
 	local deps = {
 		AnimationManager = modules.AnimationManager,
