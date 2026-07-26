@@ -3626,7 +3626,10 @@ function ZolinModules.PowerMenuManager()
 					if CloseAllAppsEvent then CloseAllAppsEvent:Fire() end
 					task.wait(3.75)
 					local mainUI = getMainUI()
+					local MessagesApp = game.Players.LocalPlayer.PlayerGui:FindFirstChild("MessagesApp");
+					if MessagesApp then MessagesApp:Destroy() end
 					if mainUI then mainUI:Destroy() end
+					
 				end)
 			end
 			PowerMenuManager.Close(0)
