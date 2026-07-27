@@ -21,6 +21,7 @@ ZolinModules.AppUrls = {
 ZolinModules.ZolinVersion = nil
 
 local openBuiltInModules = {}
+local RunningAppsThreads = {}  -- appName -> thread
 local RunningApps = {}
 local BackgroundApps = {}
 local ActiveApp = nil	
@@ -1162,26 +1163,37 @@ function ZolinModules.AppManager(dependencies)
 				local success, result = pcall(function()
 					return game:HttpGet(appUrl)
 				end)
-				if success and result then
-					local fn, compileError = loadstring(result)
-					if fn then
-						local execSuccess, moduleReturn = pcall(fn)
-						if execSuccess then
-							if type(moduleReturn) == "function" then
-								local ui = clonedApp:FindFirstChild("UI")
-									moduleReturn(ui, {}, clonedApp)
-							elseif type(moduleReturn) == "table" and moduleReturn.Init then
-								local ui = clonedApp:FindFirstChild("UI")
-									moduleReturn.Init(ui, {}, clonedApp)
+					if success and result then
+						local fn, compileError = loadstring(result)
+						if fn then
+							-- Spawn the app in a separate thread
+							local thread = task.spawn(function()
+								local execSuccess, moduleReturn = pcall(fn)
+								if execSuccess then
+									if type(moduleReturn) == "function" then
+										local ui = clonedApp:FindFirstChild("UI")
+										moduleReturn(ui, {}, clonedApp)
+									elseif type(moduleReturn) == "table" and moduleReturn.Init then
+										local ui = clonedApp:FindFirstChild("UI")
+										moduleReturn.Init(ui, {}, clonedApp)
+									end
+								else
+									warn("Failed to execute loadstring app:", p1, moduleReturn)
 								end
-								table.insert(RunningApps, p1)
-								ActiveApp = p1
-								clonedApp.Visible = true
-								openBuiltInModules[p1] = clonedApp
-								print("Launched loadstring app:", p1)
-							else
-								warn("Failed to execute loadstring app:", p1, moduleReturn)
+							end)
+
+							-- Store the thread reference
+							if not RunningApps[p1] then
+								RunningApps[p1] = {}
 							end
+							RunningApps[p1].thread = thread
+							RunningApps[p1].ui = clonedApp
+
+							table.insert(RunningApps, p1)
+							ActiveApp = p1
+							clonedApp.Visible = true
+							openBuiltInModules[p1] = clonedApp
+							print("Launched loadstring app:", p1)
 						else
 							warn("Failed to compile loadstring app:", p1, compileError)
 						end
@@ -1332,22 +1344,34 @@ function ZolinModules.AppManager(dependencies)
 						if success and result then
 							local fn, compileError = loadstring(result)
 							if fn then
-								local execSuccess, moduleReturn = pcall(fn)
-								if execSuccess then
-									if type(moduleReturn) == "function" then
-										local ui = windowApp:FindFirstChild("UI")
-										moduleReturn(ui, {}, windowApp)
-									elseif type(moduleReturn) == "table" and moduleReturn.Init then
-										local ui = windowApp:FindFirstChild("UI")
-										moduleReturn.Init(ui, {}, windowApp)
+								-- Spawn a separate thread for this app
+								local thread = task.spawn(function()
+									local execSuccess, moduleReturn = pcall(fn)
+									if execSuccess then
+										if type(moduleReturn) == "function" then
+											local ui = windowApp:FindFirstChild("UI")
+											moduleReturn(ui, {}, windowApp)
+										elseif type(moduleReturn) == "table" and moduleReturn.Init then
+											local ui = windowApp:FindFirstChild("UI")
+											moduleReturn.Init(ui, {}, windowApp)
+										end
+										print("Loadstring app executed successfully:", p1)
+									else
+										warn("Failed to execute loadstring app:", p1, moduleReturn)
 									end
-									table.insert(RunningApps, p1)
-									ActiveApp = p1
-									openBuiltInModules[p1] = windowApp
-									print("Launched loadstring app:", p1)
-								else
-									warn("Failed to execute loadstring app:", p1, moduleReturn)
+								end)
+
+								-- Store thread reference for later stop
+								if not RunningAppsThreads then
+									RunningAppsThreads = {}
 								end
+								RunningAppsThreads[p1] = thread
+
+								-- Also track UI and app state (existing tracking)
+								table.insert(RunningApps, p1)
+								ActiveApp = p1
+								openBuiltInModules[p1] = windowApp
+								print("Launched loadstring app:", p1)
 							else
 								warn("Failed to compile loadstring app:", p1, compileError)
 							end
@@ -1547,16 +1571,27 @@ function ZolinModules.AppManager(dependencies)
 			app = MainUI.__ZolinDesktop.__ScreenFrame.Applications:FindFirstChild(p3)
 		end
 		if app then
+			-- ============================================
+			-- CANCEL THE LOADSTRING THREAD (if any)
+			-- ============================================
+			if RunningAppsThreads and RunningAppsThreads[p3] then
+				task.cancel(RunningAppsThreads[p3])
+				RunningAppsThreads[p3] = nil
+				print("Cancelled thread for app:", p3)
+			end
+
 			local isSystem = AppManager.IsSystemApp(p3)
 			if isSystem and ActiveApp == p3 then
 				if ZolinModules.Mode == "Mobile" then
-				AnimationManager.AnimateWindow(p3, "Close", "Destroy")
+					AnimationManager.AnimateWindow(p3, "Close", "Destroy")
 				end
 			end
 			if ZolinModules.Mode == "Desktop" then
-			ZolinModules.ZIndexManagerInstance.Unregister(app)
-			AnimationManager.AnimateDesktopWindowOpen(app, "Close", "Destroy");
+				ZolinModules.ZIndexManagerInstance.Unregister(app)
+				AnimationManager.AnimateDesktopWindowOpen(app, "Close", "Destroy")
 			end
+
+			-- Remove from running lists
 			for i, name in ipairs(RunningApps) do
 				if name == p3 then
 					table.remove(RunningApps, i)
@@ -1569,34 +1604,38 @@ function ZolinModules.AppManager(dependencies)
 					break
 				end
 			end
+
 			local oldActive = ActiveApp
 			if ActiveApp == p3 then
 				ActiveApp = nil
 				if #RunningApps == 0 and #BackgroundApps == 0 then
 					if ZolinModules.Mode == "Mobile" then
-					if MainUI and MainUI.__ScreenFrame and MainUI.__ScreenFrame.HomeScreenScroller then
-						MainUI.__ScreenFrame.HomeScreenScroller.Visible = true
-					end
+						if MainUI and MainUI.__ScreenFrame and MainUI.__ScreenFrame.HomeScreenScroller then
+							MainUI.__ScreenFrame.HomeScreenScroller.Visible = true
+						end
 					elseif ZolinModules.Mode == "Desktop" then
 						-- we will not do this for desktop
 					end
 				end
 			end
-			-- attempt to destroy the app, using the same logic as AnimationManager with endConnection method
+
+			-- Destroy the app UI (AnimationManager handles final destruction)
 			if ZolinModules.Mode == "Mobile" then
-				AnimationManager.AnimateWindow(p3, "Close", "Destroy");
-			end;
-			print("App closed: " .. p3)
-			if ZolinModules.Mode == "Mobile" then
-			AppManager.RemovePreview(p3)
-			-- Refresh background page if it's open
-			local bgPage = MainUI.__ScreenFrame:FindFirstChild("BackgroundPage")
-			if bgPage and bgPage.Visible then
-				AppManager.RefreshBackgroundPage()
+				AnimationManager.AnimateWindow(p3, "Close", "Destroy")
 			end
+
+			print("App closed: " .. p3)
+
+			if ZolinModules.Mode == "Mobile" then
+				AppManager.RemovePreview(p3)
+				local bgPage = MainUI.__ScreenFrame:FindFirstChild("BackgroundPage")
+				if bgPage and bgPage.Visible then
+					AppManager.RefreshBackgroundPage()
+				end
 			elseif ZolinModules.Mode == "Desktop" then
 				-- we will not do this for desktop
 			end
+
 			triggerEvent("onAppClosed", p3)
 			if oldActive == p3 then
 				triggerEvent("onActiveAppChanged", ActiveApp, oldActive)
@@ -3628,8 +3667,7 @@ function ZolinModules.PowerMenuManager()
 					local mainUI = getMainUI()
 					local MessagesApp = game.Players.LocalPlayer.PlayerGui:FindFirstChild("MessagesApp");
 					if MessagesApp then MessagesApp:Destroy() end
-					if mainUI then mainUI:Destroy() end
-					
+					if mainUI then mainUI:Destroy() end					
 				end)
 			end
 			PowerMenuManager.Close(0)
@@ -4706,7 +4744,7 @@ function ZolinModules.SettingsApp()
 		elseif ZolinModules.Mode == "Desktop" then
 			modules = ZolinModules.GetAll_Desktop()
 		end
-		if not modules then warn("ZolinModules module not found/init") return end
+		if not modules then warn("ZolinModules module not found .init") return end
 		local SettingsManager = modules.SettingsManager
 		local VolumeManager = modules.VolumeManager
 		local PlatformManager = modules.PlatformManager
@@ -5050,6 +5088,7 @@ function ZolinModules.SettingsApp()
 					{name = "Animation Speed", type = "animation_speed", settingName = "TransitionSpeed", valueRef = transitionSpeedValue, min = 0.25, max = 10},
 					{name = "What's New in Zolin "..tostring(ZolinModules.ZolinVersion), type = "action", key = "changelogs"},
 					{name = "Task Manager", type = "action", key = "memorydisplayApp"},
+					{name = "Command Prompt", type = "action", key = "cmdApp"},
 					{name = "Power Menu", type = "action", key = "power"},
 				}
 			}
@@ -5295,6 +5334,13 @@ function ZolinModules.SettingsApp()
 						actionBtn.MouseButton1Click:Connect(function()
 							AppManager.HandleExit()
 							AppManager.LaunchApplication("TaskManager")
+						end)
+					end
+					if item.key == "cmdApp" then
+						actionBtn.MouseButton1Click:Connect(function()
+						AppManager.HandleExit()
+						ZolinModules.CommandApp().Init();
+						print("Command App Launched outside the System's GUI")
 						end)
 					end
 				elseif item.type == "input" then
@@ -6564,7 +6610,7 @@ function ZolinModules.TaskManagerApp()
 			closeBtn.Size = UDim2.new(0, 30, 0, 30)
 			closeBtn.Position = UDim2.new(1, -40, 0.5, -15)
 			closeBtn.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
-			closeBtn.Text = "✕"
+			closeBtn.Text = "X"
 			closeBtn.TextColor3 = Color3.new(1, 1, 1)
 			closeBtn.Font = Enum.Font.GothamBold
 			closeBtn.TextSize = 16
@@ -7961,6 +8007,487 @@ function ZolinModules.MessagesApp()
 end
 
 -- ============================================
+-- ZOLINOS COMMAND APP (Terminal)
+-- ============================================
+
+function ZolinModules.CommandApp()
+	local CommandApp = {}
+
+	local Players = game:GetService("Players")
+	local UserInputService = game:GetService("UserInputService")
+	local RunService = game:GetService("RunService")
+	local TweenService = game:GetService("TweenService")
+
+	-- ======================
+	-- INTERNAL STATE
+	-- ======================
+	local gui = nil
+	local outputLog = nil
+	local inputBox = nil
+	local commandHistory = {}
+	local historyIndex = 0
+	local isInitialized = false
+	local connections = {}
+	local messageTemplate = nil
+
+	-- ======================
+	-- COMMAND REGISTRY
+	-- ======================
+	local commands = {}
+	local exctThreads = {}          -- id -> { thread, name, status }
+	local exctCounter = 0
+	
+	local function registerCommand(name, description, func)
+		commands[name] = { description = description, func = func }
+	end
+
+	-- ======================
+	-- BUILT-IN COMMANDS
+	-- ======================
+
+	-- help
+	registerCommand("help", "Show available commands", function(args)
+		local output = "Available commands:\n"
+		for name, cmd in pairs(commands) do
+			output = output .. "  /" .. name .. " – " .. cmd.description .. "\n"
+		end
+		return output
+	end)
+
+	-- echo
+	registerCommand("echo", "Print a message", function(args)
+		return table.concat(args, " ")
+	end)
+
+	-- clear
+	registerCommand("clear", "Clear the terminal output", function(args)
+		if outputLog then
+			for _, child in ipairs(outputLog:GetChildren()) do
+				if child:IsA("TextLabel") and child.Name ~= "MessageTemplate" then
+					child:Destroy()
+				end
+			end
+		end
+		return nil
+	end)
+
+	-- ls (list apps)
+	registerCommand("ls", "List all installed apps", function(args)
+		local appList = ""
+		local installed = ZolinModules.InstalledApps or {}
+		for _, name in ipairs(installed) do
+			appList = appList .. "  " .. name .. "\n"
+		end
+		if appList == "" then appList = "  (no apps installed)" end
+		return "Installed apps:\n" .. appList
+	end)
+
+	-- ps (list running apps)
+	registerCommand("ps", "List running apps", function(args)
+		local running = ""
+		for _, name in ipairs(RunningApps or {}) do
+			running = running .. "  " .. name .. "\n"
+		end
+		if running == "" then running = "  (no running apps)" end
+		return "Running apps:\n" .. running
+	end)
+
+	-- run (launch app)
+	registerCommand("run", "Launch an app by name", function(args)
+		local appName = args[1]
+		if not appName then return "Usage: /run <appName>" end
+		if ZolinModules and ZolinModules.AppManager then
+			local success = ZolinModules.AppManager.LaunchApp(appName)
+			if success then
+				return "Launched app: " .. appName
+			else
+				return "Failed to launch app: " .. appName
+			end
+		else
+			return "AppManager not available."
+		end
+	end)
+
+	-- close
+	registerCommand("close", "Close a running app", function(args)
+		local appName = args[1]
+		if not appName then return "Usage: /close <appName>" end
+		if ZolinModules and ZolinModules.AppManager then
+			local success = ZolinModules.AppManager.CloseApp(appName)
+			if success then
+				return "Closed app: " .. appName
+			else
+				return "Failed to close app: " .. appName
+			end
+		else
+			return "AppManager not available."
+		end
+	end)
+
+	-- kill (force stop a thread)
+	registerCommand("kill", "Force stop a loadstring app thread", function(args)
+		local appName = args[1]
+		if not appName then return "Usage: /kill <appName>" end
+		if RunningAppsThreads and RunningAppsThreads[appName] then
+			task.cancel(RunningAppsThreads[appName])
+			RunningAppsThreads[appName] = nil
+			return "Killed thread for app: " .. appName
+		else
+			return "No active thread found for: " .. appName
+		end
+	end)
+
+	-- whoami
+	registerCommand("whoami", "Show current user", function(args)
+		return "User: " .. Players.LocalPlayer.Name
+	end)
+
+	-- time
+	registerCommand("time", "Show current server time", function(args)
+		return os.date("%Y-%m-%d %H:%M:%S")
+	end)
+	
+	-- exct (execute loadstring from URL or raw code)
+	registerCommand("exct", "Execute Lua code from URL or directly: /exct <url|code> [name]", function(args)
+		if #args == 0 then return "Usage: /exct <url|code> [name]" end
+		local fullInput = table.concat(args, " ")
+		local url = nil
+		local code = nil
+		local name = nil
+
+		-- Check if the input starts with a URL
+		if fullInput:match("^https?://") then
+			-- It's a URL
+			url = fullInput
+			-- Extract name if there's a space after the URL
+			local spacePos = fullInput:find(" ")
+			if spacePos then
+				url = fullInput:sub(1, spacePos - 1)
+				name = fullInput:sub(spacePos + 1)
+				if name == "" then name = nil end
+			end
+		else
+			-- It's raw code
+			code = fullInput
+			name = args[2] or "code_" .. (exctCounter + 1)
+		end
+
+		if url then
+			-- Fetch and execute from URL
+			local success, result = pcall(function()
+				return game:HttpGet(url)
+			end)
+			if not success or not result then
+				return "Failed to fetch URL: " .. url
+			end
+
+			local fn, compileError = loadstring(result)
+			if not fn then
+				return "Compile error: " .. (compileError or "unknown")
+			end
+
+			-- Spawn thread
+			local thread = task.spawn(function()
+				local execSuccess, moduleReturn = pcall(fn)
+				if execSuccess then
+					if type(moduleReturn) == "function" then
+						moduleReturn()
+					elseif type(moduleReturn) == "table" and moduleReturn.Init then
+						moduleReturn.Init()
+					end
+					CommandApp.addOutput("Executed successfully: " .. (name or url), false)
+				else
+					CommandApp.addOutput("Execution error: " .. tostring(moduleReturn), true)
+				end
+			end)
+
+			exctCounter = exctCounter + 1
+			exctThreads[exctCounter] = { thread = thread, name = name or url, url = url }
+			return "Started thread #" .. exctCounter .. " (" .. (name or url) .. ")"
+		else
+			-- Execute raw code
+			local fn, compileError = loadstring(code)
+			if not fn then
+				return "Compile error: " .. (compileError or "unknown")
+			end
+
+			local thread = task.spawn(function()
+				local execSuccess, moduleReturn = pcall(fn)
+				if execSuccess then
+					CommandApp.addOutput("Executed successfully: " .. name, false)
+				else
+					CommandApp.	addOutput("Execution error: " .. tostring(moduleReturn), true)
+				end
+			end)
+
+			exctCounter = exctCounter + 1
+			exctThreads[exctCounter] = { thread = thread, name = name, url = "local code" }
+			return "Started thread #" .. exctCounter .. " (" .. name .. ")"
+		end
+	end)
+
+	-- exctlist (list active threads)
+	registerCommand("exctlist", "List active loadstring threads", function(args)
+		local output = "Active threads:\n"
+		local count = 0
+		for id, data in pairs(exctThreads) do
+			count = count + 1
+			local typeLabel = data.url == "local code" and "local" or "url"
+			output = output .. "  #" .. id .. " – " .. data.name .. " (" .. typeLabel .. ")\n"
+		end
+		if count == 0 then output = output .. "  (none)" end
+		return output
+	end)
+
+	-- exctkill (kill a thread)
+	registerCommand("exctkill", "Kill a running loadstring thread: /exctkill <id>", function(args)
+		local id = tonumber(args[1])
+		if not id or not exctThreads[id] then
+			return "Thread #" .. tostring(args[1]) .. " not found."
+		end
+		task.cancel(exctThreads[id].thread)
+		exctThreads[id] = nil
+		return "Killed thread #" .. id
+	end)
+
+	-- ======================
+	-- COMMAND PARSER & EXECUTOR
+	-- ======================
+	local function executeCommand(input)
+		if not input or input == "" then return nil end
+
+		local parts = {}
+		for part in input:gmatch("%S+") do
+			table.insert(parts, part)
+		end
+
+		local cmdName = parts[1]:lower()
+		local args = { unpack(parts, 2) }
+
+		if cmdName:sub(1,1) ~= "/" then
+			return "Unknown command. Type /help for list."
+		end
+
+		cmdName = cmdName:sub(2)
+
+		local cmd = commands[cmdName]
+		if not cmd then
+			return "Unknown command: " .. cmdName
+		end
+
+		local result = cmd.func(args)
+		return result or ""
+	end
+
+	-- ======================
+	-- UI CREATION
+	-- ======================
+	local function createUI(parent)
+		local gui = Instance.new("ScreenGui")
+		gui.Name = "CommandApp"
+		gui.ResetOnSpawn = false
+		gui.ZIndexBehavior = Enum.ZIndexBehavior.Global
+		gui.Parent = parent or Players.LocalPlayer.PlayerGui
+
+		local mainFrame = Instance.new("Frame")
+		mainFrame.Name = "MainFrame"
+		mainFrame.Size = UDim2.new(0, 600, 0, 400)
+		mainFrame.Position = UDim2.new(0.5, 0, 0.5, 0)
+		mainFrame.AnchorPoint = Vector2.new(0.5, 0.5)
+		mainFrame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+		mainFrame.BackgroundTransparency = 0.7
+		mainFrame.Parent = gui
+
+		local corner = Instance.new("UICorner")
+		corner.CornerRadius = UDim.new(0, 10)
+		corner.Parent = mainFrame
+
+		local stroke = Instance.new("UIStroke")
+		stroke.Color = Color3.fromRGB(163, 163, 163)
+		stroke.Thickness = 2
+		stroke.Parent = mainFrame
+
+		-- Title bar
+		local titleBar = Instance.new("Frame")
+		titleBar.Size = UDim2.new(1, 0, 0, 30)
+		titleBar.BackgroundTransparency = 1
+		titleBar.Parent = mainFrame
+
+		local titleLabel = Instance.new("TextLabel")
+		titleLabel.Size = UDim2.new(0.9, 0, 1, 0)
+		titleLabel.BackgroundTransparency = 1
+		titleLabel.Text = "ZolinOS Terminal"
+		titleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+		titleLabel.Font = Enum.Font.GothamBold
+		titleLabel.TextSize = 18
+		titleLabel.TextXAlignment = Enum.TextXAlignment.Left
+		titleLabel.Parent = titleBar
+
+		local closeBtn = Instance.new("TextButton")
+		closeBtn.Size = UDim2.new(0.08, 0, 1, 0)
+		closeBtn.Position = UDim2.new(0.92, 0, 0, 0)
+		closeBtn.BackgroundTransparency = 1
+		closeBtn.Text = "X"
+		closeBtn.TextColor3 = Color3.fromRGB(200, 200, 200)
+		closeBtn.Font = Enum.Font.GothamBold
+		closeBtn.TextSize = 18
+		closeBtn.Parent = titleBar
+
+		-- Output log (ScrollingFrame)
+		local log = Instance.new("ScrollingFrame")
+		log.Name = "OutputLog"
+		log.Size = UDim2.new(1, -10, 1, -70)
+		log.Position = UDim2.new(0, 5, 0, 35)
+		log.BackgroundTransparency = 1
+		log.BorderSizePixel = 0
+		log.CanvasSize = UDim2.new(0, 0, 0, 0)
+		log.AutomaticCanvasSize = Enum.AutomaticSize.Y
+		log.ScrollBarThickness = 6
+		log.ScrollBarImageColor3 = Color3.fromRGB(150, 150, 150)
+		log.ClipsDescendants = true
+		log.Parent = mainFrame
+
+		local listLayout = Instance.new("UIListLayout")
+		listLayout.SortOrder = Enum.SortOrder.LayoutOrder
+		listLayout.Padding = UDim.new(0, 2)
+		listLayout.Parent = log
+
+		-- Message template (hidden)
+		local template = Instance.new("TextLabel")
+		template.Name = "MessageTemplate"
+		template.Size = UDim2.new(1, 0, 0, 20)
+		template.BackgroundTransparency = 1
+		template.Text = "Template"
+		template.TextColor3 = Color3.fromRGB(255, 255, 255)
+		template.TextXAlignment = Enum.TextXAlignment.Left
+		template.TextScaled = false
+		template.TextSize = 14
+		template.Font = Enum.Font.Gotham
+		template.TextWrapped = true
+		template.Visible = false
+		template.Parent = log
+
+		-- Input box
+		local input = Instance.new("TextBox")
+		input.Name = "CommandInput"
+		input.Size = UDim2.new(1, -10, 0, 30)
+		input.Position = UDim2.new(0, 5, 1, -35)
+		input.BackgroundColor3 = Color3.fromRGB(40, 40, 50)
+		input.BackgroundTransparency = 0.3
+		input.BorderSizePixel = 0
+		input.PlaceholderText = "Type a command... (e.g., /help)"
+		input.Text = ""
+		input.TextColor3 = Color3.fromRGB(255, 255, 255)
+		input.Font = Enum.Font.Gotham
+		input.TextSize = 14
+		input.ClearTextOnFocus = false
+		input.Parent = mainFrame
+
+		return gui, log, input, template, closeBtn, mainFrame
+	end
+
+	-- ======================
+	-- COMMAND HISTORY (arrow keys)
+	-- ======================
+	local function navigateHistory(direction)
+		if #commandHistory == 0 then return end
+		historyIndex = math.clamp(historyIndex + direction, 1, #commandHistory)
+		inputBox.Text = commandHistory[historyIndex]
+		inputBox.CursorPosition = #inputBox.Text + 1
+	end
+
+	-- ======================
+	-- OUTPUT HELPER
+	-- ======================
+	function CommandApp.addOutput(text, isError)
+		if not outputLog or not messageTemplate then return end
+		local label = messageTemplate:Clone()
+		label.RichText = true
+		label.Text = text
+		label.Visible = true
+		label.TextColor3 = isError and Color3.fromRGB(255, 100, 100) or Color3.fromRGB(255, 255, 255)
+		label.Parent = outputLog
+		task.wait(0.02)
+		outputLog.CanvasPosition = Vector2.new(0, outputLog.AbsoluteCanvasSize.Y)
+	end
+
+	-- ======================
+	-- PUBLIC API
+	-- ======================
+	function CommandApp.Init()
+		if isInitialized then return end
+		isInitialized = true
+
+		local gui, log, input, template, closeBtn, mainFrame = createUI(nil)
+		gui = gui
+		outputLog = log
+		inputBox = input
+		messageTemplate = template
+
+		-- Hook close button
+		closeBtn.MouseButton1Click:Connect(function()
+			CommandApp.Stop()
+		end)
+
+		-- Hook enter key
+		local focusLost = input.FocusLost:Connect(function(enterPressed)
+			if enterPressed and input.Text ~= "" then
+				local cmd = input.Text
+				input.Text = ""
+				table.insert(commandHistory, cmd)
+				historyIndex = #commandHistory + 1
+
+				-- Echo the command
+				CommandApp.addOutput("> " .. cmd, false)
+
+				-- Execute
+				local result = executeCommand(cmd)
+				if result and result ~= "" then
+					CommandApp.addOutput(result, false)
+				elseif result == false then
+					CommandApp.addOutput("Error executing command.", true)
+				end
+			end
+		end)
+		table.insert(connections, focusLost)
+
+		-- Arrow key navigation
+		local inputBegan = input.InputBegan:Connect(function(input, gameProcessed)
+			if gameProcessed then return end
+			if input.KeyCode == Enum.KeyCode.Up then
+				navigateHistory(-1)
+			elseif input.KeyCode == Enum.KeyCode.Down then
+				navigateHistory(1)
+			end
+		end)
+		table.insert(connections, inputBegan)
+
+		-- Print welcome message
+		CommandApp.addOutput("ZolinOS [Version "..tostring(ZolinModules.ZolinVersion).."]", false)
+		CommandApp.addOutput("Type /help for available commands.", false)
+		CommandApp.addOutput("", false)
+
+		print("[CommandApp] Initialized.")
+	end
+
+	function CommandApp.Stop()
+		if not isInitialized then return end
+		for _, conn in ipairs(connections) do
+			conn:Disconnect()
+		end
+		connections = {}
+		if gui then
+			gui:Destroy()
+			gui = nil
+		end
+		isInitialized = false
+		print("[CommandApp] Stopped.")
+	end
+
+	return CommandApp
+end
+
+-- ============================================
 -- EXPORT ALL MODULES
 -- ============================================
 
@@ -8112,7 +8639,9 @@ function ZolinModules.Init()
 --[[ // AUTO INITIALIZE //
 
 ZolinModules.Init();
+
 --]]
+
 ZolinModules.ZolinListener()
 
 return ZolinModules
