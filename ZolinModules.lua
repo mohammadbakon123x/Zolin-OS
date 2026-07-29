@@ -8031,7 +8031,7 @@ function ZolinModules.CommandApp()
 	local messageTemplate = nil
 	
 	local mainFrame = nil
-	local MIN_HEIGHT = 120
+	local MIN_HEIGHT = 350
 	local MAX_HEIGHT = 500
 
 	-- ======================
@@ -8104,12 +8104,12 @@ function ZolinModules.CommandApp()
 		return "Running apps:\n" .. running
 	end)
 
-	-- run (launch app)
+	--[[ run (launch app)
 	registerCommand("run", "Launch an app by name", function(args)
 		local appName = args[1]
 		if not appName then return "Usage: /run <appName>" end
 		if ZolinModules and ZolinModules.AppManager then
-			local success = ZolinModules.AppManager.LaunchApp(appName)
+			local success = ZolinModules.AppManager.LaunchApplication(appName)
 			if success then
 				return "Launched app: " .. appName
 			else
@@ -8135,6 +8135,7 @@ function ZolinModules.CommandApp()
 			return "AppManager not available."
 		end
 	end)
+	--]]
 
 	-- kill (force stop a thread)
 	registerCommand("kill", "Force stop a loadstring app thread", function(args)
@@ -8228,7 +8229,7 @@ function ZolinModules.CommandApp()
 				if execSuccess then
 					CommandApp.addOutput("Executed successfully: " .. name, false)
 				else
-					CommandApp.	addOutput("Execution error: " .. tostring(moduleReturn), true)
+					CommandApp.addOutput("Execution error: " .. tostring(moduleReturn), true)
 				end
 			end)
 
@@ -8363,13 +8364,14 @@ function ZolinModules.CommandApp()
 
 		local listLayout = Instance.new("UIListLayout")
 		listLayout.SortOrder = Enum.SortOrder.LayoutOrder
-		listLayout.Padding = UDim.new(0, 2)
+		listLayout.Padding = UDim.new(0, 4)
 		listLayout.Parent = log
 
 		-- Message template (hidden)
 		local template = Instance.new("TextLabel")
 		template.Name = "MessageTemplate"
-		template.Size = UDim2.new(1, 0, 0, 20)
+		template.Size = UDim2.new(1, 0, 0, 0) -- will be set dynamically
+		template.AutomaticSize = Enum.AutomaticSize.Y
 		template.BackgroundTransparency = 1
 		template.Text = "Template"
 		template.TextColor3 = Color3.fromRGB(255, 255, 255)
@@ -8423,14 +8425,26 @@ function ZolinModules.CommandApp()
 	-- ======================
 	-- OUTPUT HELPER
 	-- ======================
-	function CommandApp.addOutput(text, isError)
+	function CommandApp.addOutput(text, isError, isSystem)
 		if not outputLog or not messageTemplate then return end
-		local label = messageTemplate:Clone()
-		label.RichText = true
-		label.Text = text
-		label.Visible = true
-		label.TextColor3 = isError and Color3.fromRGB(255, 100, 100) or Color3.fromRGB(255, 255, 255)
-		label.Parent = outputLog
+		local lines = {}
+		for line in text:gmatch("[^\r\n]+") do
+			table.insert(lines, line)
+		end
+		if #lines == 0 then lines = {""} end  -- handle empty string
+		for _, line in ipairs(lines) do
+			local label = messageTemplate:Clone()
+			label.RichText = true
+			label.Text = line
+			label.Visible = true
+			label.TextColor3 = isError and Color3.fromRGB(255, 100, 100) or Color3.fromRGB(255, 255, 255)
+			label.Parent = outputLog
+			if isSystem and isSystem == "System" then
+				label.Name = "MessageTemplate"
+			else
+				label.Name = "CommandTemplate"
+			end
+		end
 		task.wait(0.02)
 		outputLog.CanvasPosition = Vector2.new(0, outputLog.AbsoluteCanvasSize.Y)
 		CommandApp.resizeTerminal()
@@ -8452,6 +8466,8 @@ function ZolinModules.CommandApp()
 		-- Hook close button
 		closeBtn.MouseButton1Click:Connect(function()
 			CommandApp.Stop()
+			gui:Destroy();
+			gui = nil
 		end)
 
 		-- Hook enter key
@@ -8488,9 +8504,9 @@ function ZolinModules.CommandApp()
 		table.insert(connections, inputBegan)
 
 		-- Print welcome message
-		CommandApp.addOutput("ZolinOS [Version "..tostring(ZolinModules.ZolinVersion).."]", false)
-		CommandApp.addOutput("Type /help for available commands.", false)
-		CommandApp.addOutput("", false)
+		CommandApp.addOutput("ZolinOS [Version "..tostring(ZolinModules.ZolinVersion).."]", false, "System")
+		CommandApp.addOutput("Type /help for available commands.", false, "System")
+		CommandApp.addOutput("", false, "System")
 
 		print("[CommandApp] Initialized.")
 	end
