@@ -167,7 +167,7 @@ populateInfoLabels()
 local modeOptions = {
 	{ label = "Boot as [Mobile Mode]",              mode = "Mobile" },
 	{ label = "Boot as [Desktop Mode]",             mode = "Desktop" },
-	{ label = "Boot as [Desktop + Safe Mode] With Command Prompt [Beta]", mode = "__safeModeDesktop" },
+	--{ label = "Boot as [Desktop + Safe Mode] With Command Prompt [Beta]", mode = "__safeModeDesktop" },
 }
 
 -- ---- Clear existing buttons (keep template) ----
