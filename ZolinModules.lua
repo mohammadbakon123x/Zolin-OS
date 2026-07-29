@@ -8029,6 +8029,10 @@ function ZolinModules.CommandApp()
 	local isInitialized = false
 	local connections = {}
 	local messageTemplate = nil
+	
+	local mainFrame = nil
+	local MIN_HEIGHT = 120
+	local MAX_HEIGHT = 500
 
 	-- ======================
 	-- COMMAND REGISTRY
@@ -8067,8 +8071,16 @@ function ZolinModules.CommandApp()
 					child:Destroy()
 				end
 			end
+			task.wait(0.02)
+			CommandApp.resizeTerminal()
 		end
 		return nil
+	end)
+	
+	-- resize
+	registerCommand("resize", "Resize terminal to fit content", function(args)
+		CommandApp.resizeTerminal()
+		return "Resized."
 	end)
 
 	-- ls (list apps)
@@ -8297,6 +8309,8 @@ function ZolinModules.CommandApp()
 		mainFrame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
 		mainFrame.BackgroundTransparency = 0.7
 		mainFrame.Parent = gui
+		mainFrame = mainFrame
+		mainFrame.Size = UDim2.new(0, 600, 0, MIN_HEIGHT)
 
 		local corner = Instance.new("UICorner")
 		corner.CornerRadius = UDim.new(0, 10)
@@ -8385,6 +8399,16 @@ function ZolinModules.CommandApp()
 
 		return gui, log, input, template, closeBtn, mainFrame
 	end
+	
+	function CommandApp.resizeTerminal()
+		if not mainFrame or not outputLog then return end
+		task.wait(0.03)  -- Allow UIListLayout to update
+		local contentHeight = outputLog.AbsoluteCanvasSize.Y
+		local newHeight = math.clamp(contentHeight + 70, MIN_HEIGHT, MAX_HEIGHT)
+		mainFrame.Size = UDim2.new(0, 600, 0, newHeight)
+		-- Keep it centered
+		mainFrame.Position = UDim2.new(0.5, 0, 0.5, 0)
+	end
 
 	-- ======================
 	-- COMMAND HISTORY (arrow keys)
@@ -8409,6 +8433,7 @@ function ZolinModules.CommandApp()
 		label.Parent = outputLog
 		task.wait(0.02)
 		outputLog.CanvasPosition = Vector2.new(0, outputLog.AbsoluteCanvasSize.Y)
+		CommandApp.resizeTerminal()
 	end
 
 	-- ======================
@@ -8479,6 +8504,8 @@ function ZolinModules.CommandApp()
 		if gui then
 			gui:Destroy()
 			gui = nil
+		else
+			print("[CommandApp] GUI already destroyed.");
 		end
 		isInitialized = false
 		print("[CommandApp] Stopped.")
