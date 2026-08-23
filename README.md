@@ -1,2 +1,2 @@
 # Zolin-OS
-Powerful OS that unlocks many features, id have anything to say : >
+ZolinOS is a powerful, feature-rich operating system designed to unlock a wide range of capabilities across multiple devices. Built with flexibility in mind, it offers two distinct platforms – Mobile mode and Desktop mode – allowing you to seamlessly adapt your workflow whether you're on the go or at a workstation. With an intuitive interface, robust app management, and deep customization options, ZolinOS empowers users to take full control of their digital environment. From productivity tools to entertainment and system utilities, everything is designed to work together, delivering a smooth and efficient experience tailored to your needs.
