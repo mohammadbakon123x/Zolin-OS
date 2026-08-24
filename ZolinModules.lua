@@ -6535,6 +6535,7 @@ function ZolinModules.ZolinInstaller()
 		mainFrame.Size = UDim2.new(1, 0, 1, 0)
 		mainFrame.BackgroundTransparency = 1
 		mainFrame.Parent = ui
+		mainFrame.ZIndex = ui.ZIndex + 1
 
 		-- Title bar
 		local titleBar = Instance.new("Frame")
