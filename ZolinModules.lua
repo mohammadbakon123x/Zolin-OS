@@ -1,6 +1,6 @@
 -- ZolinModules (Complete Combined ModuleScript)
 local ZolinModules = {}
-ZolinModules.Mode = "Desktop"  --| Mobile | default - | Desktop | beta
+ZolinModules.Mode = ""  --| Mobile | default - | Desktop | beta
 
 --Global Variables | Both platforms
 ZolinModules.SafeMode = false
@@ -6855,46 +6855,50 @@ function ZolinModules.ZolinInstaller()
 
 		local function fetchManifest()
 			loadingLabel.Visible = true
-			local fn, compileError
-			local success, result = pcall(function()
-				local code = game:HttpGet(MANIFEST_URL);
-				fn, compileError = loadstring(code)
-				if not fn then
-					fn()
-					loadingLabel.Text = "Invalid manifest format."
-					warn("[ZolinStore] Manifest compilation error:", compileError)
-					return false
-				end
-			end)
-			if not success or not result then
-				loadingLabel.Text = "Failed to load manifest."
-				warn("[ZolinStore] Manifest fetch failed. "..tostring(result))
-				return false
-			end
+			loadingLabel.Text = "Loading store..."
 
-			local manifest
-			local execSuccess, execResult = pcall(fn)
-			if execSuccess then
-				manifest = execResult
-			else
-				loadingLabel.Text = "Manifest execution failed."
-				warn("[ZolinStore] Manifest execution error:", execResult)
+			-- Step 1: Fetch the manifest code
+			local fetchSuccess, rawCode = pcall(function()
+				return game:HttpGet(MANIFEST_URL)
+			end)
+
+			if not fetchSuccess or not rawCode then
+				loadingLabel.Text = "Failed to load manifest."
+				warn("[ZolinStore] Manifest fetch failed")
 				return
 			end
 
+			-- Step 2: Compile the fetched code
+			local fn, compileError = loadstring(rawCode)
+			if not fn then
+				loadingLabel.Text = "Invalid manifest format."
+				warn("[ZolinStore] Manifest compilation error:", compileError)
+				return
+			end
+
+			-- Step 3: Execute the compiled function
+			local execSuccess, manifest = pcall(fn)
+			if not execSuccess then
+				loadingLabel.Text = "Manifest execution failed."
+				warn("[ZolinStore] Manifest execution error:", manifest) -- `manifest` here is the error string
+				return
+			end
+
+			-- Step 4: Validate the manifest
 			if type(manifest) ~= "table" or #manifest == 0 then
 				loadingLabel.Text = "Manifest is empty or invalid."
 				warn("[ZolinStore] Manifest is not a table or empty")
 				return
 			end
 
+			-- Success
 			loadingLabel.Visible = false
 			refreshInstalledCache()
 			buildAppList(manifest)
-			-- Optionally select first app
+
+			-- Select first app
 			if #manifest > 0 then
 				updateDetails(manifest[1])
-				-- Highlight first item
 				local firstBtn = appListScroll:FindFirstChildOfClass("TextButton")
 				if firstBtn then
 					firstBtn.BackgroundColor3 = Color3.fromRGB(50, 50, 60)
