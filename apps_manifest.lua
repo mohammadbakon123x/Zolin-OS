@@ -5,7 +5,7 @@ return {
 		description = "Msuic Player From ZolinOS",
 		author = "Sky Attacker",
 		version = "1.1",
-		loadstringUrl = "https://github.com/mohammadbakon123x/Zolin-OS/blob/main/__package_MusicPlayer.lua"
+		loadstringUrl = "https://raw.githubusercontent.com/mohammadbakon123x/Zolin-OS/refs/heads/main/__package_MusicPlayer.lua"
 	},
 	-- more apps...
 }
