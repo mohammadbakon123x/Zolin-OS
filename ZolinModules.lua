@@ -6542,6 +6542,7 @@ function ZolinModules.ZolinInstaller()
 		titleBar.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
 		titleBar.BorderSizePixel = 0
 		titleBar.Parent = mainFrame
+		titleBar.ZIndex = mainFrame.ZIndex + 1
 
 		local titleLabel = Instance.new("TextLabel")
 		titleLabel.Size = UDim2.new(1, -100, 1, 0)
@@ -6553,6 +6554,7 @@ function ZolinModules.ZolinInstaller()
 		titleLabel.TextXAlignment = Enum.TextXAlignment.Left
 		titleLabel.BackgroundTransparency = 1
 		titleLabel.Parent = titleBar
+		titleLabel.ZIndex = titleBar.ZIndex + 1
 
 		-- Refresh button
 		local refreshBtn = Instance.new("TextButton")
@@ -6567,6 +6569,7 @@ function ZolinModules.ZolinInstaller()
 		local refreshCorner = Instance.new("UICorner")
 		refreshCorner.CornerRadius = UDim.new(0, 4)
 		refreshCorner.Parent = refreshBtn
+		refreshBtn.ZIndex = titleBar.ZIndex + 1
 
 		-- Close button (Desktop only)
 		if ZolinModules.Mode == "Desktop" then
@@ -6593,6 +6596,7 @@ function ZolinModules.ZolinInstaller()
 		splitContainer.Position = UDim2.new(0, 0, 0, 40)
 		splitContainer.BackgroundTransparency = 1
 		splitContainer.Parent = mainFrame
+		splitContainer.ZIndex = mainFrame.ZIndex + 1
 
 		-- Left panel (App list)
 		local leftPanel = Instance.new("Frame")
@@ -6601,6 +6605,7 @@ function ZolinModules.ZolinInstaller()
 		leftPanel.BorderSizePixel = 1
 		leftPanel.BorderColor3 = Color3.fromRGB(50, 50, 60)
 		leftPanel.Parent = splitContainer
+		leftPanel.ZIndex = splitContainer.ZIndex + 1
 
 		local leftTitle = Instance.new("TextLabel")
 		leftTitle.Size = UDim2.new(1, 0, 0, 30)
@@ -6611,6 +6616,7 @@ function ZolinModules.ZolinInstaller()
 		leftTitle.TextSize = 14
 		leftTitle.TextXAlignment = Enum.TextXAlignment.Center
 		leftTitle.Parent = leftPanel
+		leftTitle.ZIndex = leftPanel.ZIndex + 1
 
 		local appListScroll = Instance.new("ScrollingFrame")
 		appListScroll.Size = UDim2.new(1, 0, 1, -30)
@@ -6620,6 +6626,7 @@ function ZolinModules.ZolinInstaller()
 		appListScroll.AutomaticCanvasSize = Enum.AutomaticSize.Y
 		appListScroll.ScrollBarThickness = 4
 		appListScroll.Parent = leftPanel
+		appListScroll.ZIndex = leftPanel.ZIndex + 1
 
 		local listLayout = Instance.new("UIListLayout")
 		listLayout.Padding = UDim.new(0, 2)
@@ -6634,6 +6641,7 @@ function ZolinModules.ZolinInstaller()
 		rightPanel.BorderSizePixel = 1
 		rightPanel.BorderColor3 = Color3.fromRGB(50, 50, 60)
 		rightPanel.Parent = splitContainer
+		rightPanel.ZIndex = splitContainer.ZIndex + 1
 
 		-- Details container
 		local detailsFrame = Instance.new("Frame")
@@ -6641,6 +6649,7 @@ function ZolinModules.ZolinInstaller()
 		detailsFrame.Position = UDim2.new(0, 10, 0, 10)
 		detailsFrame.BackgroundTransparency = 1
 		detailsFrame.Parent = rightPanel
+		detailsFrame.ZIndex = rightPanel.ZIndex + 1
 
 		local detailsIcon = Instance.new("ImageLabel")
 		detailsIcon.Size = UDim2.new(0, 80, 0, 80)
@@ -6651,6 +6660,7 @@ function ZolinModules.ZolinInstaller()
 		local iconCorner = Instance.new("UICorner")
 		iconCorner.CornerRadius = UDim.new(0, 8)
 		iconCorner.Parent = detailsIcon
+		detailsIcon.ZIndex = detailsFrame.ZIndex + 1
 
 		local detailsName = Instance.new("TextLabel")
 		detailsName.Size = UDim2.new(1, -90, 0, 30)
@@ -6662,6 +6672,7 @@ function ZolinModules.ZolinInstaller()
 		detailsName.TextSize = 22
 		detailsName.TextXAlignment = Enum.TextXAlignment.Left
 		detailsName.Parent = detailsFrame
+		detailsName.ZIndex = detailsFrame.ZIndex + 1
 
 		local detailsAuthor = Instance.new("TextLabel")
 		detailsAuthor.Size = UDim2.new(1, -90, 0, 20)
@@ -6673,6 +6684,7 @@ function ZolinModules.ZolinInstaller()
 		detailsAuthor.TextSize = 14
 		detailsAuthor.TextXAlignment = Enum.TextXAlignment.Left
 		detailsAuthor.Parent = detailsFrame
+		detailsAuthor.ZIndex = detailsFrame.ZIndex + 1
 
 		local detailsVersion = Instance.new("TextLabel")
 		detailsVersion.Size = UDim2.new(1, -90, 0, 20)
@@ -6684,6 +6696,7 @@ function ZolinModules.ZolinInstaller()
 		detailsVersion.TextSize = 14
 		detailsVersion.TextXAlignment = Enum.TextXAlignment.Left
 		detailsVersion.Parent = detailsFrame
+		detailsVersion.ZIndex = detailsFrame.ZIndex + 1
 
 		local detailsDesc = Instance.new("TextLabel")
 		detailsDesc.Size = UDim2.new(1, 0, 0, 80)
@@ -6697,6 +6710,7 @@ function ZolinModules.ZolinInstaller()
 		detailsDesc.TextXAlignment = Enum.TextXAlignment.Left
 		detailsDesc.TextYAlignment = Enum.TextYAlignment.Top
 		detailsDesc.Parent = detailsFrame
+		detailsDesc.ZIndex = detailsFrame.ZIndex + 1
 
 		-- Install/Uninstall button
 		local actionBtn = Instance.new("TextButton")
@@ -6711,6 +6725,7 @@ function ZolinModules.ZolinInstaller()
 		local btnCorner = Instance.new("UICorner")
 		btnCorner.CornerRadius = UDim.new(0, 6)
 		btnCorner.Parent = actionBtn
+		actionBtn.ZIndex = detailsFrame.ZIndex + 1
 
 		-- Currently selected app data
 		local selectedApp = nil
@@ -6768,6 +6783,7 @@ function ZolinModules.ZolinInstaller()
 				noApps.TextSize = 14
 				noApps.TextWrapped = true
 				noApps.Parent = appListScroll
+				noApps.ZIndex = appListScroll.ZIndex + 1
 				return
 			end
 
@@ -6778,6 +6794,7 @@ function ZolinModules.ZolinInstaller()
 				btn.BorderSizePixel = 0
 				btn.Text = ""
 				btn.Parent = appListScroll
+				btn.ZIndex = appListScroll.ZIndex + 1
 
 				-- Icon
 				local icon = Instance.new("ImageLabel")
@@ -6787,6 +6804,7 @@ function ZolinModules.ZolinInstaller()
 				icon.Image = app.icon or "rbxassetid://12905435514"
 				icon.ScaleType = Enum.ScaleType.Fit
 				icon.Parent = btn
+				icon.ZIndex = btn.ZIndex + 1
 
 				-- Name
 				local nameLabel = Instance.new("TextLabel")
@@ -6799,6 +6817,7 @@ function ZolinModules.ZolinInstaller()
 				nameLabel.TextSize = 14
 				nameLabel.TextXAlignment = Enum.TextXAlignment.Left
 				nameLabel.Parent = btn
+				nameLabel.ZIndex = btn.ZIndex + 1
 
 				-- Hover effect
 				btn.MouseEnter:Connect(function()
@@ -6832,6 +6851,7 @@ function ZolinModules.ZolinInstaller()
 		loadingLabel.Font = Enum.Font.Gotham
 		loadingLabel.TextSize = 16
 		loadingLabel.Parent = leftPanel
+		loadingLabel.ZIndex = leftPanel.ZIndex + 1
 
 		local function fetchManifest()
 			loadingLabel.Visible = true
@@ -6843,13 +6863,13 @@ function ZolinModules.ZolinInstaller()
 					fn()
 					loadingLabel.Text = "Invalid manifest format."
 					warn("[ZolinStore] Manifest compilation error:", compileError)
-					return
+					return false
 				end
 			end)
 			if not success or not result then
 				loadingLabel.Text = "Failed to load manifest."
-				warn("[ZolinStore] Manifest fetch failed")
-				return
+				warn("[ZolinStore] Manifest fetch failed. "..tostring(result))
+				return false
 			end
 
 			local manifest
