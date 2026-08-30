@@ -5,7 +5,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 	local l__TweenService__5 = game:GetService("TweenService");
 	local UIS = game:GetService("UserInputService");
 	local u6 = game:GetService("RunService")
-	local BuildVersion = "3.23.5"
+	local BuildVersion = "3.23.6"
 	local versionLabel = "v"..BuildVersion;
 	local SettingsScript = {
 		DisplayLogs = true,
@@ -487,7 +487,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 		{
 			id = "SMT_beatdown",
 			name = "SMT Beatdown",
-			description = "a huge Change for SMT's beatdown acts, Sky Attacker prefer SMT's Beatdown because it's has custom cutsence beating anyone with's his FOV or the beatdown itself. 06/07/2026 added Custom preloaded cutsence <{!}> |   he passed away at: 07/04/2026",
+			description = "a huge Change for SMT's beatdown acts, Sky Attacker prefer SMT's Beatdown because it's has custom cutsence beating anyone with's his FOV or the beatdown itself. 06/07/2026 added Custom preloaded cutsence <{!}>  |   he passed away at: 07/04/2026",
 			color = Color3.fromRGB(0, 3, 172),
 			fireColor = Color3.fromRGB(26, 49, 255),
 			material = Enum.Material.Glacier,
@@ -3102,8 +3102,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 	local ViewportModel = nil
 	local ViewOtherCustomStands = {
 		Enabled = false, -- Default enabled
-		FriendStandsOnly = true, -- Option to only see friends' custom stands
-		RefreshRate = 0.1, -- How often to check for other players' stands (in seconds)
+		FriendStandsOnly = false, -- Option to only see friends' custom stands
 		stand = nil,
 		ActiveChecks = {} -- Track which players we're monitoring
 	};
@@ -5621,7 +5620,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 		for _, p in ipairs(game.Players:GetPlayers()) do
 			if p ~= lpr and p.Character then
 				local LSB = p.Character:FindFirstChild("LastSlappedBy")
-				if LSB --[[and LSB.Value == CurrentPlayer.Name--]] then
+				if LSB and LSB.Value == CurrentPlayer.Name then
 					local torso = p.Character:FindFirstChild("Torso")
 					local head = p.Character:FindFirstChild("Head");
 					local beatdownHead = StandModel:FindFirstChild("Head") or p.Character:FindFirstChild("Stand").Head;
@@ -6832,6 +6831,30 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 												end
 												break
 											end
+										end
+									end
+									if modelData.customSounds and modelData.customSounds[soundName] then
+										if s.Name == "Male Scream Short Yelling Bursts Death Cries (SFX)" then
+											s.SoundId = "rbxassetid://1939827707"
+											s.PlaybackSpeed = modelData.soundSpeed
+											--print("Send Signal | ColorCorrectionEffect FadeOut")
+										elseif s.Name == "Yell" then
+											s.SoundId = "rbxassetid://7553397015"
+											s.PlaybackSpeed = modelData.soundSpeed
+											--print("Send Signal | ColorCorrectionEffect FadeOut")
+										elseif s.Name == "Gun1" then
+											s.SoundId = "rbxassetid://8255306220";
+											s.PlaybackSpeed = modelData.soundSpeed
+										elseif s.Name == "Gun2" then
+											s.SoundId = "rbxassetid://75350494050797"
+											s.PlaybackSpeed = modelData.soundSpeed
+										else
+											s.PlaybackSpeed = modelData.customSounds[soundName]
+										end
+									else
+										if s.Name ~= "explosion2" and s.Name ~= "Hit" and 
+											soundName ~= "Implosion" and soundName ~= "Male Scream Short Yelling Bursts Death Cries (SFX)" then
+											s.PlaybackSpeed = modelData.soundSpeed
 										end
 									end
 								else
