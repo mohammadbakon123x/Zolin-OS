@@ -10,14 +10,12 @@ ZolinModules.AppLaunchType = {
 	["Settings"] = "ZolinModules",
 	["WallpaperSys"] = "ZolinModules",
 	["Library Stands"] = "loadstring",
-	["Library Stands2"] = "loadstring",
 	["ZolinInstaller"] = "ZolinModules",
 	["TaskManager"] = "ZolinModules"
 }
 
 ZolinModules.AppUrls = {
 	["Library Stands"] = "https://raw.githubusercontent.com/mohammadbakon123x/Zolin-OS/refs/heads/main/TranslationApp.lua",
-	["Library Stands2"] = "https://raw.githubusercontent.com/mohammadbakon123x/Zolin-OS/refs/heads/main/TranslationApp2.lua",
 }
 
 ZolinModules.ZolinVersion = nil
@@ -6489,6 +6487,7 @@ function ZolinModules.ZolinInstaller()
 	local Store = {}
 	local TweenService = game:GetService("TweenService")
 	local HttpService = game:GetService("HttpService")
+	local UserInputService = game:GetService("UserInputService")
 
 	-- Change this to your own manifest URL
 	local MANIFEST_URL = "https://raw.githubusercontent.com/mohammadbakon123x/Zolin-OS/refs/heads/main/apps_manifest.lua"
@@ -6517,6 +6516,178 @@ function ZolinModules.ZolinInstaller()
 	-- ===== Helper: Refresh installed cache =====
 	local function refreshInstalledCache()
 		installedApps = getInstalledApps()
+	end
+
+	-- ============================================
+	-- LEGACY INSTALLER FUNCTIONS (reused)
+	-- ============================================
+	local function installLegacyApp(url, appName)
+		local mainUI = getMainUI()
+		if not mainUI then return false, "MainUI not found" end
+		local zolin = mainUI:FindFirstChild("__Zolin")
+		if not zolin then return false, "__Zolin not found" end
+
+		local appsFolder = zolin:FindFirstChild("__AppsLaunchArgFolder")
+		if not appsFolder then
+			appsFolder = Instance.new("Folder")
+			appsFolder.Name = "__AppsLaunchArgFolder"
+			appsFolder.Parent = zolin
+		end
+
+		-- Fetch and compile
+		local code, fetchErr = pcall(function() return game:HttpGet(url) end)
+		if not code then return false, "Failed to fetch URL: " .. tostring(fetchErr) end
+
+		local fn, compileErr = loadstring(code)
+		if not fn then return false, "Compile error: " .. tostring(compileErr) end
+
+		-- Execute (this should create the app frame in ReplicatedWindow)
+		local execOk, execErr = pcall(fn)
+		if not execOk then return false, "Execution error: " .. tostring(execErr) end
+
+		-- Store in __AppsLaunchArgFolder
+		local appEntry = appsFolder:FindFirstChild(appName)
+		if not appEntry then
+			appEntry = Instance.new("StringValue")
+			appEntry.Name = appName
+			appEntry.Parent = appsFolder
+		end
+		appEntry.Value = url
+
+		-- Refresh launcher
+		local remotes = zolin:FindFirstChild("Remotes")
+		if remotes then
+			local refreshEvent = remotes:FindFirstChild("updateZolinLauncher")
+			if refreshEvent then refreshEvent:Fire() end
+		end
+
+		return true, "Installed successfully"
+	end
+
+	local function uninstallLegacyApp(appName)
+		local mainUI = getMainUI()
+		if not mainUI then return false, "MainUI not found" end
+		local zolin = mainUI:FindFirstChild("__Zolin")
+		if not zolin then return false, "__Zolin not found" end
+
+		local appsFolder = zolin:FindFirstChild("__AppsLaunchArgFolder")
+		if not appsFolder then return false, "No apps folder" end
+
+		local appEntry = appsFolder:FindFirstChild(appName)
+		if not appEntry then return false, "App not found" end
+
+		-- Remove from __AppsLaunchArgFolder
+		appEntry:Destroy()
+
+		-- Remove from ReplicatedWindow
+		local replicatedWindow = mainUI:FindFirstChild("ReplicatedWindow")
+		if replicatedWindow then
+			local appFrame = replicatedWindow:FindFirstChild(appName)
+			if appFrame then appFrame:Destroy() end
+		end
+		local replicatedWindowSys = mainUI:FindFirstChild("ReplicatedWindow_Sys")
+		if replicatedWindowSys then
+			local appFrame = replicatedWindowSys:FindFirstChild(appName)
+			if appFrame then appFrame:Destroy() end
+		end
+
+		-- Remove from AppData
+		local appData = mainUI:FindFirstChild("AppData")
+		if appData then
+			local dataEntry = appData:FindFirstChild(appName)
+			if dataEntry then dataEntry:Destroy() end
+		end
+
+		-- Remove from Applications if running
+		local applications = mainUI.__ScreenFrame and mainUI.__ScreenFrame:FindFirstChild("Applications")
+		if applications then
+			local runningApp = applications:FindFirstChild(appName)
+			if runningApp then runningApp:Destroy() end
+		end
+
+		-- Refresh launcher
+		local remotes = zolin:FindFirstChild("Remotes")
+		if remotes then
+			local refreshEvent = remotes:FindFirstChild("updateZolinLauncher")
+			if refreshEvent then refreshEvent:Fire() end
+		end
+
+		return true, "Uninstalled successfully"
+	end
+
+	-- ===== Helper: Create a popup (used for legacy installer, about, etc.) =====
+	local function createPopup(parent, title, contentFunc, width, height)
+		width = width or 0.5
+		height = height or 0.5
+		local popup = Instance.new("Frame")
+		popup.Size = UDim2.new(width, 0, height, 0)
+		popup.AnchorPoint = Vector2.new(0.5, 0.5)
+		popup.Position = UDim2.new(0.5, 0, 0.5, 0)
+		popup.BackgroundColor3 = Color3.fromRGB(20, 20, 30)
+		popup.BackgroundTransparency = 0.1
+		popup.ZIndex = 100
+		popup.Parent = parent
+
+		local corner = Instance.new("UICorner")
+		corner.CornerRadius = UDim.new(0, 10)
+		corner.Parent = popup
+
+		local stroke = Instance.new("UIStroke")
+		stroke.Color = Color3.fromRGB(100, 100, 120)
+		stroke.Thickness = 2
+		stroke.Parent = popup
+
+		local titleLabel = Instance.new("TextLabel")
+		titleLabel.Size = UDim2.new(1, 0, 0, 40)
+		titleLabel.BackgroundTransparency = 1
+		titleLabel.Text = title
+		titleLabel.TextColor3 = Color3.new(1, 1, 1)
+		titleLabel.Font = Enum.Font.GothamBold
+		titleLabel.TextSize = 20
+		titleLabel.TextXAlignment = Enum.TextXAlignment.Center
+		titleLabel.Parent = popup
+
+		local closeBtn = Instance.new("TextButton")
+		closeBtn.Size = UDim2.new(0, 30, 0, 30)
+		closeBtn.Position = UDim2.new(1, -40, 0, 5)
+		closeBtn.BackgroundTransparency = 1
+		closeBtn.Text = "✕"
+		closeBtn.TextColor3 = Color3.new(1, 1, 1)
+		closeBtn.Font = Enum.Font.GothamBold
+		closeBtn.TextSize = 18
+		closeBtn.Parent = popup
+		closeBtn.ZIndex = popup.ZIndex + 1
+
+		-- Content container
+		local content = Instance.new("Frame")
+		content.Size = UDim2.new(1, -20, 1, -60)
+		content.Position = UDim2.new(0, 10, 0, 50)
+		content.BackgroundTransparency = 1
+		content.Parent = popup
+
+		-- Call contentFunc with the content frame
+		if contentFunc then contentFunc(content) end
+
+		-- Close on click outside (optional) - we'll handle with closeBtn and clicking outside
+		local function close()
+			popup:Destroy()
+		end
+		closeBtn.MouseButton1Click:Connect(close)
+
+		-- Also close when clicking outside the popup (on the background overlay)
+		local bg = Instance.new("Frame")
+		bg.Size = UDim2.new(1, 0, 1, 0)
+		bg.BackgroundTransparency = 0.5
+		bg.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+		bg.ZIndex = popup.ZIndex - 1
+		bg.Parent = parent
+		bg.InputBegan:Connect(function(input)
+			if input.UserInputType == Enum.UserInputType.MouseButton1 then
+				close()
+			end
+		end)
+
+		return popup
 	end
 
 	-- ===== Main Init =====
@@ -6572,24 +6743,14 @@ function ZolinModules.ZolinInstaller()
 		refreshCorner.Parent = refreshBtn
 		refreshBtn.ZIndex = titleBar.ZIndex + 1
 
-		-- Close button (Desktop only)
-		if ZolinModules.Mode == "Desktop" then
-			local closeBtn = Instance.new("TextButton")
-			closeBtn.Size = UDim2.new(0, 30, 0, 30)
-			closeBtn.Position = UDim2.new(1, -40, 0.5, -15)
-			closeBtn.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
-			closeBtn.Text = "✕"
-			closeBtn.TextColor3 = Color3.new(1, 1, 1)
-			closeBtn.Font = Enum.Font.GothamBold
-			closeBtn.TextSize = 16
-			closeBtn.Parent = titleBar
-			local closeCorner = Instance.new("UICorner")
-			closeCorner.CornerRadius = UDim.new(1, 0)
-			closeCorner.Parent = closeBtn
-			closeBtn.MouseButton1Click:Connect(function()
-				AppManager.CloseApp("ZolinInstaller")
-			end)
-		end
+		-- ===== Settings button (gear icon) =====
+		local settingsBtn = Instance.new("ImageButton")
+		settingsBtn.Size = UDim2.new(0, 30, 0, 30)
+		settingsBtn.Position = UDim2.new(1, -50, 0.5, -15)
+		settingsBtn.BackgroundTransparency = 1
+		settingsBtn.Image = "rbxassetid://6953992690"
+		settingsBtn.Parent = titleBar
+		settingsBtn.ZIndex = titleBar.ZIndex + 1
 
 		-- ===== Main layout: Left list + Right details =====
 		local splitContainer = Instance.new("Frame")
@@ -6881,7 +7042,7 @@ function ZolinModules.ZolinInstaller()
 			local execSuccess, manifest = pcall(fn)
 			if not execSuccess then
 				loadingLabel.Text = "Manifest execution failed."
-				warn("[ZolinStore] Manifest execution error:", manifest) -- `manifest` here is the error string
+				warn("[ZolinStore] Manifest execution error:", manifest)
 				return
 			end
 
@@ -6935,11 +7096,10 @@ function ZolinModules.ZolinInstaller()
 				-- ===== UNINSTALL =====
 				local appEntry = appsFolder:FindFirstChild(appName)
 				if appEntry then
-					-- Remove from __AppsLaunchArgFolder
 					appEntry:Destroy()
 				end
 
-				-- Remove from ReplicatedWindow (and ReplicatedWindow_Sys)
+				-- Remove from ReplicatedWindow
 				local replicatedWindow = mainUI:FindFirstChild("ReplicatedWindow")
 				if replicatedWindow then
 					local appFrame = replicatedWindow:FindFirstChild(appName)
@@ -6978,9 +7138,7 @@ function ZolinModules.ZolinInstaller()
 				})
 
 				refreshInstalledCache()
-				updateDetails(selectedApp)  -- Refresh button state
-				-- Rebuild list to update installed status (optional, but we'll just refresh the list)
-				-- We'll just refresh the whole list
+				updateDetails(selectedApp)
 				fetchManifest()  -- Re-fetch to stay in sync
 				return
 			end
@@ -7000,7 +7158,6 @@ function ZolinModules.ZolinInstaller()
 				local fn, compileError = loadstring(code)
 				if not fn then error("Compilation error: " .. tostring(compileError)) end
 
-				-- Store the app entry
 				local appEntry = appsFolder:FindFirstChild(appName)
 				if not appEntry then
 					appEntry = Instance.new("StringValue")
@@ -7009,7 +7166,6 @@ function ZolinModules.ZolinInstaller()
 				end
 				appEntry.Value = url
 
-				-- Execute the loadstring
 				fn()
 				return appName
 			end)
@@ -7039,15 +7195,344 @@ function ZolinModules.ZolinInstaller()
 			fetchManifest()
 		end)
 
+		-- ===== Settings button logic =====
+		local settingsMenuOpen = false
+		local settingsPopup = nil
+
+		local function closeSettingsMenu()
+			if settingsPopup then
+				settingsPopup:Destroy()
+				settingsPopup = nil
+			end
+			settingsMenuOpen = false
+		end
+
+		settingsBtn.MouseButton1Click:Connect(function()
+			if settingsMenuOpen then
+				closeSettingsMenu()
+				return
+			end
+
+			settingsMenuOpen = true
+
+			-- Create a small popup menu anchored to the top-right corner
+			local menu = Instance.new("Frame")
+			menu.Size = UDim2.new(0, 220, 0, 150)
+			menu.Position = UDim2.new(1, -230, 0, 45)
+			menu.BackgroundColor3 = Color3.fromRGB(25, 25, 35)
+			menu.BackgroundTransparency = 0.1
+			menu.ZIndex = 50
+			menu.Parent = ui
+
+			local menuCorner = Instance.new("UICorner")
+			menuCorner.CornerRadius = UDim.new(0, 8)
+			menuCorner.Parent = menu
+
+			local menuStroke = Instance.new("UIStroke")
+			menuStroke.Color = Color3.fromRGB(100, 100, 120)
+			menuStroke.Thickness = 1
+			menuStroke.Parent = menu
+
+			-- Options
+			local function createMenuItem(text, callback, isGray)
+				local btn = Instance.new("TextButton")
+				btn.Size = UDim2.new(1, -10, 0, 40)
+				btn.Position = UDim2.new(0, 5, 0, 0)
+				btn.BackgroundTransparency = 1
+				btn.Text = text
+				btn.TextColor3 = isGray and Color3.fromRGB(150, 150, 150) or Color3.new(1, 1, 1)
+				btn.Font = Enum.Font.Gotham
+				btn.TextSize = 14
+				btn.TextXAlignment = Enum.TextXAlignment.Left
+				btn.Parent = menu
+				btn.ZIndex = menu.ZIndex + 1
+				if not isGray then
+					btn.MouseButton1Click:Connect(function()
+						closeSettingsMenu()
+						if callback then callback() end
+					end)
+					btn.MouseEnter:Connect(function()
+						btn.BackgroundColor3 = Color3.fromRGB(40, 40, 50)
+					end)
+					btn.MouseLeave:Connect(function()
+						btn.BackgroundColor3 = Color3.fromRGB(0, 0, 0, 0)
+					end)
+				end
+				return btn
+			end
+
+			local y = 5
+			-- Option 1: Install Legacy Apps by URL
+			local legacyBtn = createMenuItem("📦 Install Legacy Apps by URL", function()
+				-- Open a popup with legacy installer UI
+				createPopup(ui, "Legacy App Installer", function(content)
+					-- URL input
+					local urlBox = Instance.new("TextBox")
+					urlBox.Size = UDim2.new(1, 0, 0, 30)
+					urlBox.Position = UDim2.new(0, 0, 0, 0)
+					urlBox.BackgroundColor3 = Color3.fromRGB(40, 40, 55)
+					urlBox.BackgroundTransparency = 0.3
+					urlBox.BorderSizePixel = 0
+					urlBox.PlaceholderText = "Enter loadstring URL..."
+					urlBox.Text = ""
+					urlBox.TextColor3 = Color3.new(1, 1, 1)
+					urlBox.Font = Enum.Font.Gotham
+					urlBox.TextSize = 14
+					urlBox.ClearTextOnFocus = false
+					urlBox.Parent = content
+					local urlCorner = Instance.new("UICorner")
+					urlCorner.CornerRadius = UDim.new(0, 4)
+					urlCorner.Parent = urlBox
+
+					-- Install button
+					local installBtn = Instance.new("TextButton")
+					installBtn.Size = UDim2.new(0.4, 0, 0, 30)
+					installBtn.Position = UDim2.new(0, 0, 0, 40)
+					installBtn.BackgroundColor3 = Color3.fromRGB(0, 150, 0)
+					installBtn.BackgroundTransparency = 0.3
+					installBtn.BorderSizePixel = 0
+					installBtn.Text = "Install"
+					installBtn.TextColor3 = Color3.new(1, 1, 1)
+					installBtn.Font = Enum.Font.GothamBold
+					installBtn.TextSize = 16
+					installBtn.Parent = content
+					local btnCorner = Instance.new("UICorner")
+					btnCorner.CornerRadius = UDim.new(0, 4)
+					btnCorner.Parent = installBtn
+
+					-- Status label
+					local statusLabel = Instance.new("TextLabel")
+					statusLabel.Size = UDim2.new(0.6, 0, 0, 30)
+					statusLabel.Position = UDim2.new(0.4, 0, 0, 40)
+					statusLabel.BackgroundTransparency = 1
+					statusLabel.Text = ""
+					statusLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
+					statusLabel.Font = Enum.Font.Gotham
+					statusLabel.TextSize = 12
+					statusLabel.Parent = content
+
+					-- Manage installed button (opens a list of installed apps with uninstall)
+					local manageBtn = Instance.new("TextButton")
+					manageBtn.Size = UDim2.new(0.4, 0, 0, 30)
+					manageBtn.Position = UDim2.new(0, 0, 0, 80)
+					manageBtn.BackgroundColor3 = Color3.fromRGB(60, 60, 80)
+					manageBtn.BackgroundTransparency = 0.3
+					manageBtn.BorderSizePixel = 0
+					manageBtn.Text = "Manage Installed"
+					manageBtn.TextColor3 = Color3.new(1, 1, 1)
+					manageBtn.Font = Enum.Font.GothamBold
+					manageBtn.TextSize = 14
+					manageBtn.Parent = content
+					local manageCorner = Instance.new("UICorner")
+					manageCorner.CornerRadius = UDim.new(0, 4)
+					manageCorner.Parent = manageBtn
+
+					-- Install button click
+					installBtn.MouseButton1Click:Connect(function()
+						local url = urlBox.Text
+						if url == "" then
+							statusLabel.Text = "Enter a URL."
+							statusLabel.TextColor3 = Color3.fromRGB(255, 200, 100)
+							return
+						end
+						statusLabel.Text = "Installing..."
+						statusLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
+						-- Extract app name from URL (simple fallback)
+						local appName = "LegacyApp_" .. tostring(os.time())
+						local ok, msg = installLegacyApp(url, appName)
+						if ok then
+							statusLabel.Text = "Installed: " .. appName
+							statusLabel.TextColor3 = Color3.fromRGB(100, 255, 100)
+							urlBox.Text = ""
+							refreshInstalledCache()
+							-- Refresh main store list
+							fetchManifest()
+						else
+							statusLabel.Text = "Error: " .. msg
+							statusLabel.TextColor3 = Color3.fromRGB(255, 100, 100)
+						end
+					end)
+
+					-- Manage button click: show list of installed apps with uninstall
+					manageBtn.MouseButton1Click:Connect(function()
+						-- Create a popup inside the current popup (or replace content)
+						-- We'll just create a new popup on top
+						createPopup(ui, "Manage Installed Apps", function(listContent)
+							-- Refresh installed list
+							refreshInstalledCache()
+							local installedList = {}
+							for name, _ in pairs(installedApps) do
+								table.insert(installedList, name)
+							end
+							table.sort(installedList)
+
+							if #installedList == 0 then
+								local empty = Instance.new("TextLabel")
+								empty.Size = UDim2.new(1, 0, 0, 30)
+								empty.BackgroundTransparency = 1
+								empty.Text = "No apps installed."
+								empty.TextColor3 = Color3.fromRGB(150, 150, 150)
+								empty.Font = Enum.Font.Gotham
+								empty.TextSize = 14
+								empty.Parent = listContent
+								return
+							end
+
+							local listScroller = Instance.new("ScrollingFrame")
+							listScroller.Size = UDim2.new(1, 0, 1, 0)
+							listScroller.BackgroundTransparency = 1
+							listScroller.CanvasSize = UDim2.new(0, 0, 0, 0)
+							listScroller.AutomaticCanvasSize = Enum.AutomaticSize.Y
+							listScroller.ScrollBarThickness = 4
+							listScroller.Parent = listContent
+
+							local layout = Instance.new("UIListLayout")
+							layout.Padding = UDim.new(0, 4)
+							layout.SortOrder = Enum.SortOrder.LayoutOrder
+							layout.Parent = listScroller
+
+							for _, name in ipairs(installedList) do
+								local row = Instance.new("Frame")
+								row.Size = UDim2.new(1, 0, 0, 30)
+								row.BackgroundColor3 = Color3.fromRGB(35, 35, 45)
+								row.BackgroundTransparency = 0.3
+								row.Parent = listScroller
+
+								local label = Instance.new("TextLabel")
+								label.Size = UDim2.new(0.6, 0, 1, 0)
+								label.BackgroundTransparency = 1
+								label.Text = name
+								label.TextColor3 = Color3.new(1, 1, 1)
+								label.Font = Enum.Font.Gotham
+								label.TextSize = 14
+								label.TextXAlignment = Enum.TextXAlignment.Left
+								label.Parent = row
+
+								local uninstallBtn = Instance.new("TextButton")
+								uninstallBtn.Size = UDim2.new(0.3, 0, 0.8, 0)
+								uninstallBtn.Position = UDim2.new(0.7, 0, 0.1, 0)
+								uninstallBtn.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
+								uninstallBtn.BackgroundTransparency = 0.3
+								uninstallBtn.BorderSizePixel = 0
+								uninstallBtn.Text = "Uninstall"
+								uninstallBtn.TextColor3 = Color3.new(1, 1, 1)
+								uninstallBtn.Font = Enum.Font.GothamBold
+								uninstallBtn.TextSize = 12
+								uninstallBtn.Parent = row
+								local btnCorner = Instance.new("UICorner")
+								btnCorner.CornerRadius = UDim.new(0, 4)
+								btnCorner.Parent = uninstallBtn
+
+								uninstallBtn.MouseButton1Click:Connect(function()
+									local ok, msg = uninstallLegacyApp(name)
+									if ok then
+										NotificationManager.ShowNotification({
+											title = "Uninstalled",
+											description = name .. " has been uninstalled."
+										})
+										-- Refresh the list by closing and reopening the manage popup
+										-- We'll just destroy the current popup and let the user reopen
+										listContent.Parent:Destroy()
+										refreshInstalledCache()
+										fetchManifest()
+									else
+										NotificationManager.ShowNotification({
+											title = "Error",
+											description = "Failed to uninstall: " .. msg
+										})
+									end
+								end)
+							end
+						end, 0.6, 0.6)
+					end)
+				end, 0.6, 0.7)
+			end)
+
+			-- Option 2: Settings (Not Available) – grayed out
+			local settingsGray = createMenuItem("⚙️ Settings (Not Available)", nil, true)
+
+			-- Option 3: About This ZolinStore
+			local aboutBtn = createMenuItem("ℹ️ About This ZolinStore", function()
+				createPopup(ui, "About Zolin Store", function(content)
+					-- Icon
+					local icon = Instance.new("ImageLabel")
+					icon.Size = UDim2.new(0, 80, 0, 80)
+					icon.Position = UDim2.new(0.5, -40, 0, 10)
+					icon.AnchorPoint = Vector2.new(0.5, 0)
+					icon.BackgroundColor3 = Color3.fromRGB(40, 40, 50)
+					icon.Image = "rbxassetid://12905435514" -- default store icon
+					icon.ScaleType = Enum.ScaleType.Fit
+					icon.Parent = content
+					local iconCorner = Instance.new("UICorner")
+					iconCorner.CornerRadius = UDim.new(0, 8)
+					iconCorner.Parent = icon
+
+					-- Name
+					local nameLabel = Instance.new("TextLabel")
+					nameLabel.Size = UDim2.new(1, 0, 0, 30)
+					nameLabel.Position = UDim2.new(0, 0, 0, 100)
+					nameLabel.BackgroundTransparency = 1
+					nameLabel.Text = "Zolin Store"
+					nameLabel.TextColor3 = Color3.new(1, 1, 1)
+					nameLabel.Font = Enum.Font.GothamBold
+					nameLabel.TextSize = 24
+					nameLabel.TextXAlignment = Enum.TextXAlignment.Center
+					nameLabel.Parent = content
+
+					-- Version
+					local versionLabel = Instance.new("TextLabel")
+					versionLabel.Size = UDim2.new(1, 0, 0, 20)
+					versionLabel.Position = UDim2.new(0, 0, 0, 130)
+					versionLabel.BackgroundTransparency = 1
+					versionLabel.Text = "Version 1.0.0"
+					versionLabel.TextColor3 = Color3.fromRGB(150, 150, 150)
+					versionLabel.Font = Enum.Font.Gotham
+					versionLabel.TextSize = 14
+					versionLabel.TextXAlignment = Enum.TextXAlignment.Center
+					versionLabel.Parent = content
+
+					-- Description
+					local descLabel = Instance.new("TextLabel")
+					descLabel.Size = UDim2.new(1, -20, 0, 80)
+					descLabel.Position = UDim2.new(0, 10, 0, 160)
+					descLabel.BackgroundTransparency = 1
+					descLabel.Text = "The Zolin Store is the central hub for discovering and installing apps for ZolinOS. Built with ❤️ by the Zolin team."
+					descLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
+					descLabel.Font = Enum.Font.Gotham
+					descLabel.TextSize = 14
+					descLabel.TextWrapped = true
+					descLabel.TextXAlignment = Enum.TextXAlignment.Center
+					descLabel.TextYAlignment = Enum.TextYAlignment.Top
+					descLabel.Parent = content
+				end, 0.5, 0.5)
+			end)
+
+			settingsPopup = menu
+
+			-- Close menu when clicking outside
+			local function onInputBegan(input)
+				if input.UserInputType == Enum.UserInputType.MouseButton1 then
+					-- Check if click is outside the menu
+					local mousePos = input.Position
+					local menuPos = menu.AbsolutePosition
+					local menuSize = menu.AbsoluteSize
+					if mousePos.X < menuPos.X or mousePos.X > menuPos.X + menuSize.X or mousePos.Y < menuPos.Y or mousePos.Y > menuPos.Y + menuSize.Y then
+						closeSettingsMenu()
+					end
+				end
+			end
+			UserInputService.InputBegan:Connect(onInputBegan)
+		end)
+
 		-- ===== Initial load =====
 		fetchManifest()
 
 		ui.Visible = true
 		print("Zolin Store initialized!")
 	end
-	
+
 	-- ============================================
-	-- NEW: AUTO-INSTALL FOLDER PROCESSING
+	-- AUTO-INSTALL FOLDER PROCESSING
 	-- ============================================
 	function Store.processAutoInstallFolder()
 		print("Starting auto-install from folder...");
@@ -7056,7 +7541,6 @@ function ZolinModules.ZolinInstaller()
 		local zolin = mainUI:FindFirstChild("__Zolin")
 		if not zolin then return end
 
-		-- Ensure the ZolinInstaller folder exists
 		local zero = zolin:FindFirstChild("0");
 		if not zero then return end;
 		local installerFolder = zero:FindFirstChild("ZolinInstaller")
@@ -7073,7 +7557,6 @@ function ZolinModules.ZolinInstaller()
 			autoFolder.Parent = installerFolder
 		end
 
-		-- We'll collect entries first (in case destroying during iteration)
 		local entries = {}
 		for _, child in ipairs(autoFolder:GetChildren()) do
 			if child:IsA("StringValue") and child.Value ~= "" then
@@ -7097,9 +7580,7 @@ function ZolinModules.ZolinInstaller()
 			local url = entry.url
 			local stringObj = entry.object
 
-			-- Skip if already installed
 			if (appsFolder:FindFirstChild(appName) and mainUI.ReplicatedWindow:FindFirstChild(appName)) or (appsFolder:FindFirstChild(appName) and mainUI.ReplicatedWindow_Sys:FindFirstChild(appName)) then
-				-- Already installed; remove the auto-install entry to avoid re-processing
 				stringObj:Destroy()
 				continue
 			end
@@ -7108,9 +7589,7 @@ function ZolinModules.ZolinInstaller()
 				local code = game:HttpGet(url)
 				local fn, compileError = loadstring(code)
 				if not fn then error("Compilation error: " .. tostring(compileError)) end
-				-- The loadstring should create the app frame inside ReplicatedWindow or ReplicatedWindow_Sys
 				fn()
-				-- Register in __AppsLaunchArgFolder
 				local appEntry = appsFolder:FindFirstChild(appName)
 				if not appEntry then
 					appEntry = Instance.new("StringValue")
@@ -7143,6 +7622,7 @@ function ZolinModules.ZolinInstaller()
 	Store.processAutoInstallFolder();
 	return Store
 end
+
 
 -- ============================================
 -- TASK MANAGER (Windows 10 Style)
@@ -8768,39 +9248,6 @@ function ZolinModules.CommandApp()
 		if running == "" then running = "  (no running apps)" end
 		return "Running apps:\n" .. running
 	end)
-
-	--[[ run (launch app)
-	registerCommand("run", "Launch an app by name", function(args)
-		local appName = args[1]
-		if not appName then return "Usage: /run <appName>" end
-		if ZolinModules and ZolinModules.AppManager then
-			local success = ZolinModules.AppManager.LaunchApplication(appName)
-			if success then
-				return "Launched app: " .. appName
-			else
-				return "Failed to launch app: " .. appName
-			end
-		else
-			return "AppManager not available."
-		end
-	end)
-
-	-- close
-	registerCommand("close", "Close a running app", function(args)
-		local appName = args[1]
-		if not appName then return "Usage: /close <appName>" end
-		if ZolinModules and ZolinModules.AppManager then
-			local success = ZolinModules.AppManager.CloseApp(appName)
-			if success then
-				return "Closed app: " .. appName
-			else
-				return "Failed to close app: " .. appName
-			end
-		else
-			return "AppManager not available."
-		end
-	end)
-	--]]
 
 	-- kill (force stop a thread)
 	registerCommand("kill", "Force stop a loadstring app thread", function(args)
