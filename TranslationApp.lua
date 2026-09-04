@@ -7031,16 +7031,27 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 											s.PlaybackSpeed = modelData.soundSpeed
 										end
 									end
-								else
+								elseif modelData.customHandler then
+									-- Imported custom model with its own handler
+									-- The handler receives: (soundObject, StandModel, CurrentPlayer, lpr, Camera, modelData)
+									if soundName == "Nukem" and s.IsPlaying then
+										modelData.customHandler(s, StandModel, CurrentPlayer, lpr, Camera, modelData)
+									end
+									-- For other sounds, we still apply customSounds and soundSpeed from the model
 									if modelData.customSounds and modelData.customSounds[soundName] then
-										s.PlaybackSpeed = modelData.customSounds[soundName]
-									else
-										if soundName == "Yell" or "Male Scream Short Yelling Bursts Death Cries (SFX)" then
-											s.PlaybackSpeed = modelData.soundSpeed
-										elseif soundName ~= "explosion2" and soundName ~= "Hit" and 
-											soundName ~= "Implosion" and soundName ~= "Male Scream Short Yelling Bursts Death Cries (SFX)" then
-											s.PlaybackSpeed = modelData.soundSpeed
+										local soundData = modelData.customSounds[soundName]
+										if type(soundData) == "table" then
+											if soundData.speed then
+												s.PlaybackSpeed = soundData.speed
+											end
+											if soundData.soundId then
+												s.SoundId = soundData.soundId
+											end
+										else
+											s.PlaybackSpeed = soundData
 										end
+									else
+										s.PlaybackSpeed = modelData.soundSpeed or 0.7
 									end
 								end
 							end
