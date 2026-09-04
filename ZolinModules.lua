@@ -6627,7 +6627,14 @@ function ZolinModules.ZolinInstaller()
 		popup.BackgroundTransparency = 0.1
 		popup.ZIndex = 100
 		popup.Parent = parent
-
+		
+		local bg = Instance.new("Frame")
+		bg.Size = UDim2.new(1, 0, 1, 0)
+		bg.BackgroundTransparency = 0.5
+		bg.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+		bg.ZIndex = popup.ZIndex - 1
+		bg.Parent = parent
+		
 		local corner = Instance.new("UICorner")
 		corner.CornerRadius = UDim.new(0, 10)
 		corner.Parent = popup
@@ -6672,23 +6679,17 @@ function ZolinModules.ZolinInstaller()
 		-- Close on click outside (optional) - we'll handle with closeBtn and clicking outside
 		local function close()
 			popup:Destroy()
+			bg:Destroy();
 		end
 		closeBtn.MouseButton1Click:Connect(close)
 
 		-- Also close when clicking outside the popup (on the background overlay)
-		local bg = Instance.new("Frame")
-		bg.Size = UDim2.new(1, 0, 1, 0)
-		bg.BackgroundTransparency = 0.5
-		bg.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-		bg.ZIndex = popup.ZIndex - 1
-		bg.Parent = parent
 		bg.InputBegan:Connect(function(input)
 			if input.UserInputType == Enum.UserInputType.MouseButton1 then
 				close()
-				bg:Destroy();
 			end
 		end)
-
+		
 		return popup
 	end
 
