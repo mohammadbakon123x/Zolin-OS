@@ -6651,7 +6651,7 @@ function ZolinModules.ZolinInstaller()
 		closeBtn.Size = UDim2.new(0, 30, 0, 30)
 		closeBtn.Position = UDim2.new(1, -40, 0, 5)
 		closeBtn.BackgroundTransparency = 1
-		closeBtn.Text = "✕"
+		closeBtn.Text = "X"
 		closeBtn.TextColor3 = Color3.new(1, 1, 1)
 		closeBtn.Font = Enum.Font.GothamBold
 		closeBtn.TextSize = 18
@@ -6664,6 +6664,7 @@ function ZolinModules.ZolinInstaller()
 		content.Position = UDim2.new(0, 10, 0, 50)
 		content.BackgroundTransparency = 1
 		content.Parent = popup
+		content.ZIndex = popup.ZIndex + 1
 
 		-- Call contentFunc with the content frame
 		if contentFunc then contentFunc(content) end
@@ -6684,6 +6685,7 @@ function ZolinModules.ZolinInstaller()
 		bg.InputBegan:Connect(function(input)
 			if input.UserInputType == Enum.UserInputType.MouseButton1 then
 				close()
+				bg:Destroy();
 			end
 		end)
 
@@ -7221,7 +7223,7 @@ function ZolinModules.ZolinInstaller()
 			menu.Position = UDim2.new(1, -230, 0, 45)
 			menu.BackgroundColor3 = Color3.fromRGB(25, 25, 35)
 			menu.BackgroundTransparency = 0.1
-			menu.ZIndex = 50
+			menu.ZIndex = ui.ZIndex + 10
 			menu.Parent = ui
 
 			local menuCorner = Instance.new("UICorner")
@@ -7280,6 +7282,7 @@ function ZolinModules.ZolinInstaller()
 					urlBox.TextSize = 14
 					urlBox.ClearTextOnFocus = false
 					urlBox.Parent = content
+					urlBox.ZIndex = content.ZIndex + 1
 					local urlCorner = Instance.new("UICorner")
 					urlCorner.CornerRadius = UDim.new(0, 4)
 					urlCorner.Parent = urlBox
@@ -7296,6 +7299,7 @@ function ZolinModules.ZolinInstaller()
 					installBtn.Font = Enum.Font.GothamBold
 					installBtn.TextSize = 16
 					installBtn.Parent = content
+					installBtn.ZIndex = content.ZIndex + 1
 					local btnCorner = Instance.new("UICorner")
 					btnCorner.CornerRadius = UDim.new(0, 4)
 					btnCorner.Parent = installBtn
@@ -7310,6 +7314,7 @@ function ZolinModules.ZolinInstaller()
 					statusLabel.Font = Enum.Font.Gotham
 					statusLabel.TextSize = 12
 					statusLabel.Parent = content
+					statusLabel.ZIndex = content.ZIndex + 1
 
 					-- Manage installed button (opens a list of installed apps with uninstall)
 					local manageBtn = Instance.new("TextButton")
@@ -7323,6 +7328,7 @@ function ZolinModules.ZolinInstaller()
 					manageBtn.Font = Enum.Font.GothamBold
 					manageBtn.TextSize = 14
 					manageBtn.Parent = content
+					manageBtn.ZIndex = content.ZIndex + 1
 					local manageCorner = Instance.new("UICorner")
 					manageCorner.CornerRadius = UDim.new(0, 4)
 					manageCorner.Parent = manageBtn
@@ -7375,6 +7381,7 @@ function ZolinModules.ZolinInstaller()
 								empty.Font = Enum.Font.Gotham
 								empty.TextSize = 14
 								empty.Parent = listContent
+								empty.ZIndex = listContent.ZIndex + 1
 								return
 							end
 
@@ -7385,6 +7392,7 @@ function ZolinModules.ZolinInstaller()
 							listScroller.AutomaticCanvasSize = Enum.AutomaticSize.Y
 							listScroller.ScrollBarThickness = 4
 							listScroller.Parent = listContent
+							listScroller.ZIndex = listContent.ZIndex + 1
 
 							local layout = Instance.new("UIListLayout")
 							layout.Padding = UDim.new(0, 4)
@@ -7397,6 +7405,7 @@ function ZolinModules.ZolinInstaller()
 								row.BackgroundColor3 = Color3.fromRGB(35, 35, 45)
 								row.BackgroundTransparency = 0.3
 								row.Parent = listScroller
+								row.ZIndex = listScroller.ZIndex + 1
 
 								local label = Instance.new("TextLabel")
 								label.Size = UDim2.new(0.6, 0, 1, 0)
@@ -7407,6 +7416,7 @@ function ZolinModules.ZolinInstaller()
 								label.TextSize = 14
 								label.TextXAlignment = Enum.TextXAlignment.Left
 								label.Parent = row
+								label.ZIndex = row.ZIndex + 1
 
 								local uninstallBtn = Instance.new("TextButton")
 								uninstallBtn.Size = UDim2.new(0.3, 0, 0.8, 0)
@@ -7419,6 +7429,7 @@ function ZolinModules.ZolinInstaller()
 								uninstallBtn.Font = Enum.Font.GothamBold
 								uninstallBtn.TextSize = 12
 								uninstallBtn.Parent = row
+								uninstallBtn.ZIndex = row.ZIndex + 1
 								local btnCorner = Instance.new("UICorner")
 								btnCorner.CornerRadius = UDim.new(0, 4)
 								btnCorner.Parent = uninstallBtn
