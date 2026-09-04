@@ -6661,7 +6661,7 @@ function ZolinModules.ZolinInstaller()
 		closeBtn.Text = "X"
 		closeBtn.TextColor3 = Color3.new(1, 1, 1)
 		closeBtn.Font = Enum.Font.GothamBold
-		closeBtn.TextSize = 18
+		closeBtn.TextSize = 20
 		closeBtn.Parent = popup
 		closeBtn.ZIndex = popup.ZIndex + 1
 
@@ -6683,12 +6683,13 @@ function ZolinModules.ZolinInstaller()
 		end
 		closeBtn.MouseButton1Click:Connect(close)
 
-		-- Also close when clicking outside the popup (on the background overlay)
+		--[[ Also close when clicking outside the popup (on the background overlay)
 		bg.InputBegan:Connect(function(input)
 			if input.UserInputType == Enum.UserInputType.MouseButton1 then
 				close()
 			end
 		end)
+		--]]
 		
 		return popup
 	end
@@ -7226,7 +7227,13 @@ function ZolinModules.ZolinInstaller()
 			menu.BackgroundTransparency = 0.1
 			menu.ZIndex = ui.ZIndex + 10
 			menu.Parent = ui
-
+			
+			local menuList = Instance.new("UIListLayout")
+			menuList.Padding = UDim.new(0, 5)
+			menuList.SortOrder = Enum.SortOrder.Name
+			menuList.FillDirection = Enum.FillDirection.Vertical
+			menuList.Parent = menu
+			
 			local menuCorner = Instance.new("UICorner")
 			menuCorner.CornerRadius = UDim.new(0, 8)
 			menuCorner.Parent = menu
@@ -7398,6 +7405,7 @@ function ZolinModules.ZolinInstaller()
 							local layout = Instance.new("UIListLayout")
 							layout.Padding = UDim.new(0, 4)
 							layout.SortOrder = Enum.SortOrder.LayoutOrder
+							layout.FillDirection = Enum.FillDirection.Vertical
 							layout.Parent = listScroller
 
 							for _, name in ipairs(installedList) do
@@ -7475,6 +7483,7 @@ function ZolinModules.ZolinInstaller()
 					icon.Image = "rbxassetid://12905435514" -- default store icon
 					icon.ScaleType = Enum.ScaleType.Fit
 					icon.Parent = content
+					icon.ZIndex = content.ZIndex + 1
 					local iconCorner = Instance.new("UICorner")
 					iconCorner.CornerRadius = UDim.new(0, 8)
 					iconCorner.Parent = icon
@@ -7490,6 +7499,7 @@ function ZolinModules.ZolinInstaller()
 					nameLabel.TextSize = 24
 					nameLabel.TextXAlignment = Enum.TextXAlignment.Center
 					nameLabel.Parent = content
+					nameLabel.ZIndex = content.ZIndex + 1
 
 					-- Version
 					local versionLabel = Instance.new("TextLabel")
@@ -7502,6 +7512,7 @@ function ZolinModules.ZolinInstaller()
 					versionLabel.TextSize = 14
 					versionLabel.TextXAlignment = Enum.TextXAlignment.Center
 					versionLabel.Parent = content
+					versionLabel.ZIndex = content.ZIndex + 1
 
 					-- Description
 					local descLabel = Instance.new("TextLabel")
@@ -7516,6 +7527,7 @@ function ZolinModules.ZolinInstaller()
 					descLabel.TextXAlignment = Enum.TextXAlignment.Center
 					descLabel.TextYAlignment = Enum.TextYAlignment.Top
 					descLabel.Parent = content
+					descLabel.ZIndex = content.ZIndex + 1
 				end, 0.5, 0.5)
 			end)
 
