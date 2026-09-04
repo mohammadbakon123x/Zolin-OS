@@ -3912,7 +3912,6 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 	
 	-- START --
 	local ImportedModels = {}
-
 	local function getDataStorePath()
 		local player = game.Players.LocalPlayer
 		local zolin = player:FindFirstChild("ZolinOS")
@@ -3948,6 +3947,17 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 		if not store then return end
 		local json = game:GetService("HttpService"):JSONEncode(ImportedModels)
 		store.Value = json
+	end
+	
+	local function getAllModels()
+		local all = {}
+		for _, model in ipairs(CustomBeatdownModels) do
+			table.insert(all, model)
+		end
+		for _, model in ipairs(ImportedModels) do
+			table.insert(all, model)
+		end
+		return all
 	end
 
 	-- Import Custom Beatdown Model
@@ -4065,7 +4075,6 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 					for _, model in ipairs(ImportedModels) do
 						table.insert(allModels, model)
 					end
-					
 					break
 				end
 			end
@@ -5261,7 +5270,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 			end
 		end
 		local selectedModelData = nil
-		for _, model in ipairs(CustomBeatdownModels) do
+		for _, model in ipairs(getAllModels()) do
 			if model.id == modelId then
 				selectedModelData = model
 				break
@@ -8038,6 +8047,12 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 	-- Manage Imported Models: open a popup with list
 	ManageBtn.MouseButton1Click:Connect(function()
 		-- Create a simple popup frame
+		if Settings:FindFirstChild("ManageImportedPopup") then
+			Settings:FindFirstChild("ManageImportedPopup"):Destroy();
+			print("["..AppName.."]: " .."removed ManageImportedPopup Frame. Creating new ManageImportedPopup again to load...")
+		end;
+		task.wait();
+		print("["..AppName.."]: " .."ManageImportedPopup Frame created")
 		local popup = Instance.new("Frame", Settings)
 		popup.Name = "ManageImportedPopup"
 		popup.AnchorPoint = Vector2.new(0.5, 0.5)
@@ -8060,15 +8075,17 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 		title.Font = Enum.Font.GothamBold
 		title.TextSize = 20
 		title.TextXAlignment = Enum.TextXAlignment.Center
+		title.ZIndex = popup.ZIndex + 1
 
 		local closeBtn = Instance.new("TextButton", popup)
 		closeBtn.Size = UDim2.new(0.06, 0, 0.06, 0)
 		closeBtn.Position = UDim2.new(0.92, 0, 0.02, 0)
 		closeBtn.BackgroundTransparency = 1
-		closeBtn.Text = "✕"
+		closeBtn.Text = "X"
 		closeBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
 		closeBtn.Font = Enum.Font.GothamBold
 		closeBtn.TextSize = 18
+		closeBtn.ZIndex = popup.ZIndex + 1
 		closeBtn.MouseButton1Click:Connect(function() popup:Destroy() end)
 
 		local scroll = Instance.new("ScrollingFrame", popup)
@@ -8079,6 +8096,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 		scroll.AutomaticCanvasSize = Enum.AutomaticSize.Y
 		scroll.ScrollBarThickness = 6
 		scroll.ClipsDescendants = true
+		scroll.ZIndex = popup.ZIndex + 1
 		local layout = Instance.new("UIListLayout", scroll)
 		layout.Padding = UDim.new(0, 8)
 		layout.SortOrder = Enum.SortOrder.LayoutOrder
@@ -8091,12 +8109,14 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 			empty.TextColor3 = Color3.fromRGB(150, 150, 150)
 			empty.Font = Enum.Font.Gotham
 			empty.TextSize = 16
+			empty.ZIndex = scroll.ZIndex + 1
 		else
 			for idx, model in ipairs(ImportedModels) do
 				local row = Instance.new("Frame", scroll)
 				row.Size = UDim2.new(1, 0, 0, 50)
 				row.BackgroundColor3 = Color3.fromRGB(35, 35, 45)
 				row.BackgroundTransparency = 0.2
+				row.ZIndex = scroll.ZIndex + 1
 				local rowCorner = Instance.new("UICorner", row)
 				rowCorner.CornerRadius = UDim.new(0, 6)
 
@@ -8108,6 +8128,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 				nameLabel.Font = Enum.Font.Gotham
 				nameLabel.TextSize = 16
 				nameLabel.TextXAlignment = Enum.TextXAlignment.Left
+				nameLabel.ZIndex = row.ZIndex + 1
 
 				local deleteBtn = Instance.new("TextButton", row)
 				deleteBtn.Size = UDim2.new(0.15, 0, 0.6, 0)
@@ -8119,6 +8140,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 				deleteBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
 				deleteBtn.Font = Enum.Font.GothamBold
 				deleteBtn.TextSize = 14
+				deleteBtn.ZIndex = row.ZIndex + 1
 				local delCorner = Instance.new("UICorner", deleteBtn)
 				delCorner.CornerRadius = UDim.new(0, 4)
 				deleteBtn.MouseButton1Click:Connect(function()
