@@ -5,7 +5,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 	local l__TweenService__5 = game:GetService("TweenService");
 	local UIS = game:GetService("UserInputService");
 	local u6 = game:GetService("RunService")
-	local BuildVersion = "3.23.6"
+	local BuildVersion = "3.23.7"
 	local versionLabel = "v"..BuildVersion;
 	local SettingsScript = {
 		DisplayLogs = true,
@@ -78,7 +78,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 				["Gun1"] = 0.7,
 				["Gun2"] = 0.7,
 				["Yell"] = 0.8,
-				["Hit"] = 0.75,
+				["Hit"] = 0.75,	
 				["Implosion"] = 0.7,
 			},
 			enabled = false,
@@ -2724,6 +2724,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 			end
 		},
 	}
+	
 	-- LIGHTING:
 	local function saveCurrentSettings()
 		local lighting = game:GetService("Lighting")
@@ -3908,6 +3909,170 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 	UIPadding_Desc.PaddingLeft = UDim.new(0.05, 0);
 	UIPadding_Desc.PaddingRight = UDim.new(0.05, 0);
 	UIPadding_Desc.PaddingTop = UDim.new(0.05, 0);
+	
+	-- START --
+	local ImportedModels = {}
+
+	local function getDataStorePath()
+		local player = game.Players.LocalPlayer
+		local zolin = player:FindFirstChild("ZolinOS")
+		if not zolin then zolin = Instance.new("Folder", player); zolin.Name = "ZolinOS" end
+		local appData = zolin:FindFirstChild("AppData")
+		if not appData then appData = Instance.new("Folder", zolin); appData.Name = "AppData" end
+		local translation = appData:FindFirstChild(AppName)
+		if not translation then translation = Instance.new("Folder", appData); translation.Name = AppName end
+		local imported = translation:FindFirstChild("ImportedModels")
+		if not imported then
+			imported = Instance.new("StringValue", translation)
+			imported.Name = "ImportedModels"
+			imported.Value = "[]"
+		end
+		return imported
+	end
+
+	local function loadImportedModels()
+		local store = getDataStorePath()
+		if not store then return end
+		local success, data = pcall(function()
+			return game:GetService("HttpService"):JSONDecode(store.Value)
+		end)
+		if success and type(data) == "table" then
+			ImportedModels = data
+		else
+			ImportedModels = {}
+		end
+	end
+
+	local function saveImportedModels()
+		local store = getDataStorePath()
+		if not store then return end
+		local json = game:GetService("HttpService"):JSONEncode(ImportedModels)
+		store.Value = json
+	end
+
+	-- Import Custom Beatdown Model
+	local ImportFrame = Instance.new("Frame", Desclabel)
+	ImportFrame.Name = "ImportFrame"
+	ImportFrame.AnchorPoint = Vector2.new(0.5, 0.5)
+	ImportFrame.Active = true
+	ImportFrame.BackgroundColor3 = Color3.fromRGB(35, 31, 59)
+	ImportFrame.BackgroundTransparency = 0
+	ImportFrame.Size = UDim2.new(1, 0, 0.35, 0)
+	ImportFrame.SizeConstraint = Enum.SizeConstraint.RelativeXY
+	ImportFrame.Visible = GameDetection.IsSlapBattles
+	ImportFrame.ZIndex = 6
+	ImportFrame.LayoutOrder = 11  -- adjust as needed
+	local ImportCorner = Instance.new("UICorner", ImportFrame)
+	ImportCorner.CornerRadius = UDim.new(0, 5)
+
+	local ImportTitle = Instance.new("TextLabel", ImportFrame)
+	ImportTitle.AnchorPoint = Vector2.new(0.5, 0)
+	ImportTitle.BackgroundTransparency = 1
+	ImportTitle.Position = UDim2.new(0.5, 0, 0, 0)
+	ImportTitle.Size = UDim2.new(1, 0, 0.3, 0)
+	ImportTitle.SizeConstraint = Enum.SizeConstraint.RelativeXY
+	ImportTitle.Visible = true
+	ImportTitle.ZIndex = 6
+	ImportTitle.RichText = true
+	ImportTitle.Text = "  Import Custom Beatdown Model (URL):"
+	ImportTitle.TextColor3 = Color3.fromRGB(194, 194, 194)
+	ImportTitle.TextScaled = false
+	ImportTitle.TextSize = 24
+	ImportTitle.TextWrapped = true
+	ImportTitle.TextXAlignment = Enum.TextXAlignment.Left
+	ImportTitle.TextYAlignment = Enum.TextYAlignment.Center
+	local UIPadding_ImportTitle = Instance.new("UIPadding", ImportTitle)
+	UIPadding_ImportTitle.PaddingBottom = UDim.new(-0.2, 0)
+	UIPadding_ImportTitle.PaddingLeft = UDim.new(0, 0)
+	UIPadding_ImportTitle.PaddingRight = UDim.new(0, 0)
+	UIPadding_ImportTitle.PaddingTop = UDim.new(-0.2, 0)
+
+	local ImportUrlBox = Instance.new("TextBox", ImportFrame)
+	ImportUrlBox.Name = "ImportUrlBox"
+	ImportUrlBox.Size = UDim2.new(0.6, 0, 0.25, 0)
+	ImportUrlBox.Position = UDim2.new(0.03, 0, 0.35, 0)
+	ImportUrlBox.BackgroundColor3 = Color3.fromRGB(40, 40, 55)
+	ImportUrlBox.BackgroundTransparency = 0.3
+	ImportUrlBox.BorderSizePixel = 0
+	ImportUrlBox.PlaceholderText = "Enter loadstring URL..."
+	ImportUrlBox.Text = ""
+	ImportUrlBox.TextColor3 = Color3.fromRGB(255, 255, 255)
+	ImportUrlBox.Font = Enum.Font.Gotham
+	ImportUrlBox.TextSize = 14
+	ImportUrlBox.ClearTextOnFocus = false
+	ImportUrlBox.ZIndex = 6
+	local UrlCorner = Instance.new("UICorner", ImportUrlBox)
+	UrlCorner.CornerRadius = UDim.new(0, 5)
+
+	local ImportButton = Instance.new("TextButton", ImportFrame)
+	ImportButton.Name = "ImportButton"
+	ImportButton.Size = UDim2.new(0.2, 0, 0.25, 0)
+	ImportButton.Position = UDim2.new(0.7, 0, 0.35, 0)
+	ImportButton.BackgroundColor3 = Color3.fromRGB(50, 150, 50)
+	ImportButton.BackgroundTransparency = 0.3
+	ImportButton.BorderSizePixel = 0
+	ImportButton.Text = "Import"
+	ImportButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+	ImportButton.Font = Enum.Font.GothamBold
+	ImportButton.TextSize = 16
+	ImportButton.ZIndex = 6
+	local ImportBtnCorner = Instance.new("UICorner", ImportButton)
+	ImportBtnCorner.CornerRadius = UDim.new(0, 5)
+
+	-- Manage Imported Models button
+	local ManageBtn = Instance.new("TextButton", ImportFrame)
+	ManageBtn.Name = "ManageBtn"
+	ManageBtn.Size = UDim2.new(0.2, 0, 0.25, 0)
+	ManageBtn.Position = UDim2.new(0.7, 0, 0.65, 0)
+	ManageBtn.BackgroundColor3 = Color3.fromRGB(60, 60, 80)
+	ManageBtn.BackgroundTransparency = 0.3
+	ManageBtn.BorderSizePixel = 0
+	ManageBtn.Text = "Manage Imported"
+	ManageBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+	ManageBtn.Font = Enum.Font.GothamBold
+	ManageBtn.TextSize = 14
+	ManageBtn.ZIndex = 6
+	local ManageCorner = Instance.new("UICorner", ManageBtn)
+	ManageCorner.CornerRadius = UDim.new(0, 5)
+
+	-- Status label (for feedback)
+	local ImportStatus = Instance.new("TextLabel", ImportFrame)
+	ImportStatus.Name = "ImportStatus"
+	ImportStatus.Size = UDim2.new(0.6, 0, 0.2, 0)
+	ImportStatus.Position = UDim2.new(0.03, 0, 0.65, 0)
+	ImportStatus.BackgroundTransparency = 1
+	ImportStatus.Text = ""
+	ImportStatus.TextColor3 = Color3.fromRGB(200, 200, 200)
+	ImportStatus.Font = Enum.Font.Gotham
+	ImportStatus.TextSize = 14
+	ImportStatus.TextXAlignment = Enum.TextXAlignment.Left
+	ImportStatus.ZIndex = 6
+	
+	-- Helper to refresh the CustomBeatdownUI list (if open)
+	local function refreshCustomBeatdownUI()
+		if CustomBeatdownUI and CustomBeatdownUI.Visible then
+			-- Reload the viewport and the list
+			for _, child in ipairs(CustomBeatdownUI:GetDescendants()) do
+				if child:IsA("ScrollingFrame") and child.Name == "ModelsScrollFrame" then
+					-- Clear and rebuild buttons
+					for _, btn in ipairs(child:GetChildren()) do
+						if btn:IsA("TextButton") then btn:Destroy() end
+					end
+					local allModels = {}
+					for _, model in ipairs(CustomBeatdownModels) do
+						table.insert(allModels, model)
+					end
+					for _, model in ipairs(ImportedModels) do
+						table.insert(allModels, model)
+					end
+					
+					break
+				end
+			end
+		end
+	end
+	
+	-- END --
 	
 	--[ Add after SliderSelection4
 	local SliderSelection5 = Instance.new("Frame", Desclabel);
@@ -7804,6 +7969,172 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 			applyGloveHitbox(CurrentGloveHitboxScale)
 		end
 	end)
+	
+	-- Import button
+	ImportButton.MouseButton1Click:Connect(function()
+		local url = ImportUrlBox.Text
+		if url == "" then
+			ImportStatus.Text = "Please enter a URL."
+			ImportStatus.TextColor3 = Color3.fromRGB(255, 200, 100)
+			return
+		end
+		ImportStatus.Text = "Fetching..."
+		ImportStatus.TextColor3 = Color3.fromRGB(200, 200, 200)
+		local success, result = pcall(function()
+			return game:HttpGet(url)
+		end)
+		if not success or not result then
+			ImportStatus.Text = "Failed to fetch URL."
+			ImportStatus.TextColor3 = Color3.fromRGB(255, 100, 100)
+			return
+		end
+		local fn, compileErr = loadstring(result)
+		if not fn then
+			ImportStatus.Text = "Compile error: " .. (compileErr or "unknown")
+			ImportStatus.TextColor3 = Color3.fromRGB(255, 100, 100)
+			return
+		end
+		local execSuccess, modelData = pcall(fn)
+		if not execSuccess or type(modelData) ~= "table" then
+			ImportStatus.Text = "Execution failed or returned non-table."
+			ImportStatus.TextColor3 = Color3.fromRGB(255, 100, 100)
+			return
+		end
+		-- Validate required fields
+		local required = {"id", "name", "color", "fireColor", "material", "icon", "iconColor", "soundSpeed"}
+		for _, field in ipairs(required) do
+			if modelData[field] == nil then
+				ImportStatus.Text = "Missing required field: " .. field
+				ImportStatus.TextColor3 = Color3.fromRGB(255, 100, 100)
+				return
+			end
+		end
+		-- Convert color tables to Color3 if needed (assuming they are already Color3)
+		-- Check for duplicate ID
+		for _, existing in ipairs(CustomBeatdownModels) do
+			if existing.id == modelData.id then
+				ImportStatus.Text = "ID already exists in built-in models: " .. modelData.id
+				ImportStatus.TextColor3 = Color3.fromRGB(255, 100, 100)
+				return
+			end
+		end
+		for _, existing in ipairs(ImportedModels) do
+			if existing.id == modelData.id then
+				ImportStatus.Text = "ID already imported: " .. modelData.id
+				ImportStatus.TextColor3 = Color3.fromRGB(255, 100, 100)
+				return
+			end
+		end
+		-- Add to imported list
+		table.insert(ImportedModels, modelData)
+		saveImportedModels()
+		ImportStatus.Text = "Imported successfully: " .. modelData.name
+		ImportStatus.TextColor3 = Color3.fromRGB(100, 255, 100)
+		ImportUrlBox.Text = ""
+		-- Refresh UI
+		refreshCustomBeatdownUI()
+	end)
+
+	-- Manage Imported Models: open a popup with list
+	ManageBtn.MouseButton1Click:Connect(function()
+		-- Create a simple popup frame
+		local popup = Instance.new("Frame", Settings)
+		popup.Name = "ManageImportedPopup"
+		popup.AnchorPoint = Vector2.new(0.5, 0.5)
+		popup.Position = UDim2.new(0.5, 0, 0.5, 0)
+		popup.Size = UDim2.new(0.6, 0, 0.6, 0)
+		popup.BackgroundColor3 = Color3.fromRGB(20, 20, 30)
+		popup.BackgroundTransparency = 0.1
+		popup.ZIndex = 10
+		local popupCorner = Instance.new("UICorner", popup)
+		popupCorner.CornerRadius = UDim.new(0, 10)
+		local popupStroke = Instance.new("UIStroke", popup)
+		popupStroke.Color = Color3.fromRGB(100, 100, 120)
+		popupStroke.Thickness = 2
+
+		local title = Instance.new("TextLabel", popup)
+		title.Size = UDim2.new(1, 0, 0.1, 0)
+		title.BackgroundTransparency = 1
+		title.Text = "Imported Models"
+		title.TextColor3 = Color3.fromRGB(255, 255, 255)
+		title.Font = Enum.Font.GothamBold
+		title.TextSize = 20
+		title.TextXAlignment = Enum.TextXAlignment.Center
+
+		local closeBtn = Instance.new("TextButton", popup)
+		closeBtn.Size = UDim2.new(0.06, 0, 0.06, 0)
+		closeBtn.Position = UDim2.new(0.92, 0, 0.02, 0)
+		closeBtn.BackgroundTransparency = 1
+		closeBtn.Text = "✕"
+		closeBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+		closeBtn.Font = Enum.Font.GothamBold
+		closeBtn.TextSize = 18
+		closeBtn.MouseButton1Click:Connect(function() popup:Destroy() end)
+
+		local scroll = Instance.new("ScrollingFrame", popup)
+		scroll.Size = UDim2.new(1, -20, 1, -0.2)
+		scroll.Position = UDim2.new(0, 10, 0.12, 0)
+		scroll.BackgroundTransparency = 1
+		scroll.CanvasSize = UDim2.new(0, 0, 0, 0)
+		scroll.AutomaticCanvasSize = Enum.AutomaticSize.Y
+		scroll.ScrollBarThickness = 6
+		scroll.ClipsDescendants = true
+		local layout = Instance.new("UIListLayout", scroll)
+		layout.Padding = UDim.new(0, 8)
+		layout.SortOrder = Enum.SortOrder.LayoutOrder
+
+		if #ImportedModels == 0 then
+			local empty = Instance.new("TextLabel", scroll)
+			empty.Size = UDim2.new(1, 0, 0, 40)
+			empty.BackgroundTransparency = 1
+			empty.Text = "No imported models."
+			empty.TextColor3 = Color3.fromRGB(150, 150, 150)
+			empty.Font = Enum.Font.Gotham
+			empty.TextSize = 16
+		else
+			for idx, model in ipairs(ImportedModels) do
+				local row = Instance.new("Frame", scroll)
+				row.Size = UDim2.new(1, 0, 0, 50)
+				row.BackgroundColor3 = Color3.fromRGB(35, 35, 45)
+				row.BackgroundTransparency = 0.2
+				local rowCorner = Instance.new("UICorner", row)
+				rowCorner.CornerRadius = UDim.new(0, 6)
+
+				local nameLabel = Instance.new("TextLabel", row)
+				nameLabel.Size = UDim2.new(0.6, 0, 1, 0)
+				nameLabel.BackgroundTransparency = 1
+				nameLabel.Text = model.name .. " (" .. model.id .. ")"
+				nameLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+				nameLabel.Font = Enum.Font.Gotham
+				nameLabel.TextSize = 16
+				nameLabel.TextXAlignment = Enum.TextXAlignment.Left
+
+				local deleteBtn = Instance.new("TextButton", row)
+				deleteBtn.Size = UDim2.new(0.15, 0, 0.6, 0)
+				deleteBtn.Position = UDim2.new(0.83, 0, 0.2, 0)
+				deleteBtn.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
+				deleteBtn.BackgroundTransparency = 0.3
+				deleteBtn.BorderSizePixel = 0
+				deleteBtn.Text = "Delete"
+				deleteBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+				deleteBtn.Font = Enum.Font.GothamBold
+				deleteBtn.TextSize = 14
+				local delCorner = Instance.new("UICorner", deleteBtn)
+				delCorner.CornerRadius = UDim.new(0, 4)
+				deleteBtn.MouseButton1Click:Connect(function()
+					table.remove(ImportedModels, idx)
+					saveImportedModels()
+					popup:Destroy()
+					refreshCustomBeatdownUI()
+					-- Also update status
+					ImportStatus.Text = "Deleted: " .. model.name
+					ImportStatus.TextColor3 = Color3.fromRGB(255, 200, 100)
+				end)
+			end
+		end
+		popup.Parent = Settings
+	end)
+	
 	--// BUTTONS
 	ButtonSettings.MouseButton1Click:Connect(function()
 		if Settings.Visible == false then
@@ -7969,6 +8300,8 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 	--// INITIALIZE
 	startAutoUpdate()
 	createTeleportUI()
+	loadImportedModels()
+	
 	print("Running on version:" ..tostring(BuildVersion));
 	return TranslationApp;
 
