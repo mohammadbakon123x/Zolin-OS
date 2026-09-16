@@ -2797,6 +2797,7 @@ local function createChunk25()
 	local ImageOS_2 = Instance.new("ImageLabel");
 	ImageOS_2.Name = "ImageOS_2";
 	ImageOS_2.BackgroundTransparency = 1;
+	ImageOS_2.AnchorPoint = Vector2.new(0.5, 0);
 	ImageOS_2.Size = UDim2.new(0.186, 0, 0.288, 0);
 	ImageOS_2.Position = UDim2.new(0.5, 0, 0.123, 0);
 	ImageOS_2.ZIndex = LoadingUI.ZIndex + 1;
@@ -2816,7 +2817,7 @@ local function createChunk25()
 	ImageOS_2.Visible = true; -- initially hidden
 	local MessageLabel = Instance.new("TextLabel");
 	MessageLabel.Name = "MessageLabel";
-	MessageLabel.AnchorPoint = Vector2.new(0, 0);
+	MessageLabel.AnchorPoint = Vector2.new(0.5, 0);
 	MessageLabel.BackgroundTransparency = 1;
 	MessageLabel.Position = UDim2.new(0.055, 0, 0.0309, 0);
 	MessageLabel.Size = UDim2.new(0.143, 0, 0.075, 0);
