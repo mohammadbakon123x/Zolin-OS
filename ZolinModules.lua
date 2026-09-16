@@ -4260,14 +4260,8 @@ function ZolinModules.ZolinListener()
 
 			-- Initialize the OS
 			ZolinModules.Init();
-
-			-- Hide bootloader UI (already hidden by the manager, but ensure it)
-			local bootloader = MainUI:FindFirstChild("Bootloader")
-			if bootloader then
-				bootloader.Visible = false
-			end
-
 		end)
+		print("ZolinListener: ZolinModeEvent connected")
 	end
 	if moreOptionsVolStyleEvent then
 		moreOptionsVolStyleEvent.Event:Connect(function(p1, p2)
@@ -6538,10 +6532,10 @@ function ZolinModules.ZolinInstaller()
 		local code, fetchErr = pcall(function() return game:HttpGet(url) end)
 		if not code then return false, "Failed to fetch URL: " .. tostring(fetchErr) end
 
-		local fn, compileErr = loadstring(code)
+		local fn, compileErr = loadstring(code) -- ERROR loadstring expected, got boolean, so we need to fix it later
 		if not fn then return false, "Compile error: " .. tostring(compileErr) end
-
 		-- Execute (this should create the app frame in ReplicatedWindow)
+		fn(); -- temp fix for loadstring error
 		local execOk, execErr = pcall(fn)
 		if not execOk then return false, "Execution error: " .. tostring(execErr) end
 
@@ -9814,9 +9808,18 @@ function ZolinModules.Init()
 			ZolinModules.ZolinLauncher()
 			end)
 	end
-	-- return with success
-
+	-- Hide bootloader UI (already hidden by the manager, but ensure it)
+	local MainUI = getMainUI()
+	if MainUI then
+	local bootloader = MainUI:FindFirstChild("Bootloader")
+	if bootloader then
+		bootloader.Visible = false
+	end
+	else
+		warn("MainUI not found for hiding Bootloader")
+	end
 end
+
 --[[ // AUTO INITIALIZE //
 
 ZolinModules.Init();
