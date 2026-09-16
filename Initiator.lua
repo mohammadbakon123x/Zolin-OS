@@ -1,5 +1,6 @@
 local v1 = {};
-v1.ver = "1.5.0" -- versionOS
+local TweenService = game:GetService("TweenService");
+v1.ver = "1.6.1" -- versionOS
 
 -- ============================================
 -- HELPER FUNCTIONS
@@ -1824,7 +1825,7 @@ local function createChunk16()
 	SideButtons.SizeConstraint = Enum.SizeConstraint.RelativeXY
 	SideButtons.ZIndex = 1
 	SideButtons.Visible = true
-	SideButtons.Transparency = 1
+	SideButtons.BackgroundTransparency = 1
 	SideButtons.Parent = MainUI
 
 	local UIAspectRatio = Instance.new("UIAspectRatioConstraint")
@@ -2700,6 +2701,12 @@ local function createChunk24()
 	UIListLayout3.VerticalAlignment = Enum.VerticalAlignment.Bottom;
 	UIListLayout3.HorizontalAlignment = Enum.HorizontalAlignment.Center;
 	PowerList.Parent = StartMenuFrame;
+	
+	-- PowerButtonTemplate
+	
+	--local PowerButtonTemplate = Instance.new("ImageButton");
+	--PowerButtonTemplate.Name = "PowerButtonTemplate";
+	--PowerButtonTemplate.BackgroundTransparency = 1;	
 
 	--AppButtonTemplate
 	local AppButtonTemplate = Instance.new("TextButton");
@@ -2774,6 +2781,106 @@ local function createChunk25()
 		ColorSequenceKeypoint.new(0.401, Color3.fromRGB(255, 0, 0)),
 		ColorSequenceKeypoint.new(1, Color3.fromRGB(74, 0, 0))
 	});
+	
+	-- // 09/16/2026 09:32:22 PM | Loading Screen UI \\ --
+	
+	local LoadingUI = Instance.new("Frame");
+	LoadingUI.Name = "LoadingUI";
+	LoadingUI.AnchorPoint = Vector2.new(0.5, 0.5);
+	LoadingUI.Position = UDim2.new(0.5, 0, 0.5, 0);
+	LoadingUI.Size = UDim2.new(1, 0, 1, 0);
+	LoadingUI.BackgroundTransparency = 0;
+	LoadingUI.BackgroundColor3 = Color3.fromRGB(0, 0, 0);
+	LoadingUI.ZIndex = -999999996
+	LoadingUI.Parent = bootloader;
+	LoadingUI.Visible = true; -- initially visible
+	local ImageOS_2 = Instance.new("ImageLabel");
+	ImageOS_2.Name = "ImageOS_2";
+	ImageOS_2.BackgroundTransparency = 1;
+	ImageOS_2.Size = UDim2.new(0.186, 0, 0.288, 0);
+	ImageOS_2.Position = UDim2.new(0.5, 0, 0.123, 0);
+	ImageOS_2.ZIndex = LoadingUI.ZIndex + 1;
+	ImageOS_2.BackgroundTransparency = 1;
+	ImageOS_2.Image = "rbxassetid://2467523453";
+	ImageOS_2.ScaleType = Enum.ScaleType.Crop;
+	ImageOS_2.Parent = LoadingUI;
+	local UIGradient1 = Instance.new("UIGradient");
+	UIGradient1.Name = "UIGradient";
+	UIGradient1.Parent = ImageOS_2;
+	UIGradient1.Rotation = -101;
+	UIGradient1.Color = ColorSequence.new({
+		ColorSequenceKeypoint.new(0, Color3.fromRGB(74, 0, 0)),
+		ColorSequenceKeypoint.new(0.401, Color3.fromRGB(255, 0, 0)),
+		ColorSequenceKeypoint.new(1, Color3.fromRGB(74, 0, 0))
+	});
+	ImageOS_2.Visible = true; -- initially hidden
+	local MessageLabel = Instance.new("TextLabel");
+	MessageLabel.Name = "MessageLabel";
+	MessageLabel.AnchorPoint = Vector2.new(0, 0);
+	MessageLabel.BackgroundTransparency = 1;
+	MessageLabel.Position = UDim2.new(0.055, 0, 0.0309, 0);
+	MessageLabel.Size = UDim2.new(0.143, 0, 0.075, 0);
+	MessageLabel.Font = Enum.Font.PatrickHand;
+	MessageLabel.Text = "HEADING TO BOOTLOADER MODE..."
+	MessageLabel.TextColor3 = Color3.fromRGB(255, 255, 255);
+	MessageLabel.TextScaled = true;
+	MessageLabel.ZIndex = ImageOS_2.ZIndex;
+	MessageLabel.Parent = LoadingUI;
+	local UIGradient23 = Instance.new("UIGradient");
+	UIGradient23.Name = "UIGradient";
+	UIGradient23.Parent = MessageLabel;
+	UIGradient23.Rotation = 64;
+	UIGradient23.Color = ColorSequence.new({
+		ColorSequenceKeypoint.new(0, Color3.fromRGB(74, 0, 0)),
+		ColorSequenceKeypoint.new(0.401, Color3.fromRGB(255, 0, 0)),
+		ColorSequenceKeypoint.new(1, Color3.fromRGB(74, 0, 0))
+	});
+	MessageLabel.Visible = true; -- initially hidden
+	local LoadingCircle = Instance.new("ImageLabel");
+	LoadingCircle.Name = "LoadingCircle";
+	LoadingCircle.BackgroundTransparency = 1;
+	LoadingCircle.Position = UDim2.new(0.5, 0, 0.819, 0);
+	LoadingCircle.Size = UDim2.new(0.075, 0, 0.172, 0);
+	LoadingCircle.AnchorPoint = Vector2.new(0.5, 0.5);
+	LoadingCircle.ZIndex = ImageOS_2.ZIndex;
+	LoadingCircle.Image = "rbxassetid://87969930182482"; -- Circle
+	LoadingCircle.Parent = LoadingUI;
+	LoadingCircle.ScaleType = Enum.ScaleType.Fit;
+	LoadingCircle.Visible = true; -- initially hidden
+	
+	-- Create the rotation tween (continuous spin)
+	local spinTweenInfo = TweenInfo.new(
+		1,                          -- Duration (1 second per full 360°)
+		Enum.EasingStyle.Linear,    -- Linear for constant speed
+		Enum.EasingDirection.InOut,
+		-1,                         -- Repeat count: -1 = infinite
+		false,                      -- Reverses: false (keep spinning same direction)
+		0                           -- Delay
+	)
+
+	local spinTween = game:GetService("TweenService"):Create(
+		LoadingCircle,
+		spinTweenInfo,
+		{ Rotation = 360 }
+	)
+	
+	LoadingUI:GetPropertyChangedSignal("Visible"):Connect(function()
+		if LoadingUI.Visible then
+			LoadingCircle.Rotation = 0
+			spinTween:Play()
+		else
+			spinTween:Cancel()
+			LoadingCircle.Rotation = 0
+		end
+	end)
+	
+	-- Start immediately if visible
+	if LoadingUI.Visible then
+		spinTween:Play()
+	end
+	
+	-- // END \\ --
+	
 	local SystemName = Instance.new("TextLabel");
 	SystemName.Name = "SystemName";
 	SystemName.AnchorPoint = Vector2.new(0, 0);
