@@ -1,3 +1,9 @@
+
+if game:GetService("RunService"):IsStudio() then
+	print("Studio")
+	return
+end
+
 -- ============================================================
 -- Bootloader Manager - Populates Info & Mode Selection
 -- ============================================================
@@ -32,6 +38,30 @@ end
 local SelectionList = bootloader:FindFirstChild("SelectionList")
 if not SelectionList then
 	warn("Bootloader: SelectionList not found")
+	return
+end
+
+local LoadingUI = bootloader:FindFirstChild("LoadingUI")
+if not LoadingUI then
+	warn("Bootloader: LoadingUI not found")
+	return
+end
+
+local ImageOS_2 = LoadingUI:FindFirstChild("ImageOS_2")
+if not ImageOS_2 then
+	warn("Bootloader: ImageOS_2 not found")
+	return
+end
+
+local LoadingCircle = LoadingUI:FindFirstChild("LoadingCircle")
+if not LoadingCircle then
+	warn("Bootloader: LoadingCircle not found")
+	return
+end
+
+local MessageLabel = LoadingUI:FindFirstChild("MessageLabel")
+if not MessageLabel then
+	warn("Bootloader: MessageLabel not found")
 	return
 end
 
@@ -81,30 +111,45 @@ end
 
 -- ---- Build info text (as a table of lines) ----
 local function getFriendCount(userId)
-	local success, page = pcall(function()
+	if not userId then return 0 end
+
+	local success, friendsPage = pcall(function()
 		return Players:GetFriendsAsync(userId)
 	end)
 
-	if not success then 
-		return "Error retrieving" 
+	if not success or not friendsPage then
+		warn("Failed to get friends for user:", userId)
+		return 0
 	end
 
 	local onlineCount = 0
 
-	repeat
-		for _, friend in ipairs(page:GetCurrentPage()) do
+	-- Loop through all pages
+	while true do
+		local currentPage = friendsPage:GetCurrentPage()
+		if not currentPage or #currentPage == 0 then
+			break
+		end
+
+		for _, friend in ipairs(currentPage) do
 			if friend.IsOnline then
 				onlineCount = onlineCount + 1
 			end
 		end
 
-		if not page.IsFinished then
-			local advanceSuccess = pcall(function()
-				page:AdvanceToNextPageAsync()
-			end)
-			if not advanceSuccess then break end
+		if friendsPage.IsFinished then
+			break
 		end
-	until page.IsFinished
+
+		local advanceSuccess = pcall(function()
+			friendsPage:AdvanceToNextPageAsync()
+		end)
+
+		if not advanceSuccess then
+			warn("Failed to advance friends page for user:", userId)
+			break
+		end
+	end
 
 	return onlineCount
 end
@@ -166,7 +211,7 @@ populateInfoLabels()
 -- ---- Mode options (LayoutOrder is determined by table order) ----
 local modeOptions = {
 	{ label = "Boot as [Mobile Mode]",              mode = "Mobile" },
-	{ label = "Boot as [Desktop Mode]",             mode = "Desktop" },
+	--{ label = "Boot as [Desktop Mode]",             mode = "Desktop" },
 	--{ label = "Boot as [Desktop + Safe Mode] With Command Prompt [Beta]", mode = "__safeModeDesktop" },
 }
 
@@ -199,6 +244,9 @@ local function getZolinModeEvent()
 	return ZolinModeEvent
 end
 
+if LoadingUI then
+	LoadingUI.Visible = false; -- hide loading screen
+end
 for order, option in ipairs(modeOptions) do
 	local btn = buttonTemplate:Clone()
 	btn.Name = "ModeButton_" .. option.mode
@@ -217,9 +265,6 @@ for order, option in ipairs(modeOptions) do
 		else
 			warn("[Bootloader] ZolinModeEvent not found")
 		end
-
-		-- Hide the bootloader UI
-		bootloader.Visible = false
 	end)
 end
 
