@@ -5,7 +5,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 	local l__TweenService__5 = game:GetService("TweenService");
 	local UIS = game:GetService("UserInputService");
 	local u6 = game:GetService("RunService")
-	local BuildVersion = "3.23.9.1"
+	local BuildVersion = "3.23.9.2"
 	local versionLabel = "v"..BuildVersion;
 	local SettingsScript = {
 		DisplayLogs = true,
@@ -1034,7 +1034,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 						addBegToTorso(torsoPart);
 					end
 					if parts[1].Parent then
-						addCharactersMesh(parts[1].Parent);
+						addCharactersMesh(torsoPart.Parent);
 						--addHumanoidToModel(parts[1].Parent);
 					else
 						print("Character model not found or invalid")
