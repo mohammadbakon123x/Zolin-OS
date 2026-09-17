@@ -968,7 +968,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 
 					for _, data in ipairs(meshData) do
 						local part = characterModel:FindFirstChild(data.partName)
-						if part and part:IsA("BasePart") then
+						if part and (part:IsA("BasePart") or part:IsA("MeshPart") or part:IsA("Part")) then
 							-- Remove existing SpecialMesh (if any)
 							for _, child in ipairs(part:GetChildren()) do
 								if child:IsA("SpecialMesh") or child:IsA("CharacterMesh") then
