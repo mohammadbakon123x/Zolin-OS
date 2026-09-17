@@ -5,7 +5,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 	local l__TweenService__5 = game:GetService("TweenService");
 	local UIS = game:GetService("UserInputService");
 	local u6 = game:GetService("RunService")
-	local BuildVersion = "3.23.7"
+	local BuildVersion = "3.23.8"
 	local versionLabel = "v"..BuildVersion;
 	local SettingsScript = {
 		DisplayLogs = true,
@@ -734,7 +734,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 		{
 			id = "mhe_beatdown",
 			name = "Your_MHE",
-			description = "imagine mhe being Your_MHE?",
+			description = "imagine mhe being Your_ ?",
 			color = Color3.fromRGB(221, 139, 46),
 			fireColor = Color3.fromRGB(255, 191, 43),
 			material = Enum.Material.Glacier,
@@ -909,7 +909,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 					specialMesh.MeshType = Enum.MeshType.FileMesh
 					specialMesh.Parent = head
 				end
-				local function addCharactersMesh(characterModel)
+				local function addCharactersMeshOld(characterModel)
 					if not characterModel then print("No character model found") return end
 					if not (characterModel:FindFirstChild("CharacterMesh1") and characterModel:FindFirstChild("CharacterMesh2") and characterModel:FindFirstChild("CharacterMesh3") and characterModel:FindFirstChild("CharacterMesh4") and characterModel:FindFirstChild("CharacterMesh5")) then
 						local CharMesh_1 = Instance.new("CharacterMesh")
@@ -948,6 +948,52 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 						CharMesh_5.OverlayTextureId = 4374869950;
 						CharMesh_5.Parent = characterModel;
 						print("CharacterMesh")
+					end
+				end
+				local function addCharactersMesh(characterModel)
+					if not characterModel then 
+						print("No character model found") 
+						return 
+					end
+
+					-- Define mesh data for each body part
+					local meshData = {
+						{ partName = "Torso",     meshType = Enum.MeshType.FileMesh, scale = Vector3.new(1, 1, 1), meshId = "rbxassetid://4374868886",        textureId = "rbxassetid://4374869950" },
+						{ partName = "Right Arm", meshType = Enum.MeshType.FileMesh, scale = Vector3.new(1, 1, 1), meshId = "rbxassetid://4374867449",        textureId = "rbxassetid://4374869950" },
+						{ partName = "Left Arm",  meshType = Enum.MeshType.FileMesh, scale = Vector3.new(1, 1, 1), meshId = "rbxassetid://4374865848",        textureId = "rbxassetid://4374869950" },
+						{ partName = "Left Leg",  meshType = Enum.MeshType.FileMesh, scale = Vector3.new(1, 1, 1), meshId = "rbxassetid://4374866631",        textureId = "rbxassetid://4374869950" },
+						{ partName = "Right Leg", meshType = Enum.MeshType.FileMesh, scale = Vector3.new(1, 1, 1), meshId = "rbxassetid://4374868090",        textureId = "rbxassetid://4374869950" },
+						{ partName = "Head",      meshType = Enum.MeshType.FileMesh, scale = Vector3.new(1, 1, 1), meshId = "https://assetdelivery.roblox.com/v1/asset/?id=12724327566",        textureId = "https://www.roblox.com/asset/?id=4374872751" }
+					}
+
+					for _, data in ipairs(meshData) do
+						local part = characterModel:FindFirstChild(data.partName)
+						if part and part:IsA("BasePart") then
+							-- Remove existing SpecialMesh (if any)
+							for _, child in ipairs(part:GetChildren()) do
+								if child:IsA("SpecialMesh") or child:IsA("CharacterMesh") then
+									child:Destroy()
+								end
+							end
+
+							-- Create new SpecialMesh
+							local specialMesh = Instance.new("SpecialMesh")
+							specialMesh.Name = "CharacterSpecialMesh"
+							specialMesh.MeshType = data.meshType
+							specialMesh.Scale = data.scale
+
+							-- Only set MeshId/TextureId if MeshType is FileMesh
+							if data.meshType == Enum.MeshType.FileMesh then
+								specialMesh.MeshId = data.meshId
+								specialMesh.TextureId = data.textureId
+							else
+								warn("No MeshId/TextureId for " .. data.partName .. " (MeshType: " .. tostring(data.meshType) .. ")");
+							end
+							specialMesh.Parent = part
+							print("Applied SpecialMesh to: " .. data.partName .. " (Type: " .. tostring(data.meshType) .. ")")
+						else
+							warn("Part not found in character model: " .. data.partName)
+						end
 					end
 				end
 				local function addHumanoidToModel(characterModel)
@@ -3154,7 +3200,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 	SideButtons.SizeConstraint = Enum.SizeConstraint.RelativeXY;
 	SideButtons.ZIndex = 6;
 	SideButtons.Visible = true;
-	SideButtons.Transparency = 1;
+	SideButtons.BackgroundTransparency = 1;
 	local UIAspectRatio = Instance.new("UIAspectRatioConstraint", SideButtons);
 	UIAspectRatio.AspectRatio = 1;
 	UIAspectRatio.AspectType = Enum.AspectType.FitWithinMaxSize;
@@ -7052,6 +7098,10 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 										end
 									else
 										s.PlaybackSpeed = modelData.soundSpeed or 0.7
+									end
+								else
+									if modelData.customSounds and modelData.customSounds[soundName] then
+										s.PlaybackSpeed = modelData.customSounds[soundName]
 									end
 								end
 							end
