@@ -5,7 +5,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 	local l__TweenService__5 = game:GetService("TweenService");
 	local UIS = game:GetService("UserInputService");
 	local u6 = game:GetService("RunService")
-	local BuildVersion = "3.23.9.2"
+	local BuildVersion = "3.23.9.3"
 	local versionLabel = "v"..BuildVersion;
 	local SettingsScript = {
 		DisplayLogs = true,
@@ -955,16 +955,8 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 				end
 				local function addCharactersMesh(characterModel)
 					if not characterModel then 
-						warn("No character model found") 
+						warn("No character model found")
 						return 
-					end
-
-					-- Debug: print what we're working with
-					print("=== characterModel type:", typeof(characterModel), "class:", characterModel.ClassName)
-					print("=== characterModel name:", characterModel.Name)
-					print("=== children:")
-					for _, child in ipairs(characterModel:GetChildren()) do
-						print("   -", child.Name, "(", child.ClassName, ")")
 					end
 
 					-- R6 body parts
@@ -977,32 +969,68 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 						{ partName = "Head",      meshId = "rbxassetid://12724327566", textureId = "rbxassetid://4374872751" },
 					}
 
+					-- Helper: apply SpecialMesh to a single part
+					local function applyMeshToPart(part, data)
+						-- Remove existing SpecialMesh
+						for _, child in ipairs(part:GetChildren()) do
+							if child:IsA("SpecialMesh") then
+								child:Destroy()
+							end
+						end
+
+						local specialMesh = Instance.new("SpecialMesh")
+						specialMesh.Name = "CharacterSpecialMesh"
+						specialMesh.MeshType = Enum.MeshType.FileMesh
+						specialMesh.MeshId = data.meshId
+						specialMesh.TextureId = data.textureId
+						specialMesh.Scale = Vector3.new(1, 1, 1)
+						specialMesh.Parent = part
+
+						print("Applied SpecialMesh to:", data.partName)
+					end
+
+					-- Track which parts have been processed
+					local processed = {}
+
+					-- Apply to any parts already present
 					for _, data in ipairs(meshData) do
 						local part = characterModel:FindFirstChild(data.partName)
-						if part then
-							print("Found:", data.partName, "-> class:", part.ClassName)
+						if part and part:IsA("BasePart") then
+							applyMeshToPart(part, data)
+							processed[data.partName] = true
+						end
+					end
 
-							-- Remove existing SpecialMesh / CharacterMesh
-							for _, child in ipairs(part:GetChildren()) do
-								if child:IsA("SpecialMesh") or child:IsA("CharacterMesh") then
-									child:Destroy()
+					-- Watch for missing parts to appear (up to 10 seconds)
+					local startTime = tick()
+					local timeout = 10
+
+					task.spawn(function()
+						while tick() - startTime < timeout do
+							-- Stop if model is gone
+							if not characterModel or not characterModel.Parent then return end
+
+							local allDone = true
+							for _, data in ipairs(meshData) do
+								if not processed[data.partName] then
+									allDone = false
+									local part = characterModel:FindFirstChild(data.partName)
+									if part and part:IsA("BasePart") then
+										applyMeshToPart(part, data)
+										processed[data.partName] = true
+									end
 								end
 							end
 
-							-- Create new SpecialMesh
-							local specialMesh = Instance.new("SpecialMesh")
-							specialMesh.Name = "CharacterSpecialMesh"
-							specialMesh.MeshType = Enum.MeshType.FileMesh
-							specialMesh.MeshId = data.meshId
-							specialMesh.TextureId = data.textureId
-							specialMesh.Scale = Vector3.new(1, 1, 1)
-							specialMesh.Parent = part
+							if allDone then
+								print("addCharactersMesh: all parts processed on", characterModel.Name)
+								return
+							end
 
-							print("Applied SpecialMesh to:", data.partName)
-						else
-							warn("NOT found:", data.partName)
+							task.wait(0.05)  -- check every 50ms
 						end
-					end
+						warn("addCharactersMesh: timed out waiting for parts on", characterModel.Name)
+					end)
 				end
 				local function addHumanoidToModel(characterModel)
 					if not characterModel then print("No character model found") return end
