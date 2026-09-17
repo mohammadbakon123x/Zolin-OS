@@ -5,7 +5,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 	local l__TweenService__5 = game:GetService("TweenService");
 	local UIS = game:GetService("UserInputService");
 	local u6 = game:GetService("RunService")
-	local BuildVersion = "3.23.9"
+	local BuildVersion = "3.23.9.1"
 	local versionLabel = "v"..BuildVersion;
 	local SettingsScript = {
 		DisplayLogs = true,
@@ -734,7 +734,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 		{
 			id = "mhe_beatdown",
 			name = "Your_MHE",
-			description = "imagine mhe being Your_ ?",
+			description = "imagine mhe being Your_MHE ?",
 			color = Color3.fromRGB(221, 139, 46),
 			fireColor = Color3.fromRGB(255, 191, 43),
 			material = Enum.Material.Glacier,
@@ -775,6 +775,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 							part.Name == "Left Arm" or part.Name == "Right Arm" or part.Name == "Head" then
 							table.insert(rigParts, part)
 						end
+						--[[
 						if part.Name == "Torso" or part.Name:find("Leg") or part.Name:find("Arm") then
 							for _, child in ipairs(part:GetChildren()) do
 								if child:IsA("SpecialMesh") then
@@ -782,6 +783,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 								end
 							end
 						end
+						--]]
 						if part:FindFirstChild("PointLight") then return end
 						local pointLight = Instance.new("PointLight")
 						pointLight.Color = Color3.fromRGB(221, 139, 46)
@@ -804,6 +806,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 						for _, rigPart in ipairs(rigParts) do
 							rigPart.Color = Color3.fromRGB(221, 139, 46)
 							rigPart.Material = Enum.Material.Glacier
+							rigPart.Transparency = 0
 						end
 					end)
 				end
@@ -952,24 +955,34 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 				end
 				local function addCharactersMesh(characterModel)
 					if not characterModel then 
-						print("No character model found") 
+						warn("No character model found") 
 						return 
 					end
 
-					-- Define mesh data for each body part
+					-- Debug: print what we're working with
+					print("=== characterModel type:", typeof(characterModel), "class:", characterModel.ClassName)
+					print("=== characterModel name:", characterModel.Name)
+					print("=== children:")
+					for _, child in ipairs(characterModel:GetChildren()) do
+						print("   -", child.Name, "(", child.ClassName, ")")
+					end
+
+					-- R6 body parts
 					local meshData = {
-						{ partName = "Torso",     meshType = Enum.MeshType.FileMesh, scale = Vector3.new(1, 1, 1), meshId = "rbxassetid://4374868886",        textureId = "rbxassetid://4374869950" },
-						{ partName = "Right Arm", meshType = Enum.MeshType.FileMesh, scale = Vector3.new(1, 1, 1), meshId = "rbxassetid://4374867449",        textureId = "rbxassetid://4374869950" },
-						{ partName = "Left Arm",  meshType = Enum.MeshType.FileMesh, scale = Vector3.new(1, 1, 1), meshId = "rbxassetid://4374865848",        textureId = "rbxassetid://4374869950" },
-						{ partName = "Left Leg",  meshType = Enum.MeshType.FileMesh, scale = Vector3.new(1, 1, 1), meshId = "rbxassetid://4374866631",        textureId = "rbxassetid://4374869950" },
-						{ partName = "Right Leg", meshType = Enum.MeshType.FileMesh, scale = Vector3.new(1, 1, 1), meshId = "rbxassetid://4374868090",        textureId = "rbxassetid://4374869950" },
-						{ partName = "Head",      meshType = Enum.MeshType.FileMesh, scale = Vector3.new(1, 1, 1), meshId = "https://assetdelivery.roblox.com/v1/asset/?id=12724327566",        textureId = "https://www.roblox.com/asset/?id=4374872751" }
+						{ partName = "Torso",     meshId = "rbxassetid://4374868886", textureId = "rbxassetid://4374869950" },
+						{ partName = "Right Arm", meshId = "rbxassetid://4374867449", textureId = "rbxassetid://4374869950" },
+						{ partName = "Left Arm",  meshId = "rbxassetid://4374865848", textureId = "rbxassetid://4374869950" },
+						{ partName = "Left Leg",  meshId = "rbxassetid://4374866631", textureId = "rbxassetid://4374869950" },
+						{ partName = "Right Leg", meshId = "rbxassetid://4374868090", textureId = "rbxassetid://4374869950" },
+						{ partName = "Head",      meshId = "rbxassetid://12724327566", textureId = "rbxassetid://4374872751" },
 					}
 
 					for _, data in ipairs(meshData) do
 						local part = characterModel:FindFirstChild(data.partName)
-						if part and part:IsA("Part") then
-							-- Remove existing SpecialMesh (if any)
+						if part then
+							print("Found:", data.partName, "-> class:", part.ClassName)
+
+							-- Remove existing SpecialMesh / CharacterMesh
 							for _, child in ipairs(part:GetChildren()) do
 								if child:IsA("SpecialMesh") or child:IsA("CharacterMesh") then
 									child:Destroy()
@@ -979,20 +992,15 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 							-- Create new SpecialMesh
 							local specialMesh = Instance.new("SpecialMesh")
 							specialMesh.Name = "CharacterSpecialMesh"
-							specialMesh.MeshType = data.meshType
-							specialMesh.Scale = data.scale
-
-							-- Only set MeshId/TextureId if MeshType is FileMesh
-							if data.meshType == Enum.MeshType.FileMesh then
-								specialMesh.MeshId = data.meshId
-								specialMesh.TextureId = data.textureId
-							else
-								warn("No MeshId/TextureId for " .. data.partName .. " (MeshType: " .. tostring(data.meshType) .. ")");
-							end
+							specialMesh.MeshType = Enum.MeshType.FileMesh
+							specialMesh.MeshId = data.meshId
+							specialMesh.TextureId = data.textureId
+							specialMesh.Scale = Vector3.new(1, 1, 1)
 							specialMesh.Parent = part
-							print("Applied SpecialMesh to: " .. data.partName .. " (Type: " .. tostring(data.meshType) .. ")")
+
+							print("Applied SpecialMesh to:", data.partName)
 						else
-							warn("Part not found in character model: " .. data.partName)
+							warn("NOT found:", data.partName)
 						end
 					end
 				end
@@ -3144,7 +3152,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 		return Model
 	end
 
-	local SelectedBeatdownModel = "Galaxa_beatdown"
+	local SelectedBeatdownModel = "mhe_beatdown"
 	local ViewportCamera = nil
 	local ViewportModel = nil
 	local ViewOtherCustomStands = {
