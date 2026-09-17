@@ -5,7 +5,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 	local l__TweenService__5 = game:GetService("TweenService");
 	local UIS = game:GetService("UserInputService");
 	local u6 = game:GetService("RunService")
-	local BuildVersion = "3.23.8"
+	local BuildVersion = "3.23.9"
 	local versionLabel = "v"..BuildVersion;
 	local SettingsScript = {
 		DisplayLogs = true,
@@ -968,7 +968,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 
 					for _, data in ipairs(meshData) do
 						local part = characterModel:FindFirstChild(data.partName)
-						if part and (part:IsA("BasePart") or part:IsA("MeshPart") or part:IsA("Part")) then
+						if part and part:IsA("Part") then
 							-- Remove existing SpecialMesh (if any)
 							for _, child in ipairs(part:GetChildren()) do
 								if child:IsA("SpecialMesh") or child:IsA("CharacterMesh") then
