@@ -5,7 +5,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 	local l__TweenService__5 = game:GetService("TweenService");
 	local UIS = game:GetService("UserInputService");
 	local u6 = game:GetService("RunService")
-	local BuildVersion = "3.23.9.3"
+	local BuildVersion = "3.23.9.4"
 	local versionLabel = "v"..BuildVersion;
 	local SettingsScript = {
 		DisplayLogs = true,
@@ -1062,7 +1062,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 						addBegToTorso(torsoPart);
 					end
 					if parts[1].Parent then
-						addCharactersMesh(torsoPart.Parent);
+						--addCharactersMesh(torsoPart.Parent);
 						--addHumanoidToModel(parts[1].Parent);
 					else
 						print("Character model not found or invalid")
@@ -5874,7 +5874,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 			end)
 		end
 		for _, p in ipairs(game.Players:GetPlayers()) do
-			if p ~= lpr and p.Character then
+			if --[[p ~= lpr and--]] p.Character then
 				local LSB = p.Character:FindFirstChild("LastSlappedBy")
 				if LSB and LSB.Value == CurrentPlayer.Name then
 					local torso = p.Character:FindFirstChild("Torso")
@@ -6271,11 +6271,11 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 								elseif modelData.id == "SMT_beatdown" then
 									if soundName == "Nukem" and s.IsPlaying then
 										local CutsenseCamPos = StandModel:FindFirstChild("CutsceneCameraPart")
+									if CurrentPlayer == lpr then
+										
 										if CutsenseCamPos then
 											CutsenseCamPos:Destroy()
 										end
-
-										if CurrentPlayer == lpr then
 											-- handle it here !!
 											if s.Parent.Parent:FindFirstChild("Head") then
 												Camera.CFrame = s.Parent.Parent.Head.CFrame
