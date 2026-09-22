@@ -1,6 +1,6 @@
 local v1 = {};
 local TweenService = game:GetService("TweenService");
-v1.ver = "1.6.1" -- versionOS
+v1.ver = "1.7.0" -- versionOS
 
 -- ============================================
 -- HELPER FUNCTIONS
@@ -1107,9 +1107,9 @@ local function createChunk10()
 	updateZolinLauncher.Name = "updateZolinLauncher"
 	updateZolinLauncher.Parent = Remotes
 
-	local contactDirHWupdateEvent = Instance.new("BindableEvent")
-	contactDirHWupdateEvent.Name = "contactDirHWupdateEvent"
-	contactDirHWupdateEvent.Parent = Remotes
+	local SettingsNavigateEvent = Instance.new("BindableEvent")
+	SettingsNavigateEvent.Name = "SettingsNavigateEvent"
+	SettingsNavigateEvent.Parent = Remotes
 
 	local ContextMenuEvent = Instance.new("BindableEvent")
 	ContextMenuEvent.Name = "ContextMenuEvent"
@@ -1716,7 +1716,7 @@ local function createChunk15()
 
 	local Version_TranslationApp = Instance.new("StringValue")
 	Version_TranslationApp.Name = "Version"
-	Version_TranslationApp.Value = "3.21.8"
+	Version_TranslationApp.Value = "3.23.9.4"
 	Version_TranslationApp.Parent = Data_TranslationApp
 
 	createUICorner(TranslationApp, "UICorner_Translation", UDim.new(0, 10))
