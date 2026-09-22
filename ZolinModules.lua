@@ -3,6 +3,7 @@ local ZolinModules = {}
 ZolinModules.Mode = ""  --| Mobile | default - | Desktop | beta
 
 --Global Variables | Both platforms
+ZolinModules.ZolinStarted = false;
 ZolinModules.SafeMode = false
 ZolinModules.CurrentUptime = nil
 ZolinModules.CurrentTime = nil
@@ -14,11 +15,21 @@ ZolinModules.AppLaunchType = {
 	["TaskManager"] = "ZolinModules"
 }
 
+ZolinModules.VISIBLE_SYSTEM_APPS = {
+	Settings = true,
+	ZolinInstaller = true,
+	-- Add more system apps here to make them visible	
+}
+
 ZolinModules.AppUrls = {
 	["Library Stands"] = "https://raw.githubusercontent.com/mohammadbakon123x/Zolin-OS/refs/heads/main/TranslationApp.lua",
 }
 
 ZolinModules.ZolinVersion = nil
+
+local appManagerOverlay = nil
+ZolinModules.openAppInfo = nil
+
 
 local openBuiltInModules = {}
 local RunningAppsThreads = {}  -- appName -> thread
@@ -82,6 +93,509 @@ local function getMainUI()
 		return screenGui
 	end
 	return nil
+end
+
+-- ============================================
+-- MOBILE APP CONTEXT MENU (long-press)
+-- ============================================
+
+-- Tracks when the context menu was opened for each app,
+-- so we can suppress the normal tap-to-launch event.
+ZolinModules._mobileContextOpened = {}  -- appName -> tick()
+
+-- Standard option → label + icon map (extend as needed)
+ZolinModules.ContextOptionLabels = {
+	AppInfo           = "ℹ️  App Info",
+	CompatibilityMode = "🔄  Compatibility Mode",
+	Uninstall         = "🗑  Uninstall",
+	Disable           = "⏸  Disable",
+	ForceStop         = "⏹  Force Stop",
+	OpenInSettings    = "⚙️  Open in Settings",
+}
+
+ZolinModules.ContextHandlers = {}
+
+-- ============================================
+-- Ensure the AppData/<AppName>/ContextMenu folder exists
+-- ============================================
+local function getOrCreateContextFolder(appName)
+	local MainUI = getMainUI()
+	if not MainUI then return nil end
+	local appDataFolder = MainUI:FindFirstChild("AppData")
+	if not appDataFolder then return nil end
+	local appFolder = appDataFolder:FindFirstChild(appName)
+	if not appFolder then return nil end
+
+	local ctx = appFolder:FindFirstChild("ContextMenu")
+	if not ctx then
+		ctx = Instance.new("Folder")
+		ctx.Name = "ContextMenu"
+		ctx.Parent = appFolder
+	end
+	return ctx
+end
+
+-- ============================================
+-- Read enabled context options for an app
+-- ============================================
+function ZolinModules.GetAppContextOptions(appName)
+	local MainUI = getMainUI()
+	if not MainUI then return {} end
+
+	local appDataFolder = MainUI:FindFirstChild("AppData")
+	local appFolder = appDataFolder and appDataFolder:FindFirstChild(appName)
+	if not appFolder then return {} end
+
+	local ctx = appFolder:FindFirstChild("ContextMenu")
+	if not ctx then return { "AppInfo" } end
+
+	local enabled = {}
+	for _, child in ipairs(ctx:GetChildren()) do
+		if child:IsA("BoolValue") and child.Value == true and child.Name ~= "AppInfo" then
+			table.insert(enabled, child.Name)
+		end
+	end
+	table.sort(enabled)
+	table.insert(enabled, "AppInfo")  -- always last
+	return enabled
+end
+
+-- ============================================
+-- DESKTOP APP CONTEXT MENU (right-click)
+-- ============================================
+function ZolinModules.ShowDesktopAppContextMenu(appName, position)
+	if ZolinModules.Mode ~= "Desktop" then return end
+
+	-- Get the ContextMenuManager singleton
+	local ContextMenuManager
+	if ZolinModules._contextMenuManagerInstance then
+		ContextMenuManager = ZolinModules._contextMenuManagerInstance
+	else
+		-- Ensure it's initialized
+		local mgr = ZolinModules.ContextMenuManager()
+		mgr.Init()
+		ContextMenuManager = mgr
+	end
+
+	local options = ZolinModules.GetAppContextOptions(appName)
+	if #options == 0 then return end
+
+	-- Build the items table for ContextMenuManager
+	local items = {}
+	for _, optName in ipairs(options) do
+		local label = ZolinModules.ContextOptionLabels[optName] or ("•  " .. optName)
+
+		table.insert(items, {
+			label = label,
+			callback = function()
+				local handler = ZolinModules.ContextHandlers[optName]
+				if handler then
+					local ok, err = pcall(handler, appName)
+					if not ok then
+						warn("[DesktopContextMenu] Handler error for", optName, ":", err)
+					end
+				else
+					warn("[DesktopContextMenu] No handler for option:", optName)
+				end
+			end,
+		})
+
+		-- Add a separator before AppInfo (it's the last item)
+		if optName == "AppInfo" and #options > 1 then
+			-- Remove the last item, insert separator, then reinsert
+			local lastItem = table.remove(items)
+			table.insert(items, { isSeparator = true })
+			table.insert(items, lastItem)
+		end
+	end
+
+	ContextMenuManager.Show(position, items)
+end
+
+-- Helper: ensure Settings app is running and expose its openers
+local function ensureSettingsLoaded()
+	local modules = ZolinModules.GetAll()
+	local AppManager = modules.AppManager
+	if not AppManager then return false end
+
+	if AppManager.GetApplication and AppManager.GetApplication("Settings") then
+		AppManager.ResumeApplication("Settings")
+	else
+		AppManager.LaunchApplication("Settings")
+	end
+
+	-- Wait briefly for Init() to expose the openers
+	local waited = 0
+	while not (ZolinModules.openAppInfo and ZolinModules.openCompatibilityMode) and waited < 3 do
+		task.wait(0.05)
+		waited = waited + 0.05
+	end
+
+	return ZolinModules.openAppInfo ~= nil
+end
+
+ZolinModules.ContextHandlers.AppInfo = function(appName)
+	if not ensureSettingsLoaded() then
+		warn("[MobileContextMenu] Settings not ready for AppInfo")
+		return
+	end
+	ZolinModules.openAppInfo(appName)
+end
+
+ZolinModules.ContextHandlers.CompatibilityMode = function(appName)
+	-- Read the loadstring URL for this app
+	local MainUI = getMainUI()
+	local __Zolin = MainUI and MainUI:FindFirstChild("__Zolin")
+	local appsFolder = __Zolin and __Zolin:FindFirstChild("__AppsLaunchArgFolder")
+	local entry = appsFolder and appsFolder:FindFirstChild(appName)
+	local appUrl = entry and entry.Value or ""
+
+	-- Fallback 1: ZolinModules.AppUrls registry
+	if appUrl == "" or not appUrl:match("^https?://") then
+		local fallback = ZolinModules.AppUrls and ZolinModules.AppUrls[appName]
+		if fallback and fallback:match("^https?://") then
+			appUrl = fallback
+		end
+	end
+
+	-- Final check
+	if appUrl == "" or not appUrl:match("^https?://") then
+		warn("[ContextMenu] CompatibilityMode unavailable for:", appName)
+		return
+	end
+
+	if not ensureSettingsLoaded() then
+		warn("[ContextMenu] Settings not ready for CompatibilityMode")
+		return
+	end
+
+	ZolinModules.openCompatibilityMode(appName, appUrl)
+end
+
+ZolinModules.ContextHandlers.Uninstall = function(appName)
+	local MainUI = getMainUI()
+	local modules = ZolinModules.GetAll()
+	local AppManager = modules.AppManager
+
+	-- Remove from all registries
+	pcall(function() AppManager.CloseApp(appName, true) end)
+
+	local __Zolin = MainUI:FindFirstChild("__Zolin")
+	local appsFolder = __Zolin and __Zolin:FindFirstChild("__AppsLaunchArgFolder")
+	local entry = appsFolder and appsFolder:FindFirstChild(appName)
+	if entry then entry:Destroy() end
+
+	local rw = MainUI:FindFirstChild("ReplicatedWindow")
+	if rw then local f = rw:FindFirstChild(appName); if f then f:Destroy() end end
+	local rws = MainUI:FindFirstChild("ReplicatedWindow_Sys")
+	if rws then local f = rws:FindFirstChild(appName); if f then f:Destroy() end end
+
+	local appDataFolder = MainUI:FindFirstChild("AppData")
+	if appDataFolder then local f = appDataFolder:FindFirstChild(appName); if f then f:Destroy() end end
+
+	local remotes = __Zolin and __Zolin:FindFirstChild("Remotes")
+	local refreshEvent = remotes and remotes:FindFirstChild("updateZolinLauncher")
+	if refreshEvent then refreshEvent:Fire() end
+
+	modules.NotificationManager.ShowNotification({
+		title = "Uninstalled",
+		description = appName .. " has been uninstalled."
+	})
+end
+
+ZolinModules.ContextHandlers.Disable = function(appName)
+	local MainUI = getMainUI()
+	local appDataFolder = MainUI:FindFirstChild("AppData")
+	local appFolder = appDataFolder and appDataFolder:FindFirstChild(appName)
+	if not appFolder then return end
+
+	local flag = appFolder:FindFirstChild("Disabled")
+	if not flag then
+		flag = Instance.new("BoolValue")
+		flag.Name = "Disabled"
+		flag.Parent = appFolder
+	end
+	flag.Value = not flag.Value
+
+	local __Zolin = MainUI:FindFirstChild("__Zolin")
+	local remotes = __Zolin and __Zolin:FindFirstChild("Remotes")
+	local refreshEvent = remotes and remotes:FindFirstChild("updateZolinLauncher")
+	if refreshEvent then refreshEvent:Fire() end
+end
+
+ZolinModules.ContextHandlers.ForceStop = function(appName)
+	local modules = ZolinModules.GetAll()
+	local AppManager = modules.AppManager
+	AppManager.CloseApp(appName, true)
+
+	if RunningAppsThreads and RunningAppsThreads[appName] then
+		task.cancel(RunningAppsThreads[appName])
+		RunningAppsThreads[appName] = nil
+	end
+
+	modules.NotificationManager.ShowNotification({
+		title = "Force Stopped",
+		description = appName .. " has been force stopped."
+	})
+end
+
+ZolinModules.ContextHandlers.OpenInSettings = function(appName)
+	if ensureSettingsLoaded() then
+		ZolinModules.NavigateTo("AppInfo", { appName = appName })
+	end
+end
+
+-- ============================================
+-- Build + show the menu
+-- ============================================
+function ZolinModules.ShowMobileAppContextMenu(appName, anchorIcon)
+	local MainUI = getMainUI()
+	if not MainUI then return end
+	local __ScreenFrame = MainUI:FindFirstChild("__ScreenFrame")
+	if not __ScreenFrame then return end
+
+	-- Destroy any existing menu
+	local existing = __ScreenFrame:FindFirstChild("MobileAppContextMenu")
+	if existing then existing:Destroy() end
+
+	local options = ZolinModules.GetAppContextOptions(appName)
+
+	-- ---------- Overlay ----------
+	local overlay = Instance.new("TextButton")
+	overlay.Name = "MobileAppContextMenu"
+	overlay.Size = UDim2.new(1, 0, 1, 0)
+	overlay.Position = UDim2.new(0, 0, 0, 0)
+	overlay.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+	overlay.BackgroundTransparency = 1
+	overlay.BorderSizePixel = 0
+	overlay.Text = ""
+	overlay.AutoButtonColor = false
+	overlay.ZIndex = 5000
+	overlay.Parent = __ScreenFrame
+
+	-- ---------- Menu container ----------
+	local menu = Instance.new("Frame")
+	menu.Name = "MenuContainer"
+	menu.AnchorPoint = Vector2.new(0.5, 0.5)
+	menu.Position = UDim2.new(0.5, 0, 0.5, 0)
+	menu.Size = UDim2.new(0, 260, 0, #options * 46 + 20)
+	menu.BackgroundColor3 = Color3.fromRGB(28, 28, 38)
+	menu.BackgroundTransparency = 1
+	menu.BorderSizePixel = 0
+	menu.ZIndex = overlay.ZIndex + 1
+	menu.Parent = overlay
+
+	local menuCorner = Instance.new("UICorner")
+	menuCorner.CornerRadius = UDim.new(0, 14)
+	menuCorner.Parent = menu
+
+	local menuStroke = Instance.new("UIStroke")
+	menuStroke.Color = Color3.fromRGB(80, 80, 100)
+	menuStroke.Thickness = 1
+	menuStroke.Transparency = 1
+	menuStroke.Parent = menu
+
+	local scale = Instance.new("UIScale")
+	scale.Scale = 0.85
+	scale.Parent = menu
+
+	local padding = Instance.new("UIPadding")
+	padding.PaddingTop = UDim.new(0, 10)
+	padding.PaddingBottom = UDim.new(0, 10)
+	padding.PaddingLeft = UDim.new(0, 6)
+	padding.PaddingRight = UDim.new(0, 6)
+	padding.Parent = menu
+
+	local listLayout = Instance.new("UIListLayout")
+	listLayout.FillDirection = Enum.FillDirection.Vertical
+	listLayout.SortOrder = Enum.SortOrder.LayoutOrder
+	listLayout.Padding = UDim.new(0, 4)
+	listLayout.Parent = menu
+
+	-- ---------- Options ----------
+	for i, optName in ipairs(options) do
+		local label = ZolinModules.ContextOptionLabels[optName] or ("•  " .. optName)
+		local isBottom = (optName == "AppInfo")
+
+		local btn = Instance.new("TextButton")
+		btn.Size = UDim2.new(1, 0, 0, 42)
+		btn.BackgroundColor3 = isBottom and Color3.fromRGB(40, 50, 70) or Color3.fromRGB(38, 38, 50)
+		btn.BackgroundTransparency = 1
+		btn.BorderSizePixel = 0
+		btn.Text = label
+		btn.TextColor3 = Color3.new(1, 1, 1)
+		btn.Font = Enum.Font.Gotham
+		btn.TextSize = 15
+		btn.TextXAlignment = Enum.TextXAlignment.Left
+		btn.AutoButtonColor = false
+		btn.LayoutOrder = isBottom and 9999 or i
+		btn.ZIndex = menu.ZIndex + 1
+		btn.Parent = menu
+
+		local bp = Instance.new("UIPadding")
+		bp.PaddingLeft = UDim.new(0, 14)
+		bp.Parent = btn
+
+		local bc = Instance.new("UICorner")
+		bc.CornerRadius = UDim.new(0, 8)
+		bc.Parent = btn
+
+		-- Hover / press feedback
+		btn.MouseEnter:Connect(function()
+			btn.BackgroundColor3 = Color3.fromRGB(55, 55, 75)
+		end)
+		btn.MouseLeave:Connect(function()
+			btn.BackgroundColor3 = isBottom and Color3.fromRGB(40, 50, 70) or Color3.fromRGB(38, 38, 50)
+		end)
+
+		btn.MouseButton1Click:Connect(function()
+			-- Close the menu first
+			ZolinModules.CloseMobileAppContextMenu()
+			-- Run the handler
+			local handler = ZolinModules.ContextHandlers[optName]
+			if handler then
+				local ok, err = pcall(handler, appName)
+				if not ok then
+					warn("[MobileContextMenu] Handler error for", optName, ":", err)
+				end
+			else
+				warn("[MobileContextMenu] No handler for option:", optName)
+			end
+		end)
+	end
+
+	-- ---------- Close on outside tap ----------
+	overlay.MouseButton1Click:Connect(function()
+		ZolinModules.CloseMobileAppContextMenu()
+	end)
+
+	-- ---------- Open animation ----------
+	local TweenService = game:GetService("TweenService")
+	local menuChildren = menu:GetDescendants()
+
+	TweenService:Create(overlay, TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+		BackgroundTransparency = 0.55
+	}):Play()
+
+	TweenService:Create(menu, TweenInfo.new(0.28, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
+		BackgroundTransparency = 0.05
+	}):Play()
+
+	TweenService:Create(menuStroke, TweenInfo.new(0.28), {
+		Transparency = 0.4
+	}):Play()
+
+	TweenService:Create(scale, TweenInfo.new(0.32, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+		Scale = 1
+	}):Play()
+
+	-- Fade in the buttons
+	for _, child in ipairs(menuChildren) do
+		if child:IsA("TextButton") then
+			TweenService:Create(child, TweenInfo.new(0.25), {
+				BackgroundTransparency = 0,
+				TextTransparency = 0
+			}):Play()
+		end
+	end
+
+	-- Record the open timestamp (used to suppress tap-to-launch)
+	ZolinModules._mobileContextOpened[appName] = tick()
+end
+
+-- ============================================
+-- Close the menu (with fade-out animation)
+-- ============================================
+function ZolinModules.CloseMobileAppContextMenu()
+	local MainUI = getMainUI()
+	if not MainUI then return end
+	local __ScreenFrame = MainUI:FindFirstChild("__ScreenFrame")
+	if not __ScreenFrame then return end
+	local overlay = __ScreenFrame:FindFirstChild("MobileAppContextMenu")
+	if not overlay then return end
+
+	local TweenService = game:GetService("TweenService")
+	local menu = overlay:FindFirstChild("MenuContainer")
+	local scale = menu and menu:FindFirstChildOfClass("UIScale")
+
+	TweenService:Create(overlay, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
+		BackgroundTransparency = 1
+	}):Play()
+
+	if menu then
+		TweenService:Create(menu, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
+			BackgroundTransparency = 1
+		}):Play()
+		for _, child in ipairs(menu:GetDescendants()) do
+			if child:IsA("TextButton") then
+				TweenService:Create(child, TweenInfo.new(0.15), {
+					BackgroundTransparency = 1,
+					TextTransparency = 1
+				}):Play()
+			end
+		end
+	end
+
+	if scale then
+		local t = TweenService:Create(scale, TweenInfo.new(0.22, Enum.EasingStyle.Quart, Enum.EasingDirection.In), {
+			Scale = 0.85
+		})
+		t:Play()
+		t.Completed:Connect(function()
+			if overlay and overlay.Parent then overlay:Destroy() end
+		end)
+	else
+		task.delay(0.25, function()
+			if overlay and overlay.Parent then overlay:Destroy() end
+		end)
+	end
+end
+
+-- ============================================
+-- Long-press detector
+-- ============================================
+function ZolinModules.AttachMobileContextLongPress(icon, appName)
+	if ZolinModules.Mode ~= "Mobile" then return end
+
+	local UserInputService = game:GetService("UserInputService")
+	local HOLD_TIME = 0.5
+	local MOVE_THRESHOLD = 15   -- px, cancel hold if finger moves too far
+	local holdThread = nil
+	local holding = false
+	local startPos = nil
+
+	local function cancelHold()
+		if holdThread then
+			task.cancel(holdThread)
+			holdThread = nil
+		end
+		holding = false
+		startPos = nil
+	end
+
+	icon.InputBegan:Connect(function(input)
+		holding = true
+		startPos = input.Position
+		holdThread = task.delay(HOLD_TIME, function()
+			holdThread = nil
+			if holding then
+				holding = false
+				ZolinModules.ShowMobileAppContextMenu(appName, icon)
+			end
+		end)
+	end)
+
+	icon.InputChanged:Connect(function(input)
+		if holding and startPos then
+			if (input.Position - startPos).Magnitude > MOVE_THRESHOLD then
+				cancelHold()
+			end
+		end
+	end)
+
+	icon.InputEnded:Connect(function(input)
+			cancelHold()
+	end)
 end
 
 -- ============================================
@@ -160,7 +674,7 @@ function ZolinModules.AnimationManager()
 		end
 
 		if p0 == nil or p1 == nil then
-			return
+			return false
 		end
 
 		-- Get the target window
@@ -454,19 +968,68 @@ function ZolinModules.AppLoader()
 	local AppLoader = {}
 	local MainUI = getMainUI()
 	if not MainUI then
-		return AppLoader;
+		return AppLoader
 	end
 	local AppDataFolder = MainUI:FindFirstChild("AppData") or Instance.new("Folder", MainUI)
 	AppDataFolder.Name = "AppData"
 
 	local registeredApps = {}
 
+	-- Helper: returns true if the app is a ZolinModules built-in (not loadstring)
+	local function isZolinModulesApp(appName)
+		local launchType = ZolinModules.AppLaunchType and ZolinModules.AppLaunchType[appName]
+		if launchType == "ZolinModules" then return true end
+		if launchType == "loadstring" then return false end
+
+		-- Fallback: check the __AppsLaunchArgFolder for a loadstring URL
+		local __Zolin = MainUI:FindFirstChild("__Zolin")
+		local appsFolder = __Zolin and __Zolin:FindFirstChild("__AppsLaunchArgFolder")
+		local entry = appsFolder and appsFolder:FindFirstChild(appName)
+		if entry and entry:IsA("StringValue") and entry.Value:match("^https?://") then
+			return false
+		end
+
+		-- Default: treat unknown as ZolinModules (system-ish)
+		return true
+	end
+
+	-- Helper: ensures ContextMenu folder + default options exist for an app
+	local function ensureContextMenu(appFile, appName)
+		local ctxFolder = appFile:FindFirstChild("ContextMenu")
+		if not ctxFolder then
+			ctxFolder = Instance.new("Folder")
+			ctxFolder.Name = "ContextMenu"
+			ctxFolder.Parent = appFile
+		end
+
+		-- CompatibilityMode default:
+		--   true  → ZolinModules apps
+		--   false → loadstring apps
+		if not ctxFolder:FindFirstChild("CompatibilityMode") then
+			local cm = Instance.new("BoolValue")
+			cm.Name = "CompatibilityMode"
+			cm.Value = not isZolinModulesApp(appName)
+			cm.Parent = ctxFolder
+		end
+
+		-- AppInfo default: always true
+		if not ctxFolder:FindFirstChild("AppInfo") then
+			local ai = Instance.new("BoolValue")
+			ai.Name = "AppInfo"
+			ai.Value = true
+			ai.Parent = ctxFolder
+		end
+	end
+
 	function AppLoader.RegisterApp(appName, metadata)
 		registeredApps[appName] = metadata
 
 		local appFile = AppDataFolder:FindFirstChild(appName)
 		if not appFile then
-			if appName == "ExampleWindow" and appName == "ExampleWindowV2" then return false end
+			-- ✅ Fixed: was `and`, should be `or`
+			if appName == "ExampleWindow" or appName == "ExampleWindowV2" then
+				return false
+			end
 			appFile = Instance.new("Folder")
 			appFile.Name = appName
 			appFile.Parent = AppDataFolder
@@ -487,6 +1050,10 @@ function ZolinModules.AppLoader()
 			end
 			attr.Value = value
 		end
+
+		-- ✅ Ensure ContextMenu folder + defaults exist
+		ensureContextMenu(appFile, appName)
+
 		return true
 	end
 
@@ -566,7 +1133,7 @@ function ZolinModules.NotificationManager(dependencies)
 		NOTIFICATION_COOLDOWN = 0.5,
 		PANEL_TOP_THRESHOLD = 50,
 		PANEL_SWIPE_THRESHOLD = 80,
-		NOTIFICATION_DURATION = 4,
+		NOTIFICATION_DURATION = 3,
 		NOTIFICATION_SOUND_ID = "rbxassetid://131390520971848",
 		SWIPE_THRESHOLD = 100,
 		NOTIFICATION_HEIGHT = 80,
@@ -646,9 +1213,13 @@ function ZolinModules.NotificationManager(dependencies)
 		if MainUI and MainUI.NotificationsSoundUI then
 			sound.SoundGroup = MainUI.NotificationsSoundUI
 		end
+		if sound and sound.IsLoaded then
 		sound:Play()
 		sound.Ended:Connect(function() sound:Destroy() end)
 		task.delay(sound.TimeLength + 0.1, function() if sound and sound.Parent then sound:Destroy() end end)
+		else
+			warn("Sound failed to load or play.")
+		end
 	end
 
 	function NotificationManager.OpenPanel()
@@ -978,6 +1549,20 @@ function ZolinModules.AppManager(dependencies)
 	window._savedScale = nil
 	window._dragConnections = nil
 	
+	-- ============================================
+	-- SYSTEM APP OVERRIDES
+	-- Apps in this list are always treated as system apps,
+	-- regardless of which folder they live in.
+	-- ============================================
+	local FORCE_SYSTEM_APPS = {
+		Settings = true,
+	}
+
+	-- Optional: apps that should NEVER be system, even if inside ReplicatedWindow_Sys
+	local FORCE_USER_APPS = {
+		-- ExampleApp = true,
+	}
+	
 	local UserInputService = game:GetService("UserInputService")
 
 	local MainUI = getMainUI()
@@ -1035,10 +1620,22 @@ function ZolinModules.AppManager(dependencies)
 
 	function AppManager.GetActiveApp() return ActiveApp end
 	function AppManager.GetAppCount() return #RunningApps + #BackgroundApps end
-	function AppManager.IsSystemApp(appName) return systemApps[appName] == true end
+	function AppManager.IsSystemApp(appName) if ZolinModules.VISIBLE_SYSTEM_APPS and ZolinModules.VISIBLE_SYSTEM_APPS[appName] then return false end return systemApps[appName] == true end
+	function AppManager.IsRawSystemApp(appName) return systemApps[appName] == true end
 	function AppManager.RegisterSystemApp(appName) systemApps[appName] = true end
 
 	local function registerAllApps()
+		-- Helper: decide if an app is system based on folder + overrides
+		local function resolveIsSystem(appName, folderSaysSystem)
+			if FORCE_SYSTEM_APPS[appName] then
+				return true
+			end
+			if FORCE_USER_APPS[appName] then
+				return false
+			end
+			return folderSaysSystem
+		end
+
 		if ReplicatedWindow then
 			for _, child in ipairs(ReplicatedWindow:GetChildren()) do
 				if child:IsA("Frame") then
@@ -1047,31 +1644,47 @@ function ZolinModules.AppManager(dependencies)
 					local dataFolder = child:FindFirstChild("Data")
 					local descValue = dataFolder and dataFolder:FindFirstChild("Description")
 					local versionValue = dataFolder and dataFolder:FindFirstChild("Version")
+
+					local isSystem = resolveIsSystem(child.Name, false)
+
 					local metadata = {
 						name = child.Name,
 						icon = imageLabel and imageLabel.Image or "rbxassetid://12905435514",
 						description = descValue and descValue.Value or "",
 						version = versionValue and versionValue.Value or "1.0",
 						enabled = true,
-						isSystem = false
+						isSystem = isSystem,
 					}
 					AppLoader.RegisterApp(child.Name, metadata)
+
+					if isSystem then
+						AppManager.RegisterSystemApp(child.Name)
+					end
 				end
 			end
 		end
+
 		if ReplicatedWindowSys then
 			for _, child in ipairs(ReplicatedWindowSys:GetChildren()) do
 				if child:IsA("Frame") or child:IsA("Folder") then
+					local isSystem = resolveIsSystem(child.Name, true)
+
 					local metadata = {
 						name = child.Name,
 						icon = "rbxassetid://12905435514",
 						description = "System Application",
 						version = "1.0",
 						enabled = true,
-						isSystem = true
+						isSystem = isSystem,
 					}
 					AppLoader.RegisterApp(child.Name, metadata)
-					AppManager.RegisterSystemApp(child.Name)
+
+					if isSystem then
+						AppManager.RegisterSystemApp(child.Name)
+					else
+						-- If it was previously flagged, don't leave a stale flag
+						systemApps[child.Name] = nil
+					end
 				end
 			end
 		end
@@ -1554,14 +2167,15 @@ function ZolinModules.AppManager(dependencies)
 	end
 
 	function AppManager.HandleExit()
-			if ActiveApp then
-				if AppManager.IsSystemApp(ActiveApp) then
-					AppManager.CloseApp(ActiveApp)
-				else 
-					AppManager.ExitApplication(ActiveApp) 
-				end
+		if ActiveApp then
+			local isSystem = AppManager.IsSystemApp(ActiveApp)
+			if isSystem then
+				AppManager.CloseApp(ActiveApp)
+			else
+				AppManager.ExitApplication(ActiveApp)
 			end
 		end
+	end
 
 	function AppManager.CloseApp(p3)
 		local app = nil
@@ -1674,14 +2288,14 @@ function ZolinModules.AppManager(dependencies)
 	function AppManager.ExitApplication(p4)
 		local app = nil
 		if ZolinModules.Mode == "Mobile" then
-		app = MainUI.__ScreenFrame.Applications:FindFirstChild(p4)
+			app = MainUI.__ScreenFrame.Applications:FindFirstChild(p4)
 		elseif ZolinModules.Mode == "Desktop" then
 			app = MainUI.__ZolinDesktop.__ScreenFrame.Applications:FindFirstChild(p4)
 		end
 		if app then
 			local isSystem = AppManager.IsSystemApp(p4)
-
-			-- System apps should NOT be backgrounded - close them instead
+			-- ✅ Only close system apps that are NOT whitelisted.
+			-- Whitelisted system apps (Settings, etc.) can be backgrounded like normal apps.
 			if isSystem then
 				AppManager.CloseApp(p4)
 				return
@@ -2142,6 +2756,17 @@ function ZolinModules.AppManager(dependencies)
 	registerAllApps()
 	return AppManager
 end
+
+-- ============================================
+-- APP MANAGER (Apps section)
+-- ============================================
+function ZolinModules.closeAppManager()
+	if appManagerOverlay then
+		appManagerOverlay:Destroy()
+		appManagerOverlay = nil
+	end
+end
+
 
 -- ============================================
 -- TASKBAR MANAGER (Desktop only)
@@ -3964,6 +4589,22 @@ function ZolinModules.ZolinLauncher()
 		warn("ZolinLauncher: Could not find ScreenGui")
 		return
 	end
+	
+	-- ============================================
+	-- SYSTEM APPS VISIBLE ON HOME SCREEN
+	-- (Even though they're system apps, show them)
+	-- ============================================
+
+
+	-- Helper: should this app be shown on home screen?
+	local function shouldShowApp(appName, isSystem)
+		if not isSystem then return true end
+		return ZolinModules.VISIBLE_SYSTEM_APPS[appName] == true
+	end
+
+	-- Store which built-in modules are currently open/running
+	local openBuiltInModules = {}
+	
 	if ZolinModules.Mode == "Mobile" then
 	local __ScreenFrame = MainUI:FindFirstChild("__ScreenFrame")
 	if not __ScreenFrame then
@@ -3979,15 +4620,6 @@ function ZolinModules.ZolinLauncher()
 	local AppManager = modules.AppManager
 	local AppLoader = modules.AppLoader
 
-	-- Store built-in modules that can be launched (AppName -> ModuleFunction)
-	local builtInModules = {
-		Settings = modules.SettingsApp,
-		ZolinInstaller = modules.ZolinInstaller
-	}
-
-	-- Store which built-in modules are currently open/running
-	local openBuiltInModules = {}
-
 	local function populateHomeScreen()
 		if not AppLoader then
 			warn("AppLoader not available")
@@ -4001,6 +4633,12 @@ function ZolinModules.ZolinLauncher()
 			return
 		end
 
+			-- Store built-in modules that can be launched (AppName -> ModuleFunction)
+			local builtInModules = {
+				Settings = modules.SettingsApp,
+				ZolinInstaller = modules.ZolinInstaller
+			}
+
 		-- Clear existing icons
 		for _, child in ipairs(HomeScreenScroller:GetChildren()) do
 			if child ~= appIconTemplate and child:IsA("ImageButton") then
@@ -4010,7 +4648,9 @@ function ZolinModules.ZolinLauncher()
 
 		local apps = AppLoader.GetAllApps()
 		for _, appData in ipairs(apps) do
-			if AppManager and AppManager.IsSystemApp and AppManager.IsSystemApp(appData.name) then
+			local isSystem = AppManager and AppManager.IsSystemApp and AppManager.IsSystemApp(appData.name)
+			if not shouldShowApp(appData.name, isSystem) then
+				print("Skipping system app:", appData.name)
 				-- Skip system apps
 			else
 				if not appIconTemplate then
@@ -4033,7 +4673,25 @@ function ZolinModules.ZolinLauncher()
 					label.Text = appData.name
 				end
 
+					local appDataFolder = MainUI:FindFirstChild("AppData")
+					local appFolder = appDataFolder and appDataFolder:FindFirstChild(appData.name)
+					local disabledFlag = appFolder and appFolder:FindFirstChild("Disabled")
+					if disabledFlag and disabledFlag.Value == true then
+						icon.ImageTransparency = 0.6
+						icon.BackgroundTransparency = 0.4
+						if label then label.TextTransparency = 0.5 end
+					end
+
 				icon.MouseButton1Click:Connect(function()
+						-- Suppress if context menu was just opened by long-press
+						local openedAt = ZolinModules._mobileContextOpened[appData.name]
+						if openedAt and tick() - openedAt < 0.4 then
+							return
+						end
+					if disabledFlag and disabledFlag.Value == true then
+						-- Optional: show notification "App is disabled"
+						return
+					end
 					if MainUI.__ScreenFrame.BackgroundPage.Visible then
 						return
 					end
@@ -4072,6 +4730,8 @@ function ZolinModules.ZolinLauncher()
 						end
 					end
 				end)
+					-- ----- Right‑click: open context menu -----
+				ZolinModules.AttachMobileContextLongPress(icon, appData.name)
 			end
 		end
 	end
@@ -4112,12 +4772,11 @@ function ZolinModules.ZolinLauncher()
 		end
 		local AppRightClick = Remotes:FindFirstChild("ContextMenuEvent")
 
-		-- Store built‑in modules
+		-- Store built-in modules that can be launched (AppName -> ModuleFunction)
 		local builtInModules = {
 			Settings = modules.SettingsApp,
 			ZolinInstaller = modules.ZolinInstaller
 		}
-		local openBuiltInModules = {}
 
 		local function populateHomeScreen()
 			if not AppLoader then
@@ -4139,7 +4798,8 @@ function ZolinModules.ZolinLauncher()
 
 			local apps = AppLoader.GetAllApps()
 			for _, appData in ipairs(apps) do
-				if AppManager and AppManager.IsSystemApp and AppManager.IsSystemApp(appData.name) then
+				local isSystem = AppManager and AppManager.IsSystemApp and AppManager.IsSystemApp(appData.name)
+				if not shouldShowApp(appData.name, isSystem) then
 					-- Skip system apps
 				else
 					if not appIconTemplate then
@@ -4161,7 +4821,16 @@ function ZolinModules.ZolinLauncher()
 					if label and label:IsA("TextLabel") then
 						label.Text = appData.name
 					end
-
+					
+					local appDataFolder = MainUI:FindFirstChild("AppData")
+					local appFolder = appDataFolder and appDataFolder:FindFirstChild(appData.name)
+					local disabledFlag = appFolder and appFolder:FindFirstChild("Disabled")
+					if disabledFlag and disabledFlag.Value == true then
+						icon.ImageTransparency = 0.6
+						icon.BackgroundTransparency = 0.4
+						if label then label.TextTransparency = 0.5 end
+					end
+					
 					-- ----- Double‑click detection -----
 					local lastClickTime = 0
 					local doubleClickThreshold = 0.3  -- seconds
@@ -4170,6 +4839,10 @@ function ZolinModules.ZolinLauncher()
 						local now = tick()
 						if now - lastClickTime <= doubleClickThreshold then
 							-- Double‑click: launch or resume the app
+							if disabledFlag and disabledFlag.Value == true then
+								-- Optional: show notification "App is disabled"
+								return
+							end
 							if AppManager then
 								local builtInModule = builtInModules[appData.name]
 								if builtInModule then
@@ -4240,17 +4913,17 @@ function ZolinModules.ZolinListener()
 	local moreOptionsVolStyleEvent = Remotes:FindFirstChild("moreOptionsVolStyle")
 	local CloseAllAppsEvent = Remotes:FindFirstChild("CloseAllApps")
 	local updateZolinLauncherEvent = Remotes:FindFirstChild("updateZolinLauncher")
-	local contactDirHWupdateEvent = Remotes:FindFirstChild("contactDirHWupdateEvent")
 	local SendNotificationEvent = Remotes:FindFirstChild("SendNotificationEvent")
 	local ZolinModeEvent = Remotes:FindFirstChild("ZolinModeEvent");
+	local navEvent = Remotes:FindFirstChild("SettingsNavigateEvent")
 	local modules = ZolinModules.GetAll()
 	local AppManager = modules.AppManager
 	local VolumeStyleOptions = modules.VolumeStyleOptions
-	local DirectHW = modules.DirectHW
-	
 	if ZolinModeEvent then
 		-- startup system
 		ZolinModeEvent.Event:Connect(function(p1, p2)
+			if not ZolinModules.ZolinStarted then
+				ZolinModules.ZolinStarted = true
 			print("[Initiator] Received mode:", p2)
 			
 			ZolinModules.Mode = p2
@@ -4260,9 +4933,13 @@ function ZolinModules.ZolinListener()
 
 			-- Initialize the OS
 			ZolinModules.Init();
+			else
+				print("[Initiator] Ignoring Signals, because ZolinOS is already running.")
+			end
 		end)
 		print("ZolinListener: ZolinModeEvent connected")
 	end
+	if ZolinModules.ZolinStarted then
 	if moreOptionsVolStyleEvent then
 		moreOptionsVolStyleEvent.Event:Connect(function(p1, p2)
 			if p1 == "Toggle" then
@@ -4306,76 +4983,17 @@ function ZolinModules.ZolinListener()
 		print("ZolinListener: SendNotificationEvent connected")
 	end
 	
-	-- ===== contactDirHWupdateEvent =====
-	if contactDirHWupdateEvent and DirectHW then
-		contactDirHWupdateEvent.Event:Connect(function(...)
-			local args = {...}
-			local eventType = args[1]
-
-			if eventType == "ViewportCreated" then
-				local appName = args[2]
-				local viewportData = args[3]
-				print("[DirectHW Event] Viewport created for:", appName)
-
-			elseif eventType == "ViewportDestroyed" then
-				local appName = args[2]
-				print("[DirectHW Event] Viewport destroyed for:", appName)
-
-			elseif eventType == "ModelLoaded" then
-				local appName = args[2]
-				local assetId = args[3]
-				print("[DirectHW Event] Model loaded in", appName, ":", assetId)
-
-			elseif eventType == "CameraUpdated" then
-				local appName = args[2]
-				local cframe = args[3]
-				local fov = args[4]
-				print("[DirectHW Event] Camera updated for:", appName)
-
-			elseif eventType == "RequestViewportInfo" then
-				-- App is asking for list of active viewports
-				local activeViewports = DirectHW.GetActiveViewports()
-				local viewportNames = {}
-				for _, vp in ipairs(activeViewports) do
-					table.insert(viewportNames, vp.appName)
-				end
-				-- Fire back with the info
-				contactDirHWupdateEvent:Fire("ViewportInfoResponse", viewportNames)
-
-			elseif eventType == "SyncAllCameras" then
-				-- Example: sync all cameras to a specific position
-				local targetCFrame = args[2]
-				if targetCFrame then
-					for _, vp in ipairs(DirectHW.GetActiveViewports()) do
-						DirectHW.SetCamera(vp, targetCFrame)
-					end
-				end
-
-			elseif eventType == "PauseAllAnimations" then
-				-- Example: pause all viewport animations
-				for _, vp in ipairs(DirectHW.GetActiveViewports()) do
-					for _, conn in ipairs(vp.animations) do
-						-- We don't have a pause method, but we could add one
-						-- For now, just disconnect them
-						conn:Disconnect()
-					end
-					vp.animations = {}
-				end
-
-			elseif eventType == "DestroyAllViewports" then
-				-- Emergency: destroy all viewports
-				local allViewports = DirectHW.GetActiveViewports()
-				for i = #allViewports, 1, -1 do
-					DirectHW.Destroy(allViewports[i])
-				end
-				print("[DirectHW Event] All viewports destroyed")
-
-			else
-				-- Custom event – forward it if needed
-				print("[DirectHW Event] Custom event:", eventType, unpack(args, 2))
+	if navEvent then
+		navEvent.Event:Connect(function(section, data)
+			if section == "AppInfo" then
+			 	ZolinModules.closeAppManager()
+				ZolinModules.openAppInfo(data.appName)
+			elseif section == "AppsList" then
+				ZolinModules.openAppManager()
 			end
 		end)
-		print("ZolinListener: contactDirHWupdateEvent connected")
+	end
+	
 	end
 	print("ZolinListener: Ready!")
 end
@@ -4681,11 +5299,29 @@ function ZolinModules.ContextMenuManager()
 					ContextMenuManager.Show(mousePos, items)
 				elseif source == "app" then
 					local items = {
-						{ label = "Open", callback = function()
+						{ label = "📂 Open", callback = function()
 							local modules = ZolinModules.GetAll_Desktop()
 							if modules.AppManager then
 								modules.AppManager.LaunchApplication(appName)
 							end
+						end },
+						{ label = "ℹ️ App Info", callback = function()
+							-- Redirect to Settings → App Info
+							local modules = ZolinModules.GetAll_Desktop()
+							if modules.AppManager then
+								modules.AppManager.LaunchApplication("Settings")
+							end
+							task.wait(0.3)
+							ZolinModules.NavigateTo("AppInfo", { appName = appName })
+						end },
+						{ isSeparator = true },
+						{ label = "⚙️ Open in Settings", callback = function()
+							local modules = ZolinModules.GetAll_Desktop()
+							if modules.AppManager then
+								modules.AppManager.LaunchApplication("Settings")
+							end
+							task.wait(0.3)
+							ZolinModules.NavigateTo("AppsList", {})
 						end },
 					}
 					local mousePos = game:GetService("UserInputService"):GetMouseLocation()
@@ -4718,6 +5354,30 @@ function ZolinModules.ContextMenuManager()
 
 	ZolinModules._contextMenuManagerInstance = ContextMenuManager
 	return ContextMenuManager
+end
+
+-- ============================================
+-- GLOBAL NAVIGATION (for cross-app redirects)
+-- ============================================
+function ZolinModules.NavigateTo(section, data)
+	local MainUI = getMainUI()
+	if not MainUI then return end
+	local __Zolin = MainUI:FindFirstChild("__Zolin")
+	if not __Zolin then return end
+	local Remotes = __Zolin:FindFirstChild("Remotes")
+	if not Remotes then
+		Remotes = Instance.new("Folder")
+		Remotes.Name = "Remotes"
+		Remotes.Parent = __Zolin
+	end
+	local evt = Remotes:FindFirstChild("SettingsNavigateEvent")
+	if not evt then
+		evt = Instance.new("BindableEvent")
+		evt.Name = "SettingsNavigateEvent"
+		evt.Parent = Remotes
+	end
+	evt:Fire(section, data or {})
+	print("[NavigateTo] →", section, data)
 end
 
 -- ============================================
@@ -5054,6 +5714,853 @@ function ZolinModules.SettingsApp()
 				end
 			end)
 		end
+		
+		function ZolinModules.openAppManager()
+			if appManagerOverlay then return end
+
+			local MainUI = getMainUI()
+			local AppLoader = modules.AppLoader
+			local apps = AppLoader.GetAllApps()
+
+			-- Full-screen overlay inside the Settings UI
+			local overlay = Instance.new("Frame")
+			overlay.Name = "AppManagerOverlay"
+			overlay.AnchorPoint = ui.AnchorPoint
+			overlay.Size = ui.Size
+			overlay.Position = ui.Position
+			overlay.BackgroundColor3 = Color3.fromRGB(15, 15, 22)
+			overlay.BackgroundTransparency = 0
+			overlay.ZIndex = ui.ZIndex + 50
+			overlay.Parent = ui.Parent
+
+			local header = Instance.new("Frame")
+			header.Size = UDim2.new(1, 0, 0, 50)
+			header.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
+			header.BorderSizePixel = 0
+			header.ZIndex = overlay.ZIndex + 1
+			header.Parent = overlay
+
+			local backBtn = Instance.new("TextButton")
+			backBtn.Size = UDim2.new(0, 40, 0, 40)
+			backBtn.Position = UDim2.new(0, 5, 0, 5)
+			backBtn.BackgroundColor3 = Color3.fromRGB(50, 50, 60)
+			backBtn.Text = "←"
+			backBtn.TextColor3 = Color3.new(1, 1, 1)
+			backBtn.Font = Enum.Font.GothamBold
+			backBtn.TextSize = 20
+			backBtn.ZIndex = overlay.ZIndex + 2
+			backBtn.Parent = header
+			local backCorner = Instance.new("UICorner")
+			backCorner.CornerRadius = UDim.new(0, 6)
+			backCorner.Parent = backBtn
+			backBtn.MouseButton1Click:Connect(ZolinModules.closeAppManager)
+
+			local title = Instance.new("TextLabel")
+			title.Size = UDim2.new(1, -60, 1, 0)
+			title.Position = UDim2.new(0, 55, 0, 0)
+			title.BackgroundTransparency = 1
+			title.Text = "Manage Applications"
+			title.TextColor3 = Color3.new(1, 1, 1)
+			title.Font = Enum.Font.GothamBold
+			title.TextSize = 20
+			title.TextXAlignment = Enum.TextXAlignment.Left
+			title.ZIndex = overlay.ZIndex + 1
+			title.Parent = header
+
+			local scroll = Instance.new("ScrollingFrame")
+			scroll.Size = UDim2.new(1, -20, 1, -70)
+			scroll.Position = UDim2.new(0, 10, 0, 60)
+			scroll.BackgroundTransparency = 1
+			scroll.CanvasSize = UDim2.new(0, 0, 0, 0)
+			scroll.AutomaticCanvasSize = Enum.AutomaticSize.Y
+			scroll.ScrollBarThickness = 6
+			scroll.ZIndex = overlay.ZIndex + 1
+			scroll.Parent = overlay
+
+			local listLayout = Instance.new("UIListLayout")
+			listLayout.Padding = UDim.new(0, 6)
+			listLayout.SortOrder = Enum.SortOrder.LayoutOrder
+			listLayout.Parent = scroll
+
+			for i, appData in ipairs(apps) do
+				local isSystem = modules.AppManager.IsSystemApp(appData.name)
+				local appRow = Instance.new("TextButton")
+				appRow.Size = UDim2.new(1, 0, 0, 60)
+				appRow.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
+				appRow.BorderSizePixel = 0
+				appRow.Text = ""
+				appRow.LayoutOrder = i
+				appRow.ZIndex = overlay.ZIndex + 1
+				appRow.Parent = scroll
+				local rowCorner = Instance.new("UICorner")
+				rowCorner.CornerRadius = UDim.new(0, 8)
+				rowCorner.Parent = appRow
+
+				local icon = Instance.new("ImageLabel")
+				icon.Size = UDim2.new(0, 40, 0, 40)
+				icon.Position = UDim2.new(0, 10, 0.5, -20)
+				icon.BackgroundTransparency = 1
+				icon.Image = appData.metadata.icon or "rbxassetid://12905435514"
+				icon.ScaleType = Enum.ScaleType.Fit
+				icon.ZIndex = overlay.ZIndex + 2
+				icon.Parent = appRow
+
+				local nameLbl = Instance.new("TextLabel")
+				nameLbl.Size = UDim2.new(0.6, -60, 1, 0)
+				nameLbl.Position = UDim2.new(0, 60, 0, 0)
+				nameLbl.BackgroundTransparency = 1
+				nameLbl.Text = appData.name
+				nameLbl.TextColor3 = Color3.new(1, 1, 1)
+				nameLbl.Font = Enum.Font.GothamBold
+				nameLbl.TextSize = 16
+				nameLbl.TextXAlignment = Enum.TextXAlignment.Left
+				nameLbl.ZIndex = overlay.ZIndex + 2
+				nameLbl.Parent = appRow
+
+				local typeLbl = Instance.new("TextLabel")
+				typeLbl.Size = UDim2.new(0.4, -70, 1, 0)
+				typeLbl.Position = UDim2.new(0.6, 0, 0, 0)
+				typeLbl.BackgroundTransparency = 1
+				typeLbl.Text = isSystem and "System App" or "User App"
+				typeLbl.TextColor3 = isSystem and Color3.fromRGB(200, 150, 100) or Color3.fromRGB(100, 200, 150)
+				typeLbl.Font = Enum.Font.Gotham
+				typeLbl.TextSize = 12
+				typeLbl.TextXAlignment = Enum.TextXAlignment.Right
+				typeLbl.ZIndex = overlay.ZIndex + 2
+				typeLbl.Parent = appRow
+
+				appRow.MouseButton1Click:Connect(function()
+					ZolinModules.closeAppManager()
+					ZolinModules.openAppInfo(appData.name)
+				end)
+			end
+
+			appManagerOverlay = overlay
+		end
+		
+		-- ============================================
+		-- APP INFO VIEW
+		-- ============================================
+		local function isAppDisabled(appName)
+			local MainUI = getMainUI()
+			local AppData = MainUI:FindFirstChild("AppData")
+			if not AppData then return false end
+			local folder = AppData:FindFirstChild(appName)
+			if not folder then return false end
+			local flag = folder:FindFirstChild("Disabled")
+			return flag and flag.Value == true
+		end
+
+		local function setAppDisabled(appName, disabled)
+			local MainUI = getMainUI()
+			local AppData = MainUI:FindFirstChild("AppData")
+			if not AppData then return end
+			local folder = AppData:FindFirstChild(appName)
+			if not folder then return end
+			local flag = folder:FindFirstChild("Disabled")
+			if not flag then
+				flag = Instance.new("BoolValue")
+				flag.Name = "Disabled"
+				flag.Parent = folder
+			end
+			flag.Value = disabled
+			-- Refresh launcher
+			local remotes = MainUI.__Zolin and MainUI.__Zolin:FindFirstChild("Remotes")
+			local refreshEvent = remotes and remotes:FindFirstChild("updateZolinLauncher")
+			if refreshEvent then refreshEvent:Fire() end
+		end
+
+		local appInfoOverlay = nil
+		local function closeAppInfo()
+			if appInfoOverlay then
+				appInfoOverlay:Destroy()
+				appInfoOverlay = nil
+			end
+		end
+
+		ZolinModules.openAppInfo = function(appName)
+			if appInfoOverlay then return end
+			local MainUI = getMainUI()
+			local AppLoader = modules.AppLoader
+			local meta = AppLoader.GetAppMetadata(appName)
+			if not meta then
+				warn("App metadata not found:", appName)
+				return
+			end
+
+			local isSystem = AppManager.IsRawSystemApp(appName)
+
+			local overlay = Instance.new("Frame")
+			overlay.AnchorPoint = ui.AnchorPoint
+			overlay.Size = ui.Size
+			overlay.Position = ui.Position
+			overlay.BackgroundColor3 = Color3.fromRGB(15, 15, 22)
+			overlay.BorderSizePixel = 0
+			overlay.ZIndex = ui.ZIndex + 60
+			overlay.Parent = ui.Parent
+
+			-- Header
+			local header = Instance.new("Frame")
+			header.Size = UDim2.new(1, 0, 0, 50)
+			header.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
+			header.BorderSizePixel = 0
+			header.ZIndex = overlay.ZIndex + 1
+			header.Parent = overlay
+
+			local backBtn = Instance.new("TextButton")
+			backBtn.Size = UDim2.new(0, 40, 0, 40)
+			backBtn.Position = UDim2.new(0, 5, 0, 5)
+			backBtn.BackgroundColor3 = Color3.fromRGB(50, 50, 60)
+			backBtn.Text = "←"
+			backBtn.TextColor3 = Color3.new(1, 1, 1)
+			backBtn.Font = Enum.Font.GothamBold
+			backBtn.TextSize = 20
+			backBtn.ZIndex = overlay.ZIndex + 2
+			backBtn.Parent = header
+			
+			local bc = Instance.new("UICorner"); bc.CornerRadius = UDim.new(0, 6); bc.Parent = backBtn
+			backBtn.MouseButton1Click:Connect(function()
+				closeAppInfo()
+				ZolinModules.openAppManager()
+			end)
+
+			local title = Instance.new("TextLabel")
+			title.Size = UDim2.new(1, -60, 1, 0)
+			title.Position = UDim2.new(0, 55, 0, 0)
+			title.BackgroundTransparency = 1
+			title.Text = "App Info"
+			title.TextColor3 = Color3.new(1, 1, 1)
+			title.Font = Enum.Font.GothamBold
+			title.TextSize = 20
+			title.TextXAlignment = Enum.TextXAlignment.Left
+			title.ZIndex = overlay.ZIndex + 1
+			title.Parent = header
+
+			-- Body
+			local body = Instance.new("Frame")
+			body.Size = UDim2.new(1, -40, 1, -70)
+			body.Position = UDim2.new(0, 20, 0, 60)
+			body.BackgroundTransparency = 1
+			body.ZIndex = overlay.ZIndex + 1
+			body.Parent = overlay
+
+			local icon = Instance.new("ImageLabel")
+			icon.Size = UDim2.new(0, 100, 0, 100)
+			icon.Position = UDim2.new(0, 0, 0, 0)
+			icon.BackgroundColor3 = Color3.fromRGB(40, 40, 50)
+			icon.Image = meta.icon or "rbxassetid://12905435514"
+			icon.ScaleType = Enum.ScaleType.Fit
+			icon.ZIndex = overlay.ZIndex + 2
+			icon.Parent = body
+			local ic = Instance.new("UICorner"); ic.CornerRadius = UDim.new(0, 12); ic.Parent = icon
+
+			local nameLbl = Instance.new("TextLabel")
+			nameLbl.Size = UDim2.new(1, -120, 0, 30)
+			nameLbl.Position = UDim2.new(0, 120, 0, 5)
+			nameLbl.BackgroundTransparency = 1
+			nameLbl.Text = appName
+			nameLbl.TextColor3 = Color3.new(1, 1, 1)
+			nameLbl.Font = Enum.Font.GothamBold
+			nameLbl.TextSize = 24
+			nameLbl.TextXAlignment = Enum.TextXAlignment.Left
+			nameLbl.ZIndex = overlay.ZIndex + 2
+			nameLbl.Parent = body
+
+			local verLbl = Instance.new("TextLabel")
+			verLbl.Size = UDim2.new(1, -120, 0, 20)
+			verLbl.Position = UDim2.new(0, 120, 0, 38)
+			verLbl.BackgroundTransparency = 1
+			verLbl.Text = "Version " .. (meta.version or "1.0")
+			verLbl.TextColor3 = Color3.fromRGB(180, 180, 180)
+			verLbl.Font = Enum.Font.Gotham
+			verLbl.TextSize = 14
+			verLbl.TextXAlignment = Enum.TextXAlignment.Left
+			verLbl.ZIndex = overlay.ZIndex + 2
+			verLbl.Parent = body
+
+			local typeLbl = Instance.new("TextLabel")
+			typeLbl.Size = UDim2.new(1, -120, 0, 20)
+			typeLbl.Position = UDim2.new(0, 120, 0, 58)
+			typeLbl.BackgroundTransparency = 1
+			typeLbl.Text = isSystem and "System Application" or "User Application"
+			typeLbl.TextColor3 = isSystem and Color3.fromRGB(200, 150, 100) or Color3.fromRGB(100, 200, 150)
+			typeLbl.Font = Enum.Font.Gotham
+			typeLbl.TextSize = 14
+			typeLbl.TextXAlignment = Enum.TextXAlignment.Left
+			typeLbl.ZIndex = overlay.ZIndex + 2
+			typeLbl.Parent = body
+
+			local descLbl = Instance.new("TextLabel")
+			descLbl.Size = UDim2.new(1, 0, 0, 60)
+			descLbl.Position = UDim2.new(0, 0, 0, 110)
+			descLbl.BackgroundTransparency = 1
+			descLbl.Text = meta.description or "No description."
+			descLbl.TextColor3 = Color3.fromRGB(200, 200, 200)
+			descLbl.Font = Enum.Font.Gotham
+			descLbl.TextSize = 14
+			descLbl.TextWrapped = true
+			descLbl.TextXAlignment = Enum.TextXAlignment.Left
+			descLbl.TextYAlignment = Enum.TextYAlignment.Top
+			descLbl.ZIndex = overlay.ZIndex + 2
+			descLbl.Parent = body
+
+			-- Get app URL to know if it's loadstring
+			local __Zolin = MainUI:FindFirstChild("__Zolin")
+			local appsFolder = __Zolin and __Zolin:FindFirstChild("__AppsLaunchArgFolder")
+			local appEntry = appsFolder and appsFolder:FindFirstChild(appName)
+			local appUrl = appEntry and appEntry.Value or ""
+			local isLoadstring = appUrl ~= "" and appUrl:match("^https?://") ~= nil
+
+			-- Button row
+			local btnY = 190
+			local btnRow = Instance.new("Frame")
+			btnRow.Size = UDim2.new(1, 0, 0, 50)
+			btnRow.Position = UDim2.new(0, 0, 0, btnY)
+			btnRow.BackgroundTransparency = 1
+			btnRow.ZIndex = overlay.ZIndex + 2
+			btnRow.Parent = body
+
+			local btnLayout = Instance.new("UIListLayout")
+			btnLayout.FillDirection = Enum.FillDirection.Horizontal
+			btnLayout.Padding = UDim.new(0, 10)
+			btnLayout.SortOrder = Enum.SortOrder.LayoutOrder
+			btnLayout.Parent = btnRow
+
+			local function makeBtn(text, color, callback, z)
+				local b = Instance.new("TextButton")
+				b.Size = UDim2.new(0, 150, 1, 0)
+				b.BackgroundColor3 = color
+				b.Text = text
+				b.TextColor3 = Color3.new(1, 1, 1)
+				b.Font = Enum.Font.GothamBold
+				b.TextSize = 14
+				b.LayoutOrder = z or 1
+				b.ZIndex = overlay.ZIndex + 3
+				b.Parent = btnRow
+				local c = Instance.new("UICorner"); c.CornerRadius = UDim.new(0, 8); c.Parent = b
+				b.MouseButton1Click:Connect(callback)
+				return b
+			end
+			
+			-- ---- Protected system apps (cannot be force-stopped) ----
+			local PROTECTED_APPS = {
+				Settings = true,
+			}
+			-- ---- Check if app is currently running ----
+			local appIsRunning = false
+			do
+				local rApps = AppManager.GetRunningApps and AppManager.GetRunningApps() or {}
+				local bApps = AppManager.GetBackgroundApps and AppManager.GetBackgroundApps() or {}
+				for _, n in ipairs(rApps) do
+					if n == appName then appIsRunning = true break end
+				end
+				if not appIsRunning then
+					for _, n in ipairs(bApps) do
+						if n == appName then appIsRunning = true break end
+					end
+				end
+			end
+
+			-- ---- Determine if Force Stop should be available ----
+			local isProtected = isSystem and PROTECTED_APPS[appName]
+			local canForceStop = appIsRunning and not isProtected
+
+			-- ---- Force Stop button ----
+			local forceStopBtn = makeBtn(
+				"⏹ Force Stop",
+				canForceStop and Color3.fromRGB(180, 60, 60) or Color3.fromRGB(70, 70, 80),
+				function()
+					if not canForceStop then return end  -- safety: no-op when disabled
+
+					-- Confirm popup
+					local confirm = Instance.new("Frame")
+					confirm.Size = UDim2.new(0, 300, 0, 150)
+					confirm.Position = UDim2.new(0.5, -150, 0.5, -75)
+					confirm.BackgroundColor3 = Color3.fromRGB(25, 25, 35)
+					confirm.BorderSizePixel = 0
+					confirm.ZIndex = overlay.ZIndex + 100
+					confirm.Parent = overlay
+					local cc = Instance.new("UICorner"); cc.CornerRadius = UDim.new(0, 12); cc.Parent = confirm
+
+					local q = Instance.new("TextLabel")
+					q.Size = UDim2.new(1, -20, 0, 60)
+					q.Position = UDim2.new(0, 10, 0, 15)
+					q.BackgroundTransparency = 1
+					q.Text = "Force stop " .. appName .. "?\nAny unsaved data will be lost."
+					q.TextColor3 = Color3.new(1, 1, 1)
+					q.Font = Enum.Font.Gotham
+					q.TextSize = 14
+					q.TextWrapped = true
+					q.ZIndex = confirm.ZIndex + 1
+					q.Parent = confirm
+
+					local yes = Instance.new("TextButton")
+					yes.Size = UDim2.new(0, 120, 0, 35)
+					yes.Position = UDim2.new(0, 20, 1, -50)
+					yes.BackgroundColor3 = Color3.fromRGB(180, 60, 60)
+					yes.Text = "Force Stop"
+					yes.TextColor3 = Color3.new(1, 1, 1)
+					yes.Font = Enum.Font.GothamBold
+					yes.TextSize = 14
+					yes.ZIndex = confirm.ZIndex + 1
+					yes.Parent = confirm
+					local yc = Instance.new("UICorner"); yc.CornerRadius = UDim.new(0, 6); yc.Parent = yes
+
+					local no = Instance.new("TextButton")
+					no.Size = UDim2.new(0, 120, 0, 35)
+					no.Position = UDim2.new(1, -140, 1, -50)
+					no.BackgroundColor3 = Color3.fromRGB(60, 60, 70)
+					no.Text = "Cancel"
+					no.TextColor3 = Color3.new(1, 1, 1)
+					no.Font = Enum.Font.GothamBold
+					no.TextSize = 14
+					no.ZIndex = confirm.ZIndex + 1
+					no.Parent = confirm
+					local nc = Instance.new("UICorner"); nc.CornerRadius = UDim.new(0, 6); nc.Parent = no
+
+					no.MouseButton1Click:Connect(function() confirm:Destroy() end)
+					yes.MouseButton1Click:Connect(function()
+						confirm:Destroy()
+						AppManager.CloseApp(appName)
+						if RunningAppsThreads and RunningAppsThreads[appName] then
+							task.cancel(RunningAppsThreads[appName])
+							RunningAppsThreads[appName] = nil
+						end
+						modules.NotificationManager.ShowNotification({
+							title = "Force Stopped",
+							description = appName .. " has been force stopped."
+						})
+						closeAppInfo()
+					end)
+				end,
+				1
+			)
+
+			-- ---- Gray out visuals + clarify state ----
+			if not canForceStop then
+				forceStopBtn.TextColor3 = Color3.fromRGB(140, 140, 140)
+				forceStopBtn.AutoButtonColor = false
+				if isProtected then
+					forceStopBtn.Text = "⏹ Force Stop"
+				else
+					forceStopBtn.Text = "⏹ Force Stop"
+				end
+			end
+
+			-- Disable/Enable (user apps only)
+			if not isSystem and not isProtected then
+				local disabled = isAppDisabled(appName)
+				makeBtn(disabled and "▶ Enable" or "⏸ Disable", Color3.fromRGB(120, 100, 60), function()
+					setAppDisabled(appName, not disabled)
+					closeAppInfo()
+					ZolinModules.openAppInfo(appName) -- refresh
+				end, 2)
+			end
+
+			-- Uninstall (user apps only + loadstring only)
+			if not isSystem then
+				local canUninstall = isLoadstring   -- only loadstring apps can be uninstalled
+
+				local uninstallBtn = makeBtn(
+					"🗑 Uninstall",
+					canUninstall and Color3.fromRGB(150, 40, 40) or Color3.fromRGB(70, 70, 80),
+					function()
+						if not canUninstall then return end  -- safety: no-op when disabled
+
+						local confirm = Instance.new("Frame")
+						confirm.Size = UDim2.new(0, 300, 0, 150)
+						confirm.Position = UDim2.new(0.5, -150, 0.5, -75)
+						confirm.BackgroundColor3 = Color3.fromRGB(25, 25, 35)
+						confirm.BorderSizePixel = 0
+						confirm.ZIndex = overlay.ZIndex + 100
+						confirm.Parent = overlay
+						local cc = Instance.new("UICorner"); cc.CornerRadius = UDim.new(0, 12); cc.Parent = confirm
+
+						local q = Instance.new("TextLabel")
+						q.Size = UDim2.new(1, -20, 0, 60)
+						q.Position = UDim2.new(0, 10, 0, 15)
+						q.BackgroundTransparency = 1
+						q.Text = "Uninstall " .. appName .. "?\nThis cannot be undone."
+						q.TextColor3 = Color3.new(1, 1, 1)
+						q.Font = Enum.Font.Gotham
+						q.TextSize = 14
+						q.TextWrapped = true
+						q.ZIndex = confirm.ZIndex + 1
+						q.Parent = confirm
+
+						local yes = Instance.new("TextButton")
+						yes.Size = UDim2.new(0, 120, 0, 35)
+						yes.Position = UDim2.new(0, 20, 1, -50)
+						yes.BackgroundColor3 = Color3.fromRGB(180, 60, 60)
+						yes.Text = "Uninstall"
+						yes.TextColor3 = Color3.new(1, 1, 1)
+						yes.Font = Enum.Font.GothamBold
+						yes.TextSize = 14
+						yes.ZIndex = confirm.ZIndex + 1
+						yes.Parent = confirm
+						local yc = Instance.new("UICorner"); yc.CornerRadius = UDim.new(0, 6); yc.Parent = yes
+
+						local no = Instance.new("TextButton")
+						no.Size = UDim2.new(0, 120, 0, 35)
+						no.Position = UDim2.new(1, -140, 1, -50)
+						no.BackgroundColor3 = Color3.fromRGB(60, 60, 70)
+						no.Text = "Cancel"
+						no.TextColor3 = Color3.new(1, 1, 1)
+						no.Font = Enum.Font.GothamBold
+						no.TextSize = 14
+						no.ZIndex = confirm.ZIndex + 1
+						no.Parent = confirm
+						local nc = Instance.new("UICorner"); nc.CornerRadius = UDim.new(0, 6); nc.Parent = no
+
+						no.MouseButton1Click:Connect(function() confirm:Destroy() end)
+						yes.MouseButton1Click:Connect(function()
+							confirm:Destroy()
+							-- Force stop first
+							pcall(function() AppManager.CloseApp(appName) end)
+							-- Remove from __AppsLaunchArgFolder
+							if appEntry then appEntry:Destroy() end
+							-- Remove from ReplicatedWindow
+							local rw = MainUI:FindFirstChild("ReplicatedWindow")
+							if rw then local f = rw:FindFirstChild(appName); if f then f:Destroy() end end
+							local rws = MainUI:FindFirstChild("ReplicatedWindow_Sys")
+							if rws then local f = rws:FindFirstChild(appName); if f then f:Destroy() end end
+							-- Remove from AppData
+							local appDataFolder = MainUI:FindFirstChild("AppData")
+							if appDataFolder then local f = appDataFolder:FindFirstChild(appName); if f then f:Destroy() end end
+							-- Refresh launcher
+							local remotes = __Zolin:FindFirstChild("Remotes")
+							local refreshEvent = remotes and remotes:FindFirstChild("updateZolinLauncher")
+							if refreshEvent then refreshEvent:Fire() end
+
+							modules.NotificationManager.ShowNotification({
+								title = "Uninstalled",
+								description = appName .. " has been uninstalled."
+							})
+							closeAppInfo()
+						end)
+					end,
+					3
+				)
+
+				-- Gray out visuals + clarify state if it can't be uninstalled
+				if not canUninstall then
+					uninstallBtn.TextColor3 = Color3.fromRGB(140, 140, 140)
+					uninstallBtn.AutoButtonColor = false
+					uninstallBtn.Text = "🗑 Uninstall (built-in)"
+				end
+			end
+
+			-- Compatibility Mode (loadstring apps only)
+			if isLoadstring then
+				local compatBtn = Instance.new("TextButton")
+				compatBtn.Size = UDim2.new(0, 200, 0, 40)
+				compatBtn.Position = UDim2.new(0, 0, 0, btnY + 65)
+				compatBtn.BackgroundColor3 = Color3.fromRGB(50, 80, 120)
+				compatBtn.Text = "🔄 Compatibility Mode"
+				compatBtn.TextColor3 = Color3.new(1, 1, 1)
+				compatBtn.Font = Enum.Font.GothamBold
+				compatBtn.TextSize = 14
+				compatBtn.ZIndex = overlay.ZIndex + 3
+				compatBtn.Parent = body
+				local cc = Instance.new("UICorner"); cc.CornerRadius = UDim.new(0, 8); cc.Parent = compatBtn
+
+				compatBtn.MouseButton1Click:Connect(function()
+					closeAppInfo()
+					ZolinModules.openCompatibilityMode(appName, appUrl)
+				end)
+			end
+
+			appInfoOverlay = overlay
+		end
+
+		-- ============================================
+		-- COMPATIBILITY MODE (GitHub version history)
+		-- ============================================
+		local function parseGithubUrl(url)
+			local user, repo, branch, path = url:match("raw%.githubusercontent%.com/([^/]+)/([^/]+)/([^/]+)/(.+)")
+			if not user then
+				user, repo, branch, path = url:match("github%.com/([^/]+)/([^/]+)/blob/([^/]+)/(.+)")
+			end
+			return user, repo, branch, path
+		end
+
+		local function parseVersionFromCode(code)
+			-- Try multiple patterns
+			local patterns = {
+				'Version%s*[:=]%s*"([^"]+)"',
+				'version%s*[:=]%s*"([^"]+)"',
+				'Version%.Value%s*=%s*"([^"]+)"',
+				'Version["\']%s*,%s*["\']([^"\']+)',
+				'v(%d+%.%d+%.%d+)',
+				'v(%d+%.%d+)',
+			}
+			for _, p in ipairs(patterns) do
+				local v = code:match(p)
+				if v then return v end
+			end
+			return "unknown"
+		end
+
+		local compatOverlay = nil
+		local function closeCompat()
+			if compatOverlay then
+				compatOverlay:Destroy()
+				compatOverlay = nil
+			end
+		end
+
+		function ZolinModules.openCompatibilityMode(appName, appUrl)
+			if compatOverlay then return end
+
+			local HttpService = game:GetService("HttpService")
+			local user, repo, branch, path = parseGithubUrl(appUrl)
+
+			local overlay = Instance.new("Frame")
+			overlay.AnchorPoint = ui.AnchorPoint
+			overlay.Size = ui.Size
+			overlay.Position = ui.Position
+			overlay.BackgroundColor3 = Color3.fromRGB(15, 15, 22)
+			overlay.ZIndex = ui.ZIndex + 70
+			overlay.BorderSizePixel = 0
+			overlay.Parent = ui.Parent
+
+			local header = Instance.new("Frame")
+			header.Size = UDim2.new(1, 0, 0, 50)
+			header.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
+			header.BorderSizePixel = 0
+			header.ZIndex = overlay.ZIndex + 1
+			header.Parent = overlay
+
+			local backBtn = Instance.new("TextButton")
+			backBtn.Size = UDim2.new(0, 40, 0, 40)
+			backBtn.Position = UDim2.new(0, 5, 0, 5)
+			backBtn.BackgroundColor3 = Color3.fromRGB(50, 50, 60)
+			backBtn.Text = "←"
+			backBtn.TextColor3 = Color3.new(1, 1, 1)
+			backBtn.Font = Enum.Font.GothamBold
+			backBtn.TextSize = 20
+			backBtn.ZIndex = overlay.ZIndex + 2
+			backBtn.Parent = header
+			local bc = Instance.new("UICorner"); bc.CornerRadius = UDim.new(0, 6); bc.Parent = backBtn
+			backBtn.MouseButton1Click:Connect(function()
+				closeCompat()
+				ZolinModules.openAppInfo(appName)
+			end)
+
+			local title = Instance.new("TextLabel")
+			title.Size = UDim2.new(1, -60, 1, 0)
+			title.Position = UDim2.new(0, 55, 0, 0)
+			title.BackgroundTransparency = 1
+			title.Text = "Compatibility Mode — " .. appName
+			title.TextColor3 = Color3.new(1, 1, 1)
+			title.Font = Enum.Font.GothamBold
+			title.TextSize = 18
+			title.TextXAlignment = Enum.TextXAlignment.Left
+			title.ZIndex = overlay.ZIndex + 1
+			title.Parent = header
+
+			local statusLbl = Instance.new("TextLabel")
+			statusLbl.Size = UDim2.new(1, -20, 0, 30)
+			statusLbl.Position = UDim2.new(0, 10, 0, 55)
+			statusLbl.BackgroundTransparency = 1
+			statusLbl.Text = "Fetching version history..."
+			statusLbl.TextColor3 = Color3.fromRGB(200, 200, 200)
+			statusLbl.Font = Enum.Font.Gotham
+			statusLbl.TextSize = 14
+			statusLbl.TextXAlignment = Enum.TextXAlignment.Left
+			statusLbl.ZIndex = overlay.ZIndex + 1
+			statusLbl.Parent = overlay
+
+			local scroll = Instance.new("ScrollingFrame")
+			scroll.Size = UDim2.new(1, -20, 1, -100)
+			scroll.Position = UDim2.new(0, 10, 0, 90)
+			scroll.BackgroundTransparency = 1
+			scroll.CanvasSize = UDim2.new(0, 0, 0, 0)
+			scroll.AutomaticCanvasSize = Enum.AutomaticSize.Y
+			scroll.ScrollBarThickness = 6
+			scroll.ZIndex = overlay.ZIndex + 1
+			scroll.Parent = overlay
+
+			local listLayout = Instance.new("UIListLayout")
+			listLayout.Padding = UDim.new(0, 6)
+			listLayout.SortOrder = Enum.SortOrder.LayoutOrder
+			listLayout.Parent = scroll
+
+			compatOverlay = overlay
+
+			-- Fetch versions asynchronously
+			task.spawn(function()
+				if not user or not repo or not path then
+					statusLbl.Text = "Cannot parse GitHub URL."
+					statusLbl.TextColor3 = Color3.fromRGB(255, 120, 120)
+					return
+				end
+
+				local apiUrl = string.format(
+					"https://api.github.com/repos/%s/%s/commits?path=%s&sha=%s&per_page=15",
+					user, repo, path, branch
+				)
+
+				local ok, response = pcall(function() return game:HttpGet(apiUrl, true) end)
+				if not ok or not response then
+					statusLbl.Text = "Failed to fetch commits (HTTP may be disabled)."
+					statusLbl.TextColor3 = Color3.fromRGB(255, 120, 120)
+					return
+				end
+
+				local decodeOk, commits = pcall(function() return HttpService:JSONDecode(response) end)
+				if not decodeOk or type(commits) ~= "table" then
+					statusLbl.Text = "Invalid response from GitHub."
+					statusLbl.TextColor3 = Color3.fromRGB(255, 120, 120)
+					return
+				end
+
+				if #commits == 0 then
+					statusLbl.Text = "No commits found for this file."
+					return
+				end
+
+				statusLbl.Text = string.format("Found %d versions.", #commits)
+
+				-- Current version = commits[1]
+				for i, commit in ipairs(commits) do
+					local sha = commit.sha
+					local date = commit.commit and commit.commit.author and commit.commit.author.date or "?"
+					local message = commit.commit and commit.commit.message or ""
+					-- Format date
+					local dateShort = date:sub(1, 10) .. " " .. date:sub(12, 16)
+					-- Short SHA
+					local shortSha = sha:sub(1, 7)
+
+					-- Try to fetch version from file content (only for first 10 to avoid rate limits)
+					local version = nil
+					if i <= 10 then
+						local rawUrl = string.format(
+							"https://raw.githubusercontent.com/%s/%s/%s/%s",
+							user, repo, sha, path
+						)
+						local rok, rcode = pcall(function() return game:HttpGet(rawUrl, true) end)
+						if rok and rcode then
+							version = parseVersionFromCode(rcode)
+						end
+					end
+					version = version or ("commit-" .. shortSha)
+
+					local row = Instance.new("TextButton")
+					row.Size = UDim2.new(1, 0, 0, 60)
+					row.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
+					row.BorderSizePixel = 0
+					row.Text = ""
+					row.LayoutOrder = i
+					row.ZIndex = overlay.ZIndex + 1
+					row.Parent = scroll
+					local rc = Instance.new("UICorner"); rc.CornerRadius = UDim.new(0, 8); rc.Parent = row
+
+					local vLbl = Instance.new("TextLabel")
+					vLbl.Size = UDim2.new(0.5, -10, 1, 0)
+					vLbl.Position = UDim2.new(0, 10, 0, 0)
+					vLbl.BackgroundTransparency = 1
+					vLbl.Text = version .. (i == 1 and "  [CURRENT]" or "")
+					vLbl.TextColor3 = i == 1 and Color3.fromRGB(100, 255, 120) or Color3.new(1, 1, 1)
+					vLbl.Font = Enum.Font.GothamBold
+					vLbl.TextSize = 14
+					vLbl.TextXAlignment = Enum.TextXAlignment.Left
+					vLbl.ZIndex = overlay.ZIndex + 2
+					vLbl.Parent = row
+
+					local dLbl = Instance.new("TextLabel")
+					dLbl.Size = UDim2.new(0.5, -10, 1, 0)
+					dLbl.Position = UDim2.new(0.5, 0, 0, 0)
+					dLbl.BackgroundTransparency = 1
+					dLbl.Text = dateShort .. "  (" .. shortSha .. ")"
+					dLbl.TextColor3 = Color3.fromRGB(180, 180, 180)
+					dLbl.Font = Enum.Font.Gotham
+					dLbl.TextSize = 12
+					dLbl.TextXAlignment = Enum.TextXAlignment.Right
+					dLbl.ZIndex = overlay.ZIndex + 2
+					dLbl.Parent = row
+
+					row.MouseButton1Click:Connect(function()
+						if i == 1 then return end -- already current
+
+						-- Confirm
+						local confirm = Instance.new("Frame")
+						confirm.Size = UDim2.new(0, 340, 0, 180)
+						confirm.Position = UDim2.new(0.5, -170, 0.5, -90)
+						confirm.BackgroundColor3 = Color3.fromRGB(25, 25, 35)
+						confirm.BorderSizePixel = 0
+						confirm.ZIndex = overlay.ZIndex + 200
+						confirm.Parent = overlay
+						local cc = Instance.new("UICorner"); cc.CornerRadius = UDim.new(0, 12); cc.Parent = confirm
+
+						local q = Instance.new("TextLabel")
+						q.Size = UDim2.new(1, -20, 0, 90)
+						q.Position = UDim2.new(0, 10, 0, 15)
+						q.BackgroundTransparency = 1
+						q.Text = "Downgrade " .. appName .. " to:\n" .. version .. "\n\nThis will overwrite the current version."
+						q.TextColor3 = Color3.new(1, 1, 1)
+						q.Font = Enum.Font.Gotham
+						q.TextSize = 14
+						q.TextWrapped = true
+						q.ZIndex = confirm.ZIndex + 1
+						q.Parent = confirm
+
+						local yes = Instance.new("TextButton")
+						yes.Size = UDim2.new(0, 150, 0, 35)
+						yes.Position = UDim2.new(0, 20, 1, -50)
+						yes.BackgroundColor3 = Color3.fromRGB(180, 120, 40)
+						yes.Text = "Install this version"
+						yes.TextColor3 = Color3.new(1, 1, 1)
+						yes.Font = Enum.Font.GothamBold
+						yes.TextSize = 13
+						yes.ZIndex = confirm.ZIndex + 1
+						yes.Parent = confirm
+						local yc = Instance.new("UICorner"); yc.CornerRadius = UDim.new(0, 6); yc.Parent = yes
+
+						local no = Instance.new("TextButton")
+						no.Size = UDim2.new(0, 150, 0, 35)
+						no.Position = UDim2.new(1, -170, 1, -50)
+						no.BackgroundColor3 = Color3.fromRGB(60, 60, 70)
+						no.Text = "Cancel"
+						no.TextColor3 = Color3.new(1, 1, 1)
+						no.Font = Enum.Font.GothamBold
+						no.TextSize = 13
+						no.ZIndex = confirm.ZIndex + 1
+						no.Parent = confirm
+						local nc = Instance.new("UICorner"); nc.CornerRadius = UDim.new(0, 6); nc.Parent = no
+
+						no.MouseButton1Click:Connect(function() confirm:Destroy() end)
+						yes.MouseButton1Click:Connect(function()
+							confirm:Destroy()
+
+							-- Build new URL at this commit
+							local newUrl = string.format(
+								"https://raw.githubusercontent.com/%s/%s/%s/%s",
+								user, repo, sha, path
+							)
+
+							-- Update __AppsLaunchArgFolder
+							local MainUI = getMainUI()
+							local __Zolin = MainUI:FindFirstChild("__Zolin")
+							local appsFolder = __Zolin and __Zolin:FindFirstChild("__AppsLaunchArgFolder")
+							if appsFolder then
+								local entry = appsFolder:FindFirstChild(appName)
+								if entry then
+									entry.Value = newUrl
+								end
+							end
+
+							modules.NotificationManager.ShowNotification({
+								title = "Compatibility Mode",
+								description = appName .. " set to version " .. version
+							})
+
+							closeCompat()
+						end)
+					end)
+				end
+			end)
+		end
 
 		-- ============================================
 		-- DEFINE SETTINGS CATEGORIES
@@ -5063,8 +6570,12 @@ function ZolinModules.SettingsApp()
 				name = "Personalization",
 				items = {
 					{name = "Change Wallpaper", type = "action", action = "wallpaper"},
-					{name = "User Info", type = "info", key = "user", onClick = createUserInfoPopup},
-					{name = "System Info", type = "info", key = "os"}
+				}
+			},
+			{
+				name = "Apps",
+				items = {
+					{name = "Manage Applications", type = "action", key = "manageApps"},
 				}
 			},
 			{
@@ -5073,7 +6584,7 @@ function ZolinModules.SettingsApp()
 					{name = "Media", type = "slider", key = "Volume", min = 0, max = 1},
 					{name = "Notifications", type = "slider", key = "NotificationVolume", min = 0, max = 1},
 					{name = "Mute Media", type = "toggle", key = "Muted_Media"},
-					{name = "Mute Notifications", type = "toggle", key = "Muted_Notifications"}
+					{name = "Mute Notifications", type = "toggle", key = "Muted_Notifications"},
 				}
 			},
 			{
@@ -5085,6 +6596,8 @@ function ZolinModules.SettingsApp()
 					{name = "Task Manager", type = "action", key = "memorydisplayApp"},
 					{name = "Command Prompt", type = "action", key = "cmdApp"},
 					{name = "Power Menu", type = "action", key = "power"},
+					{name = "User Info", type = "info", key = "user", onClick = createUserInfoPopup},
+					{name = "System Info", type = "info", key = "os"},
 				}
 			}
 		}
@@ -5314,28 +6827,33 @@ function ZolinModules.SettingsApp()
 
 					if item.action == "wallpaper" then
 						actionBtn.MouseButton1Click:Connect(function()
-							AppManager.HandleExit()
+							AppManager.HandleExit();
 							AppManager.LaunchApplication("WallpaperSys")
 						end)
 					end
 					
 					if item.key == "changelogs" then
 						actionBtn.MouseButton1Click:Connect(function()
-							AppManager.HandleExit()
+							AppManager.HandleExit();
 							AppManager.LaunchApplication("Changelogs")
 						end)
 					end
 					if item.key == "memorydisplayApp" then
 						actionBtn.MouseButton1Click:Connect(function()
-							AppManager.HandleExit()
+							AppManager.HandleExit();
 							AppManager.LaunchApplication("TaskManager")
 						end)
 					end
 					if item.key == "cmdApp" then
 						actionBtn.MouseButton1Click:Connect(function()
-						AppManager.HandleExit()
+						AppManager.HandleExit();
 						ZolinModules.CommandApp().Init();
 						print("Command App Launched outside the System's GUI")
+						end)
+					end
+					if item.key == "manageApps" then
+						actionBtn.MouseButton1Click:Connect(function()
+							ZolinModules.openAppManager()
 						end)
 					end
 				elseif item.type == "input" then
@@ -5388,7 +6906,8 @@ function ZolinModules.SettingsApp()
 				AppManager.CloseApp("Settings")
 			end)
 		end
-
+		ZolinModules._openAppInfo = ZolinModules.openAppInfo
+		ZolinModules.openCompatibilityMode = ZolinModules.openCompatibilityMode
 		ui.Visible = true
 	end
 
