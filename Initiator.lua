@@ -1,6 +1,6 @@
 local v1 = {};
 local TweenService = game:GetService("TweenService");
-v1.ver = "1.7.0" -- versionOS
+v1.ver = "1.7.1" -- versionOS
 
 -- ============================================
 -- HELPER FUNCTIONS
@@ -578,7 +578,7 @@ local function createChunk7()
 	Media_Notif.LayoutOrder = -2
 	Media_Notif.Visible = true
 	Media_Notif.Font = Enum.Font.SourceSans
-	Media_Notif.Text = "Media & Media & Notifications"
+	Media_Notif.Text = "Media & Notifications"
 	Media_Notif.TextColor3 = Color3.fromRGB(255, 255, 255)
 	Media_Notif.TextSize = 14
 	Media_Notif.TextWrapped = true
@@ -1094,6 +1094,11 @@ local function createChunk10()
 	TransitionSpeed.Name = "TransitionSpeed"
 	TransitionSpeed.Value = 1.5
 	TransitionSpeed.Parent = Data
+	
+	local TapSoundEnabled = Instance.new("BoolValue")
+	TapSoundEnabled.Name = "TapSoundEnabled"
+	TapSoundEnabled.Value = true
+	TapSoundEnabled.Parent = Data
 
 	local CloseAllApps = Instance.new("BindableEvent")
 	CloseAllApps.Name = "CloseAllApps"
@@ -1122,6 +1127,10 @@ local function createChunk10()
 	local ZolinModeEvent = Instance.new("BindableEvent")
 	ZolinModeEvent.Name = "ZolinModeEvent"
 	ZolinModeEvent.Parent = Remotes
+	
+	local ReportProblemUIEvent = Instance.new("BindableEvent")
+	ReportProblemUIEvent.Name = "ReportProblemUIEvent"
+	ReportProblemUIEvent.Parent = Remotes
 end
 
 -- ============================================
@@ -3011,6 +3020,62 @@ local function createChunk25()
 	UIShadow.ZIndex  = -1;
 end
 
+local function createChunk26()
+	local ReplicatedAssetsUI = Instance.new("Folder");
+	ReplicatedAssetsUI.Name = "ReplicatedAssetsUI";
+	ReplicatedAssetsUI.Parent = MainUI;
+	local MessageHelperUI = Instance.new("Frame");
+	MessageHelperUI.Name = "MessageHelperUI";
+	MessageHelperUI.AnchorPoint = Vector2.new(0.5, 0.5);
+	MessageHelperUI.BackgroundTransparency = 0.4;
+	MessageHelperUI.BackgroundColor3 = Color3.fromRGB(27, 27, 27);
+	MessageHelperUI.Position = UDim2.new(0.5, 0, 0.5, 0);
+	MessageHelperUI.Size = UDim2.new(1, 0, 1, 0);
+	MessageHelperUI.ZIndex = 1000000000;
+	MessageHelperUI.Visible = false;
+	MessageHelperUI.Parent = ReplicatedAssetsUI;
+	local UI = Instance.new("Frame");
+	UI.Name = "UI";
+	UI.AnchorPoint = Vector2.new(0.5, 0.5);
+	UI.BackgroundColor3 = Color3.fromRGB(58, 58, 58);
+	UI.Position = UDim2.new(0.5, 0, 0.5, 0);
+	UI.Size = UDim2.new(0.369, 0, 0.408, 0);
+	UI.ZIndex = MessageHelperUI.ZIndex + 1;
+	UI.Parent = MessageHelperUI;
+	createUICorner(UI, "UICorner", UDim.new(0, 15))
+	local FrameList = Instance.new("Frame");
+	FrameList.Name = "FrameList";
+	FrameList.AnchorPoint = Vector2.new(0.5, 1);
+	FrameList.Size = UDim2.new(0.925, 0, 0.138, 0);
+	FrameList.Position = UDim2.new(0.5, 0, 1, 0);
+	FrameList.ZIndex = UI.ZIndex + 1;
+	local UIListLayout = Instance.new("UIListLayout");
+	UIListLayout.SortOrder = Enum.SortOrder.LayoutOrder;
+	UIListLayout.Padding = UDim.new(0.03, 0);
+	UIListLayout.FillDirection = Enum.FillDirection.Horizontal;
+	UIListLayout.HorizontalAlignment = Enum.HorizontalAlignment.Right;
+	UIListLayout.VerticalAlignment = Enum.VerticalAlignment.Center;
+	UIListLayout.Parent = FrameList;
+	local MessageTemplate = Instance.new("TextButton");
+	MessageTemplate.Name = "MessageTemplate";
+	MessageTemplate.AnchorPoint = Vector2.new(0.5, 0.5);
+	MessageTemplate.Active = true;
+	MessageTemplate.Size = UDim2.new(0.197, 0, 0.709, 0);
+	MessageTemplate.ZIndex = FrameList.ZIndex + 1;
+	MessageTemplate.Text = "";
+	MessageTemplate.Parent = ReplicatedAssetsUI;
+	MessageTemplate.TextColor3 = Color3.fromRGB(0, 157, 255);
+	MessageTemplate.TextScaled = true;
+	MessageTemplate.TextSize = 29;
+	MessageTemplate.TextYAlignment = Enum.TextYAlignment.Top;
+	MessageTemplate.RichText = true;
+	MessageTemplate.Visible = false;
+	local UITextSizeConstraint = Instance.new("UITextSizeConstraint");
+	UITextSizeConstraint.MaxTextSize = 29;
+	UITextSizeConstraint.Parent = MessageTemplate;
+	createUICorner(MessageTemplate, "UICorner", Vector2.new(0, 11));
+end
+
 -- ============================================
 -- MAIN INIT FUNCTION
 -- ============================================
@@ -3120,6 +3185,8 @@ function v1.Init()
 		task.spawn(function() createChunk24() end)
 		task.wait()
 		task.spawn(function() createChunk25() end)
+		task.wait()
+		task.spawn(function() createChunk26() end)
 
 		print("ZolinOS UI initialized | Version: " ..tostring(BuildVersion));
 	end
