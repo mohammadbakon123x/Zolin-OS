@@ -637,108 +637,336 @@ function ZolinModules.AnimationManager()
 		return TweenInfo.new(adjustedTime, easingStyle, easingDirection)
 	end
 
-	function v2.AnimateWindow(p0, p1, p2)
-		-- Check if animations are disabled
-		if not isAnimationUIEnabled() then
-			-- Skip animation, just set final state
-			local target
-			if type(p0) == "string" then
-				local mainUI = getMainUI()
-				if mainUI then
-					local appFolder = mainUI.__ScreenFrame and mainUI.__ScreenFrame.Applications and mainUI.__ScreenFrame.Applications:FindFirstChild(p0)
-					if appFolder then
-						target = appFolder
-					else
-						warn("AnimateWindow: No app found with name:", p0)
-						return
-					end
-				else
-					warn("AnimateWindow: Could not find ScreenGui ancestor")
-					return
-				end
-			elseif p0:IsA("Instance") then
-				target = p0
-			else
-				warn("AnimateWindow: Invalid p0 type:", type(p0))
-				return
-			end
-
-			local window = target
-			local uiScale = window:FindFirstChildOfClass("UIScale")
-			if not uiScale then
-				uiScale = Instance.new("UIScale")
-				uiScale.Parent = window
-			end
-			uiScale.Scale = (p1 == "Open") and 1 or 0
-			return true
-		end
-
-		if p0 == nil or p1 == nil then
-			return false
-		end
-
-		-- Get the target window
+	function v2.AnimateWindow(p0, p1, p2, sourceIcon, skipIcon)
+		-- ============================================================
+		-- Resolve target
+		-- ============================================================
 		local target
 		if type(p0) == "string" then
-			local mainUI = getMainUI();
+			local mainUI = getMainUI()
 			if mainUI then
-				local appFolder = mainUI.__ScreenFrame and mainUI.__ScreenFrame.Applications and mainUI.__ScreenFrame.Applications:FindFirstChild(p0)
-				if appFolder then
-					target = appFolder
-				else
-					warn("AnimateWindow: No app found with name:", p0)
-					return
-				end
-			else
-				warn("AnimateWindow: Could not find ScreenGui ancestor")
-				return
+				target = mainUI.__ScreenFrame
+					and mainUI.__ScreenFrame.Applications
+					and mainUI.__ScreenFrame.Applications:FindFirstChild(p0)
 			end
-		elseif p0:IsA("Instance") then
+			if not target then
+				warn("AnimateWindow: No app found:", p0)
+				return false
+			end
+		elseif p0 and typeof(p0) == "Instance" then
 			target = p0
 		else
 			warn("AnimateWindow: Invalid p0 type:", type(p0))
-			return
-		end
-
-		local window = target
-		local windowKey = tostring(window)  -- Unique identifier for the window
-		-- Check if this window is already animating
-		if animatingWindows[windowKey] then
-			-- Already animating, ignore this call
 			return false
 		end
 
-		-- Mark this window as animating
+		if not target.Parent then return false end
+
+		-- ============================================================
+		-- Animations disabled: snap
+		-- ============================================================
+		if not isAnimationUIEnabled() then
+			local uiScale = target:FindFirstChildOfClass("UIScale")
+			if not uiScale then
+				uiScale = Instance.new("UIScale")
+				uiScale.Parent = target
+			end
+			uiScale.Scale = (p1 == "Open") and 1 or 0
+			if p1 == "Close" then
+				target.Visible = false
+				if p2 == "Destroy" then target:Destroy() end
+			end
+			return true
+		end
+
+		-- ============================================================
+		-- Guard
+		-- ============================================================
+		local windowKey = tostring(target)
+		if animatingWindows[windowKey] then return false end
 		animatingWindows[windowKey] = true
 
-		local uiScale = window:FindFirstChildOfClass("UIScale")
+		local TweenService = game:GetService("TweenService")
+		local speed = getTransitionSpeed()
+
+		local uiScale = target:FindFirstChildOfClass("UIScale")
 		if not uiScale then
 			uiScale = Instance.new("UIScale")
-			uiScale.Scale = (p1 == "Open") and 1 or 0
-			uiScale.Parent = window
+			uiScale.Parent = target
 		end
 
-		local tweenInfo = (p1 == "Open") and 
-			createTweenInfo(BASE_OPEN_TIME, Enum.EasingStyle.Quint, Enum.EasingDirection.Out) or 
-			createTweenInfo(BASE_CLOSE_TIME, Enum.EasingStyle.Quart, Enum.EasingDirection.In)
+		-- ============================================================
+		-- ✅ Snapshot store (persists across Open / Close / Resume)
+		--    Stored on ZolinModules so it survives AnimationManager re-instantiation
+		-- ============================================================
+		if not ZolinModules._windowTransparencySnapshots then
+			ZolinModules._windowTransparencySnapshots = {}
+		end
+		local snapshots = ZolinModules._windowTransparencySnapshots
 
-		local tween = TweenService:Create(uiScale, tweenInfo, {
-			Scale = (p1 == "Open") and 1 or 0
-		})
+		-- Raw collector — reads current values, no side effects
+		local function collectRaw(root)
+			local out = {}
+			local function walk(inst)
+				if not inst:IsA("GuiObject") then return end
+				local props = {}
+				if inst:IsA("Frame") or inst:IsA("ScrollingFrame") then
+					props.BackgroundTransparency = inst.BackgroundTransparency
+					if inst:IsA("ScrollingFrame") then
+						props.ScrollBarImageTransparency = inst.ScrollBarImageTransparency
+					end
+				end
+				if inst:IsA("ImageLabel") or inst:IsA("ImageButton") then
+					props.ImageTransparency = inst.ImageTransparency
+					props.BackgroundTransparency = inst.BackgroundTransparency
+				end
+				if inst:IsA("TextLabel") or inst:IsA("TextButton") then
+					props.TextTransparency = inst.TextTransparency
+					props.BackgroundTransparency = inst.BackgroundTransparency
+				end
+				if inst:IsA("TextBox") then
+					props.TextTransparency = inst.TextTransparency
+					props.BackgroundTransparency = inst.BackgroundTransparency
+				end
+				if next(props) then
+					table.insert(out, { instance = inst, props = props })
+				end
+				for _, child in ipairs(inst:GetChildren()) do
+					walk(child)
+				end
+			end
+			walk(root)
+			return out
+		end
 
-		-- When animation completes, remove from animating list
-		tween.Completed:Connect(function()
+		-- Returns the snapshot; only creates it the FIRST time we see this window
+		local function getSnapshot(window)
+			if snapshots[window] then return snapshots[window] end
+			local s = collectRaw(window)
+			snapshots[window] = s
+			return s
+		end
+
+		-- ============================================================
+		-- Resolve icon info
+		-- ============================================================
+		local iconAbsX, iconAbsY, iconAbsW, iconAbsH
+		
+
+		if p1 == "Open" and sourceIcon and sourceIcon.Parent then
+			iconAbsX = sourceIcon.AbsolutePosition.X
+			iconAbsY = sourceIcon.AbsolutePosition.Y
+			iconAbsW = sourceIcon.AbsoluteSize.X
+			iconAbsH = sourceIcon.AbsoluteSize.Y
+
+			target:SetAttribute("ZL_IconAbsX", iconAbsX)
+			target:SetAttribute("ZL_IconAbsY", iconAbsY)
+			target:SetAttribute("ZL_IconAbsW", iconAbsW)
+			target:SetAttribute("ZL_IconAbsH", iconAbsH)
+		else
+			iconAbsX = target:GetAttribute("ZL_IconAbsX")
+			iconAbsY = target:GetAttribute("ZL_IconAbsY")
+			iconAbsW = target:GetAttribute("ZL_IconAbsW")
+			iconAbsH = target:GetAttribute("ZL_IconAbsH")
+		end
+
+		if skipIcon then
+			iconAbsX, iconAbsY, iconAbsW, iconAbsH = nil, nil, nil, nil
+		end
+
+		-- ============================================================
+		-- Fallback (classic pop-in) — no icon info available
+		-- ============================================================
+		if not (iconAbsX and iconAbsY and iconAbsW and iconAbsH) then
+			local tweenInfo = (p1 == "Open")
+				and createTweenInfo(BASE_OPEN_TIME, Enum.EasingStyle.Quint, Enum.EasingDirection.Out)
+				or  createTweenInfo(BASE_CLOSE_TIME, Enum.EasingStyle.Quart, Enum.EasingDirection.In)
+
+			local tween = TweenService:Create(uiScale, tweenInfo, {
+				Scale = (p1 == "Open") and 1 or 0
+			})
+
+			tween.Completed:Connect(function()
+				animatingWindows[windowKey] = nil
+			end)
+
+			tween:Play()
+			tween.Completed:Wait()
+
+			if p2 == true and p1 == "Close" then
+				target.Visible = false
+			elseif p2 == "Destroy" and p1 == "Close" then
+				snapshots[target] = nil
+				target:Destroy()
+			end
+
+			return true
+		end
+
+		-- ============================================================
+		-- Get ScreenFrame context
+		-- ============================================================
+		local MainUI = getMainUI()
+		local __ScreenFrame = MainUI and MainUI.__ScreenFrame
+		if not __ScreenFrame then
 			animatingWindows[windowKey] = nil
-		end)
-
-		tween:Play()
-		tween.Completed:Wait()
-		if p2 == true and (p1 == "Close" or 0) then
-			window.Visible = false
-		elseif p2 == "Destroy" and (p1 == "Close" or 0) then
-			window:Destroy()
+			return false
 		end
-		return true
+		local sfAbsPos  = __ScreenFrame.AbsolutePosition
+		local sfAbsSize = __ScreenFrame.AbsoluteSize
+		if sfAbsSize.X <= 0 or sfAbsSize.Y <= 0 then
+			animatingWindows[windowKey] = nil
+			return false
+		end
+
+		local iconCX = (iconAbsX + iconAbsW * 0.5) - sfAbsPos.X
+		local iconCY = (iconAbsY + iconAbsH * 0.5) - sfAbsPos.Y
+
+		local iconScale = math.min(
+			iconAbsW / sfAbsSize.X,
+			iconAbsH / sfAbsSize.Y
+		)
+		iconScale = math.max(0.05, iconScale)
+
+		-- ============================================================
+		-- OPEN (icon-style)
+		-- ============================================================
+		if p1 == "Open" then
+			target.Visible = true
+
+			-- ✅ Get snapshot (only creates the FIRST time)
+			local snapshot = getSnapshot(target)
+
+			-- Force anchor & place at icon
+			target.AnchorPoint = Vector2.new(0.5, 0.5)
+			target.Position = UDim2.new(0, iconCX, 0, iconCY)
+			uiScale.Scale = iconScale
+
+			-- Zero transparencies (start invisible)
+			for _, item in ipairs(snapshot) do
+				for prop, _ in pairs(item.props) do
+					item.instance[prop] = 1
+				end
+			end
+
+			local openTime = math.max(0.3, 0.5 * speed)
+			local tweenInfo = TweenInfo.new(
+				openTime,
+				Enum.EasingStyle.Quint,
+				Enum.EasingDirection.Out
+			)
+
+			local tweens = {}
+			table.insert(tweens, TweenService:Create(target, tweenInfo, {
+				Position = UDim2.new(0.5, 0, 0.5, 0),
+			}))
+			table.insert(tweens, TweenService:Create(uiScale, tweenInfo, {
+				Scale = 1
+			}))
+
+			-- ✅ Tween to SNAPSHOT values (not current values)
+			for _, item in ipairs(snapshot) do
+				for prop, original in pairs(item.props) do
+					table.insert(tweens, TweenService:Create(item.instance, tweenInfo, {
+						[prop] = original
+					}))
+				end
+			end
+
+			for _, t in ipairs(tweens) do t:Play() end
+
+			if #tweens > 0 then
+				local longest = tweens[1]
+				for _, t in ipairs(tweens) do
+					if t.TweenInfo.Time > longest.TweenInfo.Time then
+						longest = t
+					end
+				end
+				longest.Completed:Connect(function()
+					animatingWindows[windowKey] = nil
+				end)
+			else
+				animatingWindows[windowKey] = nil
+			end
+
+			return true
+		end
+
+		-- ============================================================
+		-- CLOSE (icon-style, reverse)
+		-- ============================================================
+		if p1 == "Close" then
+			local winAbsPos  = target.AbsolutePosition
+			local winAbsSize = target.AbsoluteSize
+			local winCX = (winAbsPos.X + winAbsSize.X * 0.5) - sfAbsPos.X
+			local winCY = (winAbsPos.Y + winAbsSize.Y * 0.5) - sfAbsPos.Y
+
+			target.AnchorPoint = Vector2.new(0.5, 0.5)
+			target.Position = UDim2.new(0, winCX, 0, winCY)
+
+			-- ✅ Use snapshot list (knows what items to fade)
+			local snapshot = getSnapshot(target)
+
+			local closeTime = math.max(0.25, 0.4 * speed)
+			local tweenInfo = TweenInfo.new(
+				closeTime,
+				Enum.EasingStyle.Quint,
+				Enum.EasingDirection.In
+			)
+
+			local tweens = {}
+			table.insert(tweens, TweenService:Create(target, tweenInfo, {
+				Position = UDim2.new(0, iconCX, 0, iconCY)
+			}))
+			table.insert(tweens, TweenService:Create(uiScale, tweenInfo, {
+				Scale = iconScale
+			}))
+
+			-- Fade everything to fully transparent
+			for _, item in ipairs(snapshot) do
+				table.insert(tweens, TweenService:Create(item.instance, tweenInfo, {
+					BackgroundTransparency = 1
+				}))
+			end
+
+			for _, t in ipairs(tweens) do t:Play() end
+
+			if #tweens > 0 then
+				local longest = tweens[1]
+				for _, t in ipairs(tweens) do
+					if t.TweenInfo.Time > longest.TweenInfo.Time then
+						longest = t
+					end
+				end
+				longest.Completed:Connect(function()
+					if target and target.Parent then
+						if p2 == true or p2 == "Destroy" then
+							target.Visible = false
+						end
+						if p2 == "Destroy" then
+							-- ✅ Clean up snapshot on destroy
+							snapshots[target] = nil
+							target:Destroy()
+						end
+					end
+					animatingWindows[windowKey] = nil
+				end)
+			else
+				if p2 == true or p2 == "Destroy" then
+					target.Visible = false
+				end
+				if p2 == "Destroy" then
+					snapshots[target] = nil
+					target:Destroy()
+				end
+				animatingWindows[windowKey] = nil
+			end
+
+			return true
+		end
+
+		animatingWindows[windowKey] = nil
+		return false
 	end
 
 	function v2.AnimateVolumeFrame(p2, p3)
@@ -960,6 +1188,305 @@ function ZolinModules.AnimationManager()
 	return v2
 end
 
+
+-- ============================================
+-- ZOLIN SLIDE ANIMATOR UI
+-- ============================================
+function ZolinModules.ZolinSlideAnimatorUI(root, options)
+	options = options or {}
+	local TweenService = game:GetService("TweenService")
+
+	local MainUI = getMainUI()
+	if not MainUI then return end
+	local __Zolin = MainUI:FindFirstChild("__Zolin")
+	local DataFolder = __Zolin and __Zolin:FindFirstChild("Data")
+
+	-- ---- Settings readers ----
+	local function isAnimationEnabled()
+		if options.forceAnimation ~= nil then return options.forceAnimation end
+		if DataFolder then
+			local v = DataFolder:FindFirstChild("AnimationUI")
+			if v and v:IsA("BoolValue") then return v.Value end
+		end
+		return true
+	end
+
+	local function isTapSoundEnabled()
+		if options.forceTapSound ~= nil then return options.forceTapSound end
+		if DataFolder then
+			local v = DataFolder:FindFirstChild("TapSoundEnabled")
+			if v and v:IsA("BoolValue") then return v.Value end
+		end
+		return true
+	end
+
+	local function getTransitionSpeed()
+		if DataFolder then
+			local v = DataFolder:FindFirstChild("TransitionSpeed")
+			if v and v:IsA("NumberValue") then
+				return math.max(0.1, v.Value - 0.1)
+			end
+		end
+		return 1
+	end
+
+	-- ---- Customizable defaults (via `options`) ----
+	local TAP_SOUND_ID = options.soundId or "rbxassetid://3623733749"
+	local RIPPLE_IMAGE = options.image or "rbxassetid://1156532713"     -- blank by default
+	local RIPPLE_COLOR = options.color or Color3.fromRGB(235, 235, 235)
+	local RIPPLE_PEAK_TRANSPARENCY = options.peakTransparency or 0.5
+	local RIPPLE_START_TRANSPARENCY = options.startTransparency or 0.6
+	local SLICE_CENTER = options.sliceCenter or Rect.new(4, 4, 6, 6)
+
+	-- ---- Tap sound ----
+	local function playTapSound()
+		if not isTapSoundEnabled() then return end
+		local sound = Instance.new("Sound")
+		sound.SoundId = TAP_SOUND_ID
+		sound.Volume = 1.5
+		sound.Parent = MainUI
+		local newDis = Instance.new("DistortionSoundEffect")
+		newDis.Parent = sound
+		newDis.Level = 0.5
+		newDis.Enabled = true
+		if MainUI:FindFirstChild("NotificationsSoundUI") then
+			sound.SoundGroup = MainUI.NotificationsSoundUI
+		end
+		sound:Play()
+		sound.Ended:Connect(function()
+			if sound and sound.Parent then sound:Destroy() end
+		end)
+		-- Safety cleanup
+		task.delay(3, function()
+			if sound and sound.Parent then sound:Destroy() end
+		end)
+	end
+	
+	local function restoreAutoButtonColor(element)
+		if not element or not element.Parent then return end
+		if element:GetAttribute("ZolinSlideOriginalAutoButtonColor") then
+			element.AutoButtonColor = true
+			element:SetAttribute("ZolinSlideOriginalAutoButtonColor", nil)
+		end
+	end
+
+	-- ---- Attach handler to a single element ----
+	local function attachTo(element)
+		if not element or not element:IsA("GuiObject") then return end
+		if not (element:IsA("ImageButton")
+			or element:IsA("TextButton")) then
+			return
+		end
+
+
+		-- Avoid double-attaching
+		if element:GetAttribute("ZolinSlideAttached") then return end
+		element:SetAttribute("ZolinSlideAttached", true)
+
+		-- ============================================
+		--  Override AutoButtonColor so the ripple is the only feedback
+		-- ============================================
+		local canAutoColor = (element:IsA("ImageButton") or element:IsA("TextButton"))
+		local originalAutoButtonColor = nil
+
+		if canAutoColor and element.AutoButtonColor then
+			originalAutoButtonColor = element.AutoButtonColor
+			element.AutoButtonColor = false
+			element:SetAttribute("ZolinSlideOriginalAutoButtonColor", true)
+		end
+
+		-- Optionally save the original background color so we can restore it,
+		-- in case AutoButtonColor left the button in a pressed/darker state.
+		local originalBackgroundColor = nil
+		if element:IsA("ImageButton") or element:IsA("TextButton") then
+			originalBackgroundColor = element.BackgroundColor3
+			element:SetAttribute("ZolinSlideOriginalBgSet", true)
+		end
+
+		local activeRipples = {}
+		local existingCorner = element:FindFirstChildOfClass("UICorner")
+
+		local function spawnSlice(clickX, clickY)
+			if not isAnimationEnabled() then return end
+			if not element.Parent then return end
+
+			local absSize = element.AbsoluteSize
+			if absSize.X <= 0 or absSize.Y <= 0 then return end
+
+			local localX = clickX - element.AbsolutePosition.X
+			local localY = clickY - element.AbsolutePosition.Y
+
+			-- ---- Clipping container: keeps the ripple inside the element ----
+			local clipFrame = element:FindFirstChild("ZolinSliceClip")
+			if not clipFrame then
+				clipFrame = Instance.new("Frame")
+				clipFrame.Name = "ZolinSliceClip"
+				clipFrame.Size = UDim2.new(1, 0, 1, 0)
+				clipFrame.Position = UDim2.new(0, 0, 0, 0)
+				clipFrame.BackgroundTransparency = 1
+				clipFrame.BorderSizePixel = 0
+				clipFrame.ClipsDescendants = true
+				clipFrame.ZIndex = (element.ZIndex or 1) + 1
+				clipFrame.Parent = element
+
+				-- Match the element's corner radius (with newer Roblox versions,
+				-- ClipsDescendants + UICorner clips to the rounded shape too)
+				local clipCorner = Instance.new("UICorner")
+				clipCorner.CornerRadius = existingCorner and existingCorner.CornerRadius or UDim.new(0, 0)
+				clipCorner.Parent = clipFrame
+			end
+
+			-- ---- Ripple (inside the clip container) ----
+			local ripple = Instance.new("Frame")
+			ripple.Name = "ZolinSlice"
+			ripple.AnchorPoint = Vector2.new(0.5, 0.5)
+			ripple.Position = UDim2.new(0, localX, 0, localY)
+			ripple.Size = UDim2.new(0, 0, 0, 0)
+			ripple.BackgroundColor3 = RIPPLE_COLOR           --  use the configured color
+			ripple.BackgroundTransparency = 0.6
+			ripple.BorderSizePixel = 0
+			ripple.ClipsDescendants = false
+			ripple.ZIndex = clipFrame.ZIndex + 1
+			ripple.Parent = clipFrame
+
+			-- Ripple corner (makes it a circle)
+			local rippleCorner = Instance.new("UICorner")
+			rippleCorner.CornerRadius = existingCorner and existingCorner.CornerRadius or UDim.new(0, 0)
+			rippleCorner.Parent = ripple
+
+			-- ---- Slice image (optional, for textured ripples) ----
+			local slice = Instance.new("ImageLabel")
+			slice.Name = "Slice"
+			slice.Size = UDim2.new(1, 0, 1, 0)
+			slice.Position = UDim2.new(0, 0, 0, 0)
+			slice.BackgroundTransparency = 1
+			slice.Image = RIPPLE_IMAGE
+			slice.ImageColor3 = RIPPLE_COLOR
+			slice.ImageTransparency = RIPPLE_START_TRANSPARENCY
+			slice.ScaleType = Enum.ScaleType.Slice
+			slice.SliceCenter = SLICE_CENTER
+			slice.ZIndex = ripple.ZIndex + 1
+			slice.Parent = ripple
+
+			table.insert(activeRipples, ripple)
+
+			-- ---- Full-cover diameter (calculated against the element's size) ----
+			local dx = math.max(localX, absSize.X - localX)
+			local dy = math.max(localY, absSize.Y - localY)
+			local radius = math.sqrt(dx * dx + dy * dy)
+			local targetDiameter = radius * 2
+
+			local speed = getTransitionSpeed()
+			local expandTime = math.max(0.15, 0.35 * speed)
+			local fadeTime = math.max(0.10, 0.25 * speed)
+
+			-- ---- Expand ----
+			local expandTween = TweenService:Create(
+				ripple,
+				TweenInfo.new(expandTime, Enum.EasingStyle.Quart, Enum.EasingDirection.Out),
+				{ Size = UDim2.new(0, targetDiameter, 0, targetDiameter) }
+			)
+			expandTween:Play()
+
+			-- ---- Slice fades as it expands (only if a texture is used) ----
+			if RIPPLE_IMAGE ~= "" and RIPPLE_IMAGE ~= "rbxassetid://0" then
+				local sliceFade = TweenService:Create(
+					slice,
+					TweenInfo.new(expandTime, Enum.EasingStyle.Quart, Enum.EasingDirection.Out),
+					{ ImageTransparency = 1 }
+				)
+				sliceFade:Play()
+			end
+
+			-- ---- Cleanup ----
+			expandTween.Completed:Connect(function()
+				if not ripple or not ripple.Parent then return end
+
+				local fadeTween = TweenService:Create(
+					ripple,
+					TweenInfo.new(fadeTime, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
+					{ BackgroundTransparency = 1 }
+				)
+				fadeTween:Play()
+				fadeTween.Completed:Connect(function()
+					if ripple and ripple.Parent then
+						ripple:Destroy()
+					end
+					for i, r in ipairs(activeRipples) do
+						if r == ripple then
+							table.remove(activeRipples, i)
+							break
+						end
+					end
+
+					-- Cleanup the clipFrame if no more ripples are inside it
+					task.wait(0.05)
+					local stillHasRipple = false
+					for _, child in ipairs(clipFrame:GetChildren()) do
+						if child:IsA("Frame") and child.Name == "ZolinSlice" then
+							stillHasRipple = true
+							break
+						end
+					end
+					if not stillHasRipple and clipFrame and clipFrame.Parent then
+						clipFrame:Destroy()
+					end
+				end)
+			end)
+		end
+
+		-- ---- Input hook: auto-detects element type on click ----
+		
+		local function isInteractive(el)
+			return el and (
+				el:IsA("ImageButton")
+					or el:IsA("TextButton")
+			)
+		end
+		
+		element.MouseButton1Click:Connect(function()
+			-- Auto-detect: is this still an interactive element?
+			if not isInteractive(element) then return end
+			if not element.Parent then return end
+
+			-- Get click position (works for mouse + touch)
+			local UserInputService = game:GetService("UserInputService")
+			local mousePos = UserInputService:GetMouseLocation()
+
+			playTapSound()
+			spawnSlice(mousePos.X, mousePos.Y)
+		end)
+	end
+
+	-- ---- Auto-detect existing elements ----
+	if root then
+		if root:IsA("ImageButton") or root:IsA("TextButton") or root:IsA("TextBox") then
+			attachTo(root)
+		end
+		for _, obj in ipairs(root:GetDescendants()) do
+			if obj:IsA("ImageButton") or obj:IsA("TextButton") or obj:IsA("TextBox") then
+				attachTo(obj)
+			end
+		end
+
+		-- Watch for new elements (e.g., cloned app windows)
+		if options.watchNew ~= false then
+			root.DescendantAdded:Connect(function(obj)
+				if obj:IsA("ImageButton") or obj:IsA("TextButton") or obj:IsA("TextBox") then
+					task.wait()
+					attachTo(obj)
+				end
+			end)
+		end
+	end
+
+	-- Add to the returned table:
+	return {
+		Attach = attachTo,
+		ApplyTo = function(target) attachTo(target) end,
+		RestoreAutoColor = restoreAutoButtonColor,
+	}
+end
 
 -- ============================================
 -- APP LOADER
@@ -1713,7 +2240,7 @@ function ZolinModules.AppManager(dependencies)
 		return nil, false
 	end
 
-	function AppManager.LaunchApplication(p1)
+	function AppManager.LaunchApplication(p1, sourceIcon)
 		
 		if MainUI and (MainUI.__ScreenFrame and MainUI.__ScreenFrame.Applications and MainUI.__ScreenFrame.Applications:FindFirstChild(p1)) or (MainUI.__ZolinDesktop.__ScreenFrame and MainUI.__ZolinDesktop.__ScreenFrame.Applications and MainUI.__ZolinDesktop.__ScreenFrame.Applications:FindFirstChild(p1)) then
 			print("App already running")
@@ -1827,7 +2354,9 @@ function ZolinModules.AppManager(dependencies)
 		local oldActive = ActiveApp
 		ActiveApp = p1
 		if ZolinModules.Mode == "Mobile" then
-		task.spawn(function() AnimationManager.AnimateWindow(clonedApp, "Open") end)
+			task.spawn(function()
+				AnimationManager.AnimateWindow(clonedApp, "Open", nil, sourceIcon)
+			end)
 		end
 		table.insert(RunningApps, p1)
 		triggerEvent("onAppLaunched", p1)
@@ -2294,7 +2823,7 @@ function ZolinModules.AppManager(dependencies)
 		end
 		if app then
 			local isSystem = AppManager.IsSystemApp(p4)
-			-- ✅ Only close system apps that are NOT whitelisted.
+			-- Only close system apps that are NOT whitelisted.
 			-- Whitelisted system apps (Settings, etc.) can be backgrounded like normal apps.
 			if isSystem then
 				AppManager.CloseApp(p4)
@@ -2305,7 +2834,7 @@ function ZolinModules.AppManager(dependencies)
 			if not isSystem then
 				MainUI.__ScreenFrame.HomeScreenScroller.Visible = true
 			end
-			AnimationManager.AnimateWindow(p4, "Close", true);
+			AnimationManager.AnimateWindow(p4, "Close", true, nil, false);
 			
 			elseif ZolinModules.Mode == "Desktop" then
 				spawn(function()
@@ -2356,7 +2885,7 @@ function ZolinModules.AppManager(dependencies)
 		for _, name in ipairs(appsToBg) do AppManager.ExitApplication(name) end
 	end
 
-	function AppManager.ResumeApplication(p5)
+	function AppManager.ResumeApplication(p5, sourceIcon)
 	if not AppManager.GetApplication(p5) then print("Attempted to resume non-existent app: " .. tostring(p5)) return false end
 		local app = nil
 		if ZolinModules.Mode == "Mobile" then
@@ -2371,9 +2900,9 @@ function ZolinModules.AppManager(dependencies)
 			if not isSystem then
 				MainUI.__ScreenFrame.HomeScreenScroller.Visible = false
 			end
-			spawn(function()
-				AnimationManager.AnimateWindow(app, "Open")
-			end);
+			task.spawn(function()
+				AnimationManager.AnimateWindow(app, "Open", nil, sourceIcon)
+			end)
 			elseif ZolinModules.Mode == "Desktop" then
 				AnimationManager.AnimateDesktopWindowOpen(app, "Open")
 				ZolinModules.ZIndexManagerInstance.BringToFront(app)
@@ -4464,54 +4993,52 @@ function ZolinModules.SettingsManager()
 		settingsFolder.Name = "SettingsData"
 		settingsFolder.Parent = MainUI
 	end
-	
+
+	-- ============================================
+	-- DATA FOLDER (mirror target for AnimationManager)
+	-- ============================================
+	local __Zolin = MainUI:FindFirstChild("__Zolin")
+	if not __Zolin then
+		__Zolin = Instance.new("Folder")
+		__Zolin.Name = "__Zolin"
+		__Zolin.Parent = MainUI
+	end
+	local DataFolder = __Zolin:FindFirstChild("Data")
+	if not DataFolder then
+		DataFolder = Instance.new("Folder")
+		DataFolder.Name = "Data"
+		DataFolder.Parent = __Zolin
+	end
+
 	local deviceTree = MainUI:FindFirstChild("DeviceTree")
-	ZolinModules.ZolinVersion = deviceTree.ZolinVersion.Value or "1.0.0"
-	
+	ZolinModules.ZolinVersion = (deviceTree and deviceTree:FindFirstChild("ZolinVersion") and deviceTree.ZolinVersion.Value) or "1.0.0"
+
 	-- Default settings
 	local defaultSettings = {
-		Wallpaper = {
-			type = "string",
-			value = "rbxassetid://2387794684" -- default wallpaper
-		},
-		-- Media volume (main volume)
-		Volume = {
-			type = "number",
-			value = 0.5
-		},
-		-- Notification volume
-		NotificationVolume = {
-			type = "number",
-			value = 0.5
-		},
-		-- Media mute
-		Muted_Media = {
-			type = "boolean",
-			value = false
-		},
-		-- Notification mute
-		Muted_Notifications = {
-			type = "boolean",
-			value = false
-		},
-		-- UI animations toggle
-		AnimationUI = {
-			type = "boolean",
-			value = true
-		},
-		-- Transition speed
-		TransitionSpeed = {
-			type = "number",
-			value = 1
-		},
-		-- Device name
-		DeviceName = {
-			type = "string",
-			value = "ZolinPhone"
-		},
+		Wallpaper           = { type = "string",  value = "rbxassetid://2387794684" },
+		Volume              = { type = "number",  value = 0.5 },
+		NotificationVolume  = { type = "number",  value = 0.5 },
+		Muted_Media         = { type = "boolean", value = false },
+		Muted_Notifications = { type = "boolean", value = false },
+		AnimationUI         = { type = "boolean", value = true },
+		TapSoundEnabled     = { type = "boolean", value = true },
+		TransitionSpeed     = { type = "number",  value = 1.5 },
+		DeviceName          = { type = "string",  value = "ZolinPhone" },
 	}
 
-	-- Load or create setting
+	-- ============================================
+	-- MIRROR MAP
+	-- Maps SettingsData key → __Zolin.Data key
+	-- (some are identical; add aliases if you want different names)
+	-- ============================================
+	local MIRROR_MAP = {
+		AnimationUI     = "AnimationUI",
+		TransitionSpeed = "TransitionSpeed",
+		TapSoundEnabled = "TapSoundEnabled",
+		DeviceName      = "DeviceName",
+	}
+
+	-- Load or create a setting
 	local function getSetting(settingName, settingType, defaultValue)
 		local setting = settingsFolder:FindFirstChild(settingName)
 		if not setting then
@@ -4529,12 +5056,116 @@ function ZolinModules.SettingsManager()
 		return setting
 	end
 
-	-- Initialize all settings
+	-- ============================================
+	-- MIRROR HELPERS
+	-- ============================================
+	local isMirroring = false
+
+	local function getOrCreateDataValue(name, valueType, defaultValue)
+		local v = DataFolder:FindFirstChild(name)
+		if not v then
+			if valueType == "string" then
+				v = Instance.new("StringValue")
+			elseif valueType == "number" then
+				v = Instance.new("NumberValue")
+			elseif valueType == "boolean" then
+				v = Instance.new("BoolValue")
+			end
+			v.Name = name
+			v.Value = defaultValue
+			v.Parent = DataFolder
+		end
+		return v
+	end
+
+	-- Push a SettingsData value → DataFolder
+	local function pushToData(settingName)
+		local dataKey = MIRROR_MAP[settingName]
+		if not dataKey then return end
+
+		local src = settingsFolder:FindFirstChild(settingName)
+		if not src then return end
+
+		local dst = getOrCreateDataValue(dataKey, (function()
+			if src:IsA("StringValue")  then return "string"
+			elseif src:IsA("NumberValue") then return "number"
+			elseif src:IsA("BoolValue") then return "boolean" end
+		end)(), src.Value)
+
+		isMirroring = true
+		dst.Value = src.Value
+		isMirroring = false
+	end
+
+	-- Pull a DataFolder value → SettingsData
+	local function pullFromData(dataKey)
+		-- Find settings key for this data key
+		local settingName = nil
+		for sName, dName in pairs(MIRROR_MAP) do
+			if dName == dataKey then settingName = sName break end
+		end
+		if not settingName then return end
+
+		local src = DataFolder:FindFirstChild(dataKey)
+		if not src then return end
+
+		local dst = settingsFolder:FindFirstChild(settingName)
+		if not dst then return end
+
+		isMirroring = true
+		dst.Value = src.Value
+		isMirroring = false
+	end
+
+	-- ============================================
+	-- INITIALIZE SETTINGS + BUILD BRIDGE
+	-- ============================================
 	for name, data in pairs(defaultSettings) do
 		getSetting(name, data.type, data.value)
 	end
 
-	-- Public functions
+	for settingName, dataKey in pairs(MIRROR_MAP) do
+		local srcSetting = settingsFolder:FindFirstChild(settingName)
+		local dataValue  = DataFolder:FindFirstChild(dataKey)
+
+		if srcSetting and not dataValue then
+			-- Data doesn't exist yet → push from Settings
+			pushToData(settingName)
+		elseif dataValue and not srcSetting then
+			-- Settings doesn't exist yet → pull from Data
+			pullFromData(dataKey)
+		elseif srcSetting and dataValue then
+			-- Both exist → trust SettingsData as source of truth on boot
+			pushToData(settingName)
+		end
+	end
+
+	-- Keep watching for external edits to DataFolder
+	-- (e.g., code elsewhere writing directly to __Zolin.Data)
+	for settingName, dataKey in pairs(MIRROR_MAP) do
+		local dataValue = DataFolder:FindFirstChild(dataKey)
+		if dataValue then
+			dataValue.Changed:Connect(function()
+				if isMirroring then return end
+				pullFromData(dataKey)
+			end)
+		end
+	end
+
+	-- Keep watching for edits to SettingsData
+	for settingName, dataKey in pairs(MIRROR_MAP) do
+		local srcSetting = settingsFolder:FindFirstChild(settingName)
+		if srcSetting then
+			srcSetting.Changed:Connect(function()
+				if isMirroring then return end
+				pushToData(settingName)
+			end)
+		end
+	end
+
+	-- ============================================
+	-- PUBLIC FUNCTIONS
+	-- ============================================
 	function SettingsManager.GetSetting(settingName)
 		local setting = settingsFolder:FindFirstChild(settingName)
 		return setting and setting.Value or nil
@@ -4544,6 +5175,11 @@ function ZolinModules.SettingsManager()
 		local setting = settingsFolder:FindFirstChild(settingName)
 		if setting then
 			setting.Value = value
+			-- .Changed handler above pushes to DataFolder automatically,
+			-- but call explicitly for immediate sync.
+			if MIRROR_MAP[settingName] then
+				pushToData(settingName)
+			end
 			return true
 		end
 		return false
@@ -4576,7 +5212,11 @@ function ZolinModules.SettingsManager()
 		}
 	end
 
-	print("SettingsManager initialized!")
+	-- Expose the mirror map for debugging / external use
+	SettingsManager.GetDataFolder = function() return DataFolder end
+	SettingsManager.GetMirrorMap = function() return MIRROR_MAP end
+
+	print("SettingsManager initialized! (mirrored with __Zolin.Data)")
 	return SettingsManager
 end
 
@@ -4712,20 +5352,20 @@ function ZolinModules.ZolinLauncher()
 								local appInstance = MainUI.__ScreenFrame.Applications:FindFirstChild(appData.name)
 								if not appInstance and not AppManager.GetApplication(appData.name) then
 									-- Create a new app instance for the built-in module
-									AppManager.LaunchApplication(appData.name)
+									AppManager.LaunchApplication(appData.name, icon)
 								elseif not AppManager.GetActiveApp() then
 									-- Resume the existing app
 									openBuiltInModules[appData.name] = appInstance
-									AppManager.ResumeApplication(appData.name)
+									AppManager.ResumeApplication(appData.name, icon)
 									
 								end
 							end
 						else
 							-- Launch regular app via AppManager
 							if not AppManager.GetApplication(appData.name) then
-								AppManager.LaunchApplication(appData.name)
+								AppManager.LaunchApplication(appData.name, icon)
 							elseif not AppManager.GetActiveApp() then
-								AppManager.ResumeApplication(appData.name)
+								AppManager.ResumeApplication(appData.name, icon)
 							end
 						end
 					end
@@ -4993,7 +5633,8 @@ function ZolinModules.ZolinListener()
 			end
 		end)
 	end
-	
+	-- Auto-attach the slice animator to every interactive element in the OS
+	ZolinModules.ZolinSlideAnimatorUI(MainUI)
 	end
 	print("ZolinListener: Ready!")
 end
@@ -6585,6 +7226,7 @@ function ZolinModules.SettingsApp()
 					{name = "Notifications", type = "slider", key = "NotificationVolume", min = 0, max = 1},
 					{name = "Mute Media", type = "toggle", key = "Muted_Media"},
 					{name = "Mute Notifications", type = "toggle", key = "Muted_Notifications"},
+					{name = "Tap & click sounds", type = "toggle", key = "TapSoundEnabled"},
 				}
 			},
 			{
