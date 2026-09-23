@@ -3073,7 +3073,7 @@ local function createChunk26()
 	local UITextSizeConstraint = Instance.new("UITextSizeConstraint");
 	UITextSizeConstraint.MaxTextSize = 29;
 	UITextSizeConstraint.Parent = MessageTemplate;
-	createUICorner(MessageTemplate, "UICorner", Vector2.new(0, 11));
+	createUICorner(MessageTemplate, "UICorner", UDim.new(0, 11));
 end
 
 -- ============================================
