@@ -5,7 +5,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 	local l__TweenService__5 = game:GetService("TweenService");
 	local UIS = game:GetService("UserInputService");
 	local u6 = game:GetService("RunService")
-	local BuildVersion = "3.23.9.4"
+	local BuildVersion = "3.23.9.5"
 	local versionLabel = "v"..BuildVersion;
 	local SettingsScript = {
 		DisplayLogs = true,
@@ -47,17 +47,17 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 	local gloveScale = CurrentGloveHitboxScale  -- default 1
 	local dragging = false
 	local trackWidth = 0
-	
+
 	-- Slap battles | highlight people
 	local PlayerHighlightEnabled = false
 	local highlightsTable = {}  -- tracks highlights per player
 	local highlightConnections = {}  -- tracks character added connections
 	local nameTagsTable = {}  -- tracks name tags per player
 	local nameTagConnections = {}  -- tracks CharacterAdded connections for name tags
-	
+
 	local originalSkybox = {}
 	local originalLighting = {}
-	
+
 	--[ Custom Beatdown Var
 	local CustomBeatdownUI = nil
 	local CustomBeatdownModels = {
@@ -1518,7 +1518,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 					end
 					return hatAccessory
 				end
-				
+
 				local function AddFakeHumanoidRigToStand(standModel)
 					if not standModel then return end
 					local standModelReal = lpr.Character:FindFirstChild("Stand");
@@ -2213,19 +2213,19 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 						part.Color = Color3.fromRGB(0, 0, 0)
 						for _, face in ipairs(faces) do
 							if part.Name ~= "Head" then
-							local faceName = tostring(face):match("%.(.+)$") or tostring(face)
-							local textureName = "Texture_" .. faceName
-							local existingTexture = part:FindFirstChild(textureName)
-							if not existingTexture then
-								for _, child in ipairs(part:GetChildren()) do
-									if child:IsA("Texture") and child.Face == face then
-										existingTexture = child
-										break
+								local faceName = tostring(face):match("%.(.+)$") or tostring(face)
+								local textureName = "Texture_" .. faceName
+								local existingTexture = part:FindFirstChild(textureName)
+								if not existingTexture then
+									for _, child in ipairs(part:GetChildren()) do
+										if child:IsA("Texture") and child.Face == face then
+											existingTexture = child
+											break
+										end
 									end
 								end
-							end
-							if not existingTexture then
-								local texture = Instance.new("Texture")
+								if not existingTexture then
+									local texture = Instance.new("Texture")
 									texture.Name = textureName
 									texture.Texture = textureId
 									texture.Face = face
@@ -2279,8 +2279,8 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 						end
 					end)
 				end
-					-- we will continue this later | 07/07/2026 | 07:02 AM
-					-- hala 04:02 PM
+				-- we will continue this later | 07/07/2026 | 07:02 AM
+				-- hala 04:02 PM
 				local function addTopHatToHead(head)
 					if not head then return end
 					local Name = "HatMeshPartAccessory"
@@ -2315,12 +2315,12 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 					accessoryWeld.Enabled = true
 					accessoryWeld.Parent = handle
 					hatAccessory.Parent = head.Parent
-					
+
 					local face = head:FindFirstChild("face")
 					if face and face:IsA("Decal") then
 						if face.Texture ~= "rbxassetid://73005811414616" then
-						face.Texture = "rbxassetid://73005811414616" -- Set face texture
-						print("Set face Event.")
+							face.Texture = "rbxassetid://73005811414616" -- Set face texture
+							print("Set face Event.")
 						end
 					end
 					if specialMesh then
@@ -2400,9 +2400,9 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 						Sword.Anchored = false
 						Sword.Reflectance = 1
 						Sword.Parent = rightArm
-						
+
 						-- SpecialMesh
-						
+
 						local SpecialMesh = Instance.new("SpecialMesh")
 						SpecialMesh.MeshId = "http://www.roblox.com/asset/?id=94840342";
 						SpecialMesh.MeshType = Enum.MeshType.FileMesh
@@ -2410,18 +2410,18 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 						SpecialMesh.TextureId = "rbxassetid://3142335903";
 						SpecialMesh.Parent = Sword;
 						SpecialMesh.Name = "Sword";
-						
+
 						-- Light
-						
+
 						local Light = Instance.new("PointLight")
 						Light.Brightness = 35;
 						Light.Range = 7;
 						Light.Shadows = true;
 						Light.Color = Color3.fromRGB(0, 85, 255);
 						Light.Parent = Sword;
-						
+
 						-- Particles
-						
+
 						local SoulFire = Instance.new("ParticleEmitter")
 						SoulFire.Brightness = 13;
 						SoulFire.Color = Color3.fromRGB(0, 85, 255);
@@ -2460,15 +2460,15 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 						SoulFire.LockedToPart = false;
 						SoulFire.Parent = Sword;
 						SoulFire.Enabled = true;
-						
+
 						local Effect = Instance.new("Attachment");
 						Effect.Name = "Effect";
 						Effect.Parent = Sword;
 						Effect.CFrame.Position = Vector3.new(0, -1.1, 0);
 						Effect.Axis = Vector3.new(1, 0, 0);
 						Effect.SecondaryAxis = Vector3.new(0, 1, 0);
-						
-						
+
+
 						local Flame = Instance.new("ParticleEmitter")
 						Flame.Brightness = 10;
 						Flame.Color = ColorSequence.new({
@@ -2523,7 +2523,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 						Flame.ShapePartial = 1;
 						Flame.Parent = Effect;
 						Flame.Enabled = true;
-						
+
 						local InnerFlame = Instance.new("ParticleEmitter")
 						InnerFlame.Brightness = 10;
 						InnerFlame.Color = ColorSequence.new({
@@ -2578,7 +2578,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 						InnerFlame.ShapePartial = 1;
 						InnerFlame.Parent = Effect;
 						InnerFlame.Enabled = true;
-						
+
 						-- Weld
 						local Weld = Instance.new("Weld")
 						Weld.Part0 = Sword
@@ -2586,7 +2586,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 						Weld.C0 = CFrame.new(0, -2.7, 0.9) * CFrame.Angles(math.rad(90), math.rad(0), 0)
 						Weld.C1 = CFrame.new(0, 0, 0) * CFrame.Angles(math.rad(0), math.rad(0), 0)
 						Weld.Parent = Sword
-						
+
 
 						print("Sword created successfully!")
 					end
@@ -2656,35 +2656,35 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 				end
 				-- we will continue this later | 07/23/2026 | 02:13 AM
 				local function addOutlineHead(head)
-						if not head then return end
-						local Name = "Accessory (BestOutlineHead)"
-						if head.Parent:FindFirstChild(Name) then return end
-						for _, child in ipairs(head.Parent:GetChildren()) do
-							if child.Name == Name then
-								child:Destroy()
-							end
+					if not head then return end
+					local Name = "Accessory (BestOutlineHead)"
+					if head.Parent:FindFirstChild(Name) then return end
+					for _, child in ipairs(head.Parent:GetChildren()) do
+						if child.Name == Name then
+							child:Destroy()
 						end
-						local hatAccessory = Instance.new("Accessory")
-						hatAccessory.Name = Name
-						local handle = Instance.new("MeshPart")
-						handle.Name = "Handle"
-						handle.CanCollide = false
-						handle.Transparency = 0
-						handle.Massless = true
-						handle.Parent = hatAccessory
-						handle.MeshId = "rbxassetid://89020373682473";
-						handle.TextureID = "rbxassetid://92408191024626";
-						handle.Size = Vector3.new(1.314, 1.319, 1.314)
+					end
+					local hatAccessory = Instance.new("Accessory")
+					hatAccessory.Name = Name
+					local handle = Instance.new("MeshPart")
+					handle.Name = "Handle"
+					handle.CanCollide = false
+					handle.Transparency = 0
+					handle.Massless = true
+					handle.Parent = hatAccessory
+					handle.MeshId = "rbxassetid://89020373682473";
+					handle.TextureID = "rbxassetid://92408191024626";
+					handle.Size = Vector3.new(1.314, 1.319, 1.314)
 
-						local accessoryWeld = Instance.new("Weld")
-						accessoryWeld.Name = "AccessoryWeld"
-						accessoryWeld.Part0 = handle
-						accessoryWeld.Part1 = head
-						accessoryWeld.C0 = CFrame.new(0, 0, 0) * CFrame.Angles(0, 0, 0)
-						accessoryWeld.C1 = CFrame.new(0, 0, 0) * CFrame.Angles(0, 0, 0)
-						accessoryWeld.Enabled = true
-						accessoryWeld.Parent = handle
-						hatAccessory.Parent = head.Parent
+					local accessoryWeld = Instance.new("Weld")
+					accessoryWeld.Name = "AccessoryWeld"
+					accessoryWeld.Part0 = handle
+					accessoryWeld.Part1 = head
+					accessoryWeld.C0 = CFrame.new(0, 0, 0) * CFrame.Angles(0, 0, 0)
+					accessoryWeld.C1 = CFrame.new(0, 0, 0) * CFrame.Angles(0, 0, 0)
+					accessoryWeld.Enabled = true
+					accessoryWeld.Parent = handle
+					hatAccessory.Parent = head.Parent
 					local face = head:FindFirstChild("face")
 					if face and face:IsA("Decal") then
 						local NewFace = face:Clone();
@@ -2806,7 +2806,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 			end
 		},
 	}
-	
+
 	-- LIGHTING:
 	local function saveCurrentSettings()
 		local lighting = game:GetService("Lighting")
@@ -2959,7 +2959,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 	end
 	local isNight = false
 	local isTransitioning = false
-	
+
 	local function setDayNight(enableNight)
 		-- Prevent spam
 		if isTransitioning then
@@ -2990,12 +2990,12 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 			end)
 		end
 	end
-	
+
 	local function CreateLightning(StartPosition, EndPosition, TotalDuration, r, g ,b)
 		local currentColor = nil
 		if not r and not g and not b then
 			currentColor = Color3.fromRGB(187, 14, 255);
-			elseif r and g and b then
+		elseif r and g and b then
 			currentColor = Color3.fromRGB(r, g, b);
 		end
 		TotalDuration = TotalDuration or 2
@@ -3349,7 +3349,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 	ImageLabel_ButtonSettings.Image = "rbxassetid://5912368763";
 	ImageLabel_ButtonSettings.ImageColor3 = Color3.fromRGB(48, 48, 48);
 	ImageLabel_ButtonSettings.ScaleType = Enum.ScaleType.Fit;
-	
+
 	--[
 	local ButtonTeleport = Instance.new("TextButton", SideButtons)
 	ButtonTeleport.AnchorPoint = Vector2.new(0.05, 0.5)
@@ -3438,7 +3438,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 	UIStroke_Settings.Thickness = 4.3;
 	UIStroke_Settings.Transparency = 0.33;
 	UIStroke_Settings.ZIndex = 6;
-	
+
 	local function isFriend(Friend)
 		if Friend == lpr then return end
 		local success, isFriends = pcall(function()
@@ -3689,7 +3689,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 		-- ============================================================
 		-- PERFORM TELEPORT
 		-- ============================================================
-		
+
 		-- Teleport
 		humanoidRootPart.CFrame = CFrame.new(safePosition, safePosition + lookVector)
 
@@ -3731,7 +3731,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 
 		-- Check if player is falling into void after teleport
 		task.wait(0.5)
-		
+
 		if humanoidRootPart.Position.Y < 0 then
 			-- Falling into void! Try to find a safe position again
 			local emergencyCheck = findSafePosition(targetRootPart.Position, lookVector)
@@ -3991,7 +3991,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 	UIPadding_Desc.PaddingLeft = UDim.new(0.05, 0);
 	UIPadding_Desc.PaddingRight = UDim.new(0.05, 0);
 	UIPadding_Desc.PaddingTop = UDim.new(0.05, 0);
-	
+
 	-- START --
 	local ImportedModels = {}
 	local function getDataStorePath()
@@ -4030,7 +4030,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 		local json = game:GetService("HttpService"):JSONEncode(ImportedModels)
 		store.Value = json
 	end
-	
+
 	local function getAllModels()
 		local all = {}
 		for _, model in ipairs(CustomBeatdownModels) do
@@ -4139,7 +4139,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 	ImportStatus.TextSize = 14
 	ImportStatus.TextXAlignment = Enum.TextXAlignment.Left
 	ImportStatus.ZIndex = 6
-	
+
 	-- Helper to refresh the CustomBeatdownUI list (if open)
 	local function refreshCustomBeatdownUI()
 		if CustomBeatdownUI and CustomBeatdownUI.Visible then
@@ -4162,9 +4162,9 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 			end
 		end
 	end
-	
+
 	-- END --
-	
+
 	--[ Add after SliderSelection4
 	local SliderSelection5 = Instance.new("Frame", Desclabel);
 	SliderSelection5.AnchorPoint = Vector2.new(0.5, 0.5);
@@ -4244,7 +4244,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 	UIStroke_TitleSlider5.ZIndex = 6;
 	UIStroke_TitleSlider5.Transparency = 0;
 	--]]
-	
+
 	--[ Glove Hitbox Resize Setting
 	local GloveResizeSetting = Instance.new("Frame", Desclabel)
 	GloveResizeSetting.Name = "GloveResizeSetting"
@@ -4369,10 +4369,10 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 	ValueLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
 	ValueLabel.TextScaled = true
 	ValueLabel.ZIndex = 6
-	
+
 	--]]
 
-	
+
 	local SlapSetting2 = Instance.new("Frame", Desclabel);
 	SlapSetting2.Name = "SlapSetting2";
 	SlapSetting2.AnchorPoint = Vector2.new(0.5, 0.5);
@@ -4443,7 +4443,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 	UIStroke_ButtonSlap2.StrokeSizingMode = Enum.StrokeSizingMode.FixedSize;
 	UIStroke_ButtonSlap2.LineJoinMode = Enum.LineJoinMode.Round;
 	UIStroke_ButtonSlap2.Transparency = 0;
-	
+
 	--]]
 
 	--[ Slap Battles Settings
@@ -5162,7 +5162,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 
 		--print("ColorCorrection effect ended (Scream)")
 	end
-	
+
 	-- Red
 	local function initializeColorCorrectionGalaxy()
 		-- First, check for ALL existing ColorCorrection effects and clean them up
@@ -5341,7 +5341,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 
 		--print("ColorCorrection effect ended (Scream)")
 	end
-	
+
 	local function loadModelIntoViewport(modelId)
 		if not CustomBeatdownUI then return end
 		local viewport = CustomBeatdownUI:FindFirstChild("ContentContainer"):FindFirstChild("ModelPreviewContainer"):FindFirstChild("ViewportFrame")
@@ -6046,8 +6046,8 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 
 													if v:IsA("BasePart") and not v:IsDescendantOf(character:FindFirstChild("Stand")) then
 														if v.Name ~= "HumanoidRootPart" then
-														v.Transparency = 1
-														--v.CanCollide = false
+															v.Transparency = 1
+															--v.CanCollide = false
 														end
 													end
 
@@ -6080,8 +6080,8 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 															for _, child in pairs(v:GetDescendants()) do
 																if child:IsA("BasePart") and not v:IsDescendantOf(character:FindFirstChild("Stand")) then
 																	if child.Name ~= "HumanoidRootPart" then
-																	child.Transparency = 1
-																	--child.CanCollide = false
+																		child.Transparency = 1
+																		--child.CanCollide = false
 																	end
 																end
 															end
@@ -6109,7 +6109,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 												game:GetService("SoundService"):FindFirstChild("Timeresume"):Play();
 												game:GetService("SoundService"):FindFirstChild("Timestop").Volume = 0.5;
 												game:GetService("SoundService"):FindFirstChild("Timeresume").Volume = 2.5;
-												
+
 												-- restore the player's visibility
 												local function restorePlayerVisibility()
 													local lpr = game:GetService("Players").LocalPlayer
@@ -6124,10 +6124,10 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 
 														if v:IsA("BasePart") then
 															if v.Name ~= "HumanoidRootPart" then
-															v.Transparency = 0
-															--v.CanCollide = true
+																v.Transparency = 0
+																--v.CanCollide = true
+															end
 														end
-													end
 														if v:IsA("Decal") or v:IsA("Texture") then
 															v.Transparency = 0
 														end
@@ -6155,8 +6155,8 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 																for _, child in pairs(v:GetDescendants()) do
 																	if child:IsA("BasePart") then
 																		if child.Name ~= "HumanoidRootPart" then
-																		child.Transparency = 0
-																		--child.CanCollide = true
+																			child.Transparency = 0
+																			--child.CanCollide = true
 																		end
 																	end
 																end
@@ -6271,11 +6271,11 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 								elseif modelData.id == "SMT_beatdown" then
 									if soundName == "Nukem" and s.IsPlaying then
 										local CutsenseCamPos = StandModel:FindFirstChild("CutsceneCameraPart")
-									if CurrentPlayer == lpr then
-										
-										if CutsenseCamPos then
-											CutsenseCamPos:Destroy()
-										end
+										if CurrentPlayer == lpr then
+
+											if CutsenseCamPos then
+												CutsenseCamPos:Destroy()
+											end
 											-- handle it here !!
 											if s.Parent.Parent:FindFirstChild("Head") then
 												Camera.CFrame = s.Parent.Parent.Head.CFrame
@@ -6598,93 +6598,93 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 										if CutsenseCamPos then
 											CutsenseCamPos:Destroy()
 										end
-										
+
 										if CurrentPlayer == lpr then
 											spawn(function()
-											if CustomCutsenseUncle3 and not CamPosActive then
-												CamPosActive = true
-												PlayerCurrentData["CutsceneActive"] = true
+												if CustomCutsenseUncle3 and not CamPosActive then
+													CamPosActive = true
+													PlayerCurrentData["CutsceneActive"] = true
 
-												-- Define timers for camera positions
-												local CamPos1_timer = 1.5  -- Switch to beatdown head at 1.5 seconds
-												local CamPos2_timer = 3.5  -- Switch back to victim head at 3.5 seconds
-												local totalDuration = 7    -- Total cutscene duration
+													-- Define timers for camera positions
+													local CamPos1_timer = 1.5  -- Switch to beatdown head at 1.5 seconds
+													local CamPos2_timer = 3.5  -- Switch back to victim head at 3.5 seconds
+													local totalDuration = 7    -- Total cutscene duration
 
-												-- Reset flags
-												local CamPos1 = false
-												local CamPos2 = false
-												local FinalCamPos = false
+													-- Reset flags
+													local CamPos1 = false
+													local CamPos2 = false
+													local FinalCamPos = false
 
-												-- Store original camera settings
-												local originalCameraType = Camera.CameraType
-												Camera.CameraType = Enum.CameraType.Scriptable
+													-- Store original camera settings
+													local originalCameraType = Camera.CameraType
+													Camera.CameraType = Enum.CameraType.Scriptable
 
-												local startTime = tick()
-												print("Starting unified cutscene loop")
+													local startTime = tick()
+													print("Starting unified cutscene loop")
 
-												-- Single loop handling both timer and camera updates
-												while CamPosActive and (tick() - startTime) < totalDuration do
-													local elapsedTime = tick() - startTime
+													-- Single loop handling both timer and camera updates
+													while CamPosActive and (tick() - startTime) < totalDuration do
+														local elapsedTime = tick() - startTime
 
-													-- Update timer flags
-													if not CamPos1 and elapsedTime >= CamPos1_timer then
-														CamPos1 = true
-														print("CamPos1 triggered at " .. string.format("%.2f", elapsedTime) .. "s")
+														-- Update timer flags
+														if not CamPos1 and elapsedTime >= CamPos1_timer then
+															CamPos1 = true
+															print("CamPos1 triggered at " .. string.format("%.2f", elapsedTime) .. "s")
+														end
+
+														if not CamPos2 and elapsedTime >= CamPos2_timer then
+															CamPos2 = true
+															print("CamPos2 triggered at " .. string.format("%.2f", elapsedTime) .. "s")
+														end
+
+														if not FinalCamPos and elapsedTime >= totalDuration then
+															FinalCamPos = true
+															print("FinalCamPos triggered at " .. string.format("%.2f", elapsedTime) .. "s")
+														end
+
+														-- Get target parts
+														local victimHead = s and s.Parent and s.Parent.Parent and s.Parent.Parent:FindFirstChild("Head")
+														local beatdownHeadPart = beatdownHead
+														local camOffset = Vector3.new(0, -0.2, -1) -- a little bit fornt
+														-- Camera positioning based on current flags
+														if not CamPos1 and not CamPos2 and not FinalCamPos then
+															-- Initial position: Victim Head
+															if victimHead then
+																Camera.CFrame = victimHead.CFrame
+															end
+														elseif CamPos1 and not CamPos2 and not FinalCamPos then
+															-- Position 1: Beatdown Stand Head
+															if beatdownHeadPart and beatdownHeadPart.Parent then
+																Camera.CFrame = beatdownHeadPart.CFrame * CFrame.new(camOffset)
+															elseif victimHead then
+																-- Fallback to victim head
+																Camera.CFrame = victimHead.CFrame
+															end
+														elseif CamPos1 and CamPos2 and not FinalCamPos then
+															-- Position 2: Back to Victim Head
+															if victimHead then
+																Camera.CFrame = victimHead.CFrame
+															end
+														elseif CamPos1 and CamPos2 and FinalCamPos then
+															-- Final position: Beatdown Head
+															if beatdownHeadPart and beatdownHeadPart.Parent then
+																Camera.CFrame = beatdownHeadPart.CFrame * CFrame.new(camOffset)
+															elseif victimHead then
+																-- Fallback to victim head
+																Camera.CFrame = victimHead.CFrame
+															end
+														else
+															-- Default fallback
+															if victimHead then
+																Camera.CFrame = victimHead.CFrame
+															end
+														end
+
+														game:GetService("RunService").RenderStepped:Wait()
 													end
-
-													if not CamPos2 and elapsedTime >= CamPos2_timer then
-														CamPos2 = true
-														print("CamPos2 triggered at " .. string.format("%.2f", elapsedTime) .. "s")
-													end
-
-													if not FinalCamPos and elapsedTime >= totalDuration then
-														FinalCamPos = true
-														print("FinalCamPos triggered at " .. string.format("%.2f", elapsedTime) .. "s")
-													end
-
-													-- Get target parts
-													local victimHead = s and s.Parent and s.Parent.Parent and s.Parent.Parent:FindFirstChild("Head")
-													local beatdownHeadPart = beatdownHead
-													local camOffset = Vector3.new(0, -0.2, -1) -- a little bit fornt
-													-- Camera positioning based on current flags
-													if not CamPos1 and not CamPos2 and not FinalCamPos then
-														-- Initial position: Victim Head
-														if victimHead then
-															Camera.CFrame = victimHead.CFrame
-														end
-													elseif CamPos1 and not CamPos2 and not FinalCamPos then
-														-- Position 1: Beatdown Stand Head
-														if beatdownHeadPart and beatdownHeadPart.Parent then
-															Camera.CFrame = beatdownHeadPart.CFrame * CFrame.new(camOffset)
-														elseif victimHead then
-															-- Fallback to victim head
-															Camera.CFrame = victimHead.CFrame
-														end
-													elseif CamPos1 and CamPos2 and not FinalCamPos then
-														-- Position 2: Back to Victim Head
-														if victimHead then
-															Camera.CFrame = victimHead.CFrame
-														end
-													elseif CamPos1 and CamPos2 and FinalCamPos then
-														-- Final position: Beatdown Head
-														if beatdownHeadPart and beatdownHeadPart.Parent then
-															Camera.CFrame = beatdownHeadPart.CFrame * CFrame.new(camOffset)
-														elseif victimHead then
-															-- Fallback to victim head
-															Camera.CFrame = victimHead.CFrame
-														end
-													else
-														-- Default fallback
-														if victimHead then
-															Camera.CFrame = victimHead.CFrame
-														end
-													end
-
-													game:GetService("RunService").RenderStepped:Wait()
-												end
-												CamPosActive = false
-												PlayerCurrentData["CutsceneActive"] = false
-												spawn(function()
+													CamPosActive = false
+													PlayerCurrentData["CutsceneActive"] = false
+													spawn(function()
 														-- Handle return after cutscene with proper timing
 														if SettingsScript.KickPlayerAfterCutsenceBD and PlayerCurrentData["IsTeleported"] then
 															-- Calculate remaining time for proper timing
@@ -6718,7 +6718,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 																end
 															end
 														end
-												end)
+													end)
 													print("Cutscene completed")
 												end
 											end)
@@ -6844,7 +6844,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 													s.SoundId = "105105608518242"
 													s.TimePosition = 2.19
 													s.PlaybackSpeed = 1
-													
+
 													--]]
 													game:GetService("SoundService").AmbientReverb = Enum.ReverbType.Quarry
 													game:GetService("SoundService"):FindFirstChild("Timestop"):Play();
@@ -6855,17 +6855,17 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 													-- hook event if standModel destroyed
 													local connection = nil
 													if StandModel then
-													connection = StandModel.Destroying:Connect(function()
-														if CurrentPlayer == lpr then
-														endColorCorrectionEffectGalaxy();
-														setDayNight(false);
-														game:GetService("SoundService").AmbientReverb = Enum.ReverbType.NoReverb
-														game:GetService("SoundService"):FindFirstChild("Timeresume"):Play();
-														game:GetService("SoundService"):FindFirstChild("Timestop").Volume = 0.5;
-														game:GetService("SoundService"):FindFirstChild("Timeresume").Volume = 2.5;
-														connection:Disconnect()
-														end
-													end)
+														connection = StandModel.Destroying:Connect(function()
+															if CurrentPlayer == lpr then
+																endColorCorrectionEffectGalaxy();
+																setDayNight(false);
+																game:GetService("SoundService").AmbientReverb = Enum.ReverbType.NoReverb
+																game:GetService("SoundService"):FindFirstChild("Timeresume"):Play();
+																game:GetService("SoundService"):FindFirstChild("Timestop").Volume = 0.5;
+																game:GetService("SoundService"):FindFirstChild("Timeresume").Volume = 2.5;
+																connection:Disconnect()
+															end
+														end)
 													else
 														if CurrentPlayer == lpr then
 															endColorCorrectionEffectGalaxy();
@@ -7250,7 +7250,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 				end;
 			end;
 		end;
-		
+
 	end;
 	local function WriteStandModelOther(Stand, PlayerId)
 		local CurrentPlayer = game.Players:GetPlayerByUserId(PlayerId);
@@ -7266,7 +7266,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 					return
 				end
 			end
-			
+
 		end
 		for v1, parts in ipairs(StandModel:GetChildren()) do
 			if parts:IsA("BasePart") then
@@ -7369,7 +7369,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 			end
 		end
 	end
-	
+
 	-- Apply and restore functions
 	local function applyGloveHitbox(scale)
 		if not lpr.Character then return end
@@ -7391,7 +7391,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 		glovePart.Size = baseSize * scale
 		glovePart.Transparency = 0.5  -- optional visual feedback
 	end
-	
+
 	local function updateSliderFromMouse(mouseX)
 		local track = SliderTrack
 		local handle = SliderHandle
@@ -7450,206 +7450,113 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 		glovePart.Size = CustomGloveHitbox or Vector3.new(7, 7, 7)
 		glovePart.Transparency = 0
 	end
-		
-	local renderSteppedConnection = nil
+
 	local monitoredPlayers = {}
+	local standsPlayerAddedConnection = nil
+	local standsPlayerRemovingConnection = nil
 
-	-- Make sure the connection is created and maintained
-	local function startMonitoringOtherStands()
-		if not ViewOtherCustomStands.Enabled then 
-			if SettingsScript.DisplayLogs then
-				print("ViewOtherCustomStands is disabled")
+	local function monitorStandPlayer(player)
+		if player == lpr or monitoredPlayers[player] then return end
+		local data = {
+			character = nil,
+			stand = nil,
+			appliedModel = nil,
+			isFriend = nil,
+			busy = false,
+			retryAt = 0,
+		}
+		monitoredPlayers[player] = data
+
+		-- Friendship checks can yield; keep them outside the render callback.
+		task.spawn(function()
+			local friend = isFriend(player)
+			if monitoredPlayers[player] == data then
+				data.isFriend = friend
 			end
-			return 
+		end)
+	end
+
+	local function updateOtherStands()
+		if not ViewOtherCustomStands.Enabled or not standsPlayerAddedConnection then
+			return
 		end
 
-		if renderSteppedConnection then
-			renderSteppedConnection:Disconnect()
-			renderSteppedConnection = nil
-		end
-
-		-- Monitor all current players
-		for _, player in ipairs(game.Players:GetPlayers()) do
-			if player ~= lpr then
-				if not ViewOtherCustomStands.FriendStandsOnly or (ViewOtherCustomStands.FriendStandsOnly and isFriend(player)) then
-					if not monitoredPlayers[player] then
-						monitoredPlayers[player] = {
-							active = true,
-							character = player.Character,
-							appliedModel = nil,
-							isFriend = isFriend(player)
-						}
-
-						-- Apply immediately if stand exists
-						if player.Character then
-							local stand = player.Character:FindFirstChild("Stand")
-							if stand then
-								local selectedModelData = nil
-								for _, model in ipairs(CustomBeatdownModels) do
-									if model.id == SelectedBeatdownModel then
-										selectedModelData = model
-										break
-									end
-								end
-								if selectedModelData then
-									monitoredPlayers[player].appliedModel = SelectedBeatdownModel
-									WriteStandModelOther("Stand", player.UserId)
-								end
-							end
-						end
-					end
-				end
+		for player, data in pairs(monitoredPlayers) do
+			if player.Parent ~= game.Players then
+				monitoredPlayers[player] = nil
+				continue
 			end
-		end
-
-		-- Create the RenderStepped connection
-		renderSteppedConnection = u6.RenderStepped:Connect(function()
-			if not ViewOtherCustomStands.Enabled then
-				if renderSteppedConnection then
-					renderSteppedConnection:Disconnect()
-					renderSteppedConnection = nil
-					if SettingsScript.DisplayLogs then
-						print("ViewOtherCustomStands is disabled, disconnecting RenderStepped")
-					end
-				end
-				return
+			if ViewOtherCustomStands.FriendStandsOnly and data.isFriend ~= true then
+				continue
 			end
 
-			-- Process all monitored players
-			for player, data in pairs(monitoredPlayers) do
-				-- Check if data is valid
-				if not data or not data.active then
-					monitoredPlayers[player] = nil
-					continue
-				end
-
-				-- Check if player still exists
-				if not player or not player.Parent then
-					monitoredPlayers[player] = nil
-					continue
-				end
-
-				-- Check if character exists and is valid
-				local character = player.Character
-				if not character or not character.Parent then
-					-- Character was removed, wait for CharacterAdded event
-					continue
-				end
-
-				-- Update character reference if changed
-				if data.character ~= character then
-					data.character = character
-				end
-
-				-- Check if stand exists
-				local stand = character:FindFirstChild("Stand")
-				if stand and stand.Parent then
-					-- Get selected model data
-					local selectedModelData = nil
-					for _, model in ipairs(CustomBeatdownModels) do
-						if model.id == SelectedBeatdownModel then
-							selectedModelData = model
-							break
-						end
-					end
-
-					if not selectedModelData then
-						for _, model in ipairs(CustomBeatdownModels) do
-							if model.id == "evil_beatdown" then
-								selectedModelData = model
-								break
-							end
-						end
-					end
-
-					if selectedModelData then
-					spawn(function()
-						while ViewOtherCustomStands.Enabled do
-							task.wait(0.01);
-							if not stand and not stand.Parent then
-								if SettingsScript.DisplayLogs then
-									print("Stand was removed for: " .. player.Name)
-								end
-								data.appliedModel = nil
-								break
-							end
-							if data.appliedModel ~= SelectedBeatdownModel then
-								WriteStandModelOther("Stand", player.UserId);
-								data.appliedModel = SelectedBeatdownModel
-								if SettingsScript.DisplayLogs then
-									--print("Applied custom stand to: " .. player.Name)
-								end
-							end
-						end
-					end)
-				end
-			else
-				-- Stand was removed
+			local character = player.Character
+			local stand = character and character:FindFirstChild("Stand")
+			if data.character ~= character or data.stand ~= stand then
+				data.character = character
+				data.stand = stand
 				data.appliedModel = nil
 			end
-		end
-	end)
+			if not stand or not stand.Parent or data.busy then continue end
 
-		-- Handle new players
-		game.Players.PlayerAdded:Connect(function(player)
-			if player == lpr then return end
-			if ViewOtherCustomStands.FriendStandsOnly and not isFriend(player) then
-				return
+			local modelId = SelectedBeatdownModel
+			local forceOverwrite = SlapBattlesSettings.ForceOverwriteBeatdown
+			if data.appliedModel == modelId and data.appliedForceOverwrite == forceOverwrite then
+				continue
 			end
+			if os.clock() < data.retryAt then continue end
 
-			if not monitoredPlayers[player] then
-				monitoredPlayers[player] = {
-					active = true,
-					character = player.Character,
-					appliedModel = nil,
-					isFriend = isFriend(player)
-				}
-			end
-		end)
-
-		-- Handle player character added
-		game.Players.PlayerAdded:Connect(function(player)
-			if player == lpr then return end
-			player.CharacterAdded:Connect(function(character)
-				if not monitoredPlayers[player] then
-					monitoredPlayers[player] = {
-						active = true,
-						character = character,
-						appliedModel = nil,
-						isFriend = isFriend(player)
-					}
-				else
-					monitoredPlayers[player].active = true
-					monitoredPlayers[player].character = character
-					monitoredPlayers[player].appliedModel = nil
+			data.busy = true
+			local success, err = pcall(WriteStandModelOther, "Stand", player.UserId)
+			data.busy = false
+			if success then
+				-- Do not mark a replacement stand as already updated.
+				if monitoredPlayers[player] == data
+					and player.Character == character
+					and character:FindFirstChild("Stand") == stand then
+					data.appliedModel = modelId
+					data.appliedForceOverwrite = forceOverwrite
 				end
-			end)
-		end)
+			else
+				data.retryAt = os.clock() + 1
+				if SettingsScript.DisplayLogs then
+					warn("Could not update stand for " .. player.Name .. ": " .. tostring(err))
+				end
+			end
+		end
+	end
 
+	local function startMonitoringOtherStands()
+		if not ViewOtherCustomStands.Enabled or standsPlayerAddedConnection then return end
+
+		standsPlayerAddedConnection = game.Players.PlayerAdded:Connect(monitorStandPlayer)
+		standsPlayerRemovingConnection = game.Players.PlayerRemoving:Connect(function(player)
+			monitoredPlayers[player] = nil
+		end)
+		for _, player in ipairs(game.Players:GetPlayers()) do
+			monitorStandPlayer(player)
+		end
+		updateOtherStands()
 		if SettingsScript.DisplayLogs then
 			print("Started monitoring other players' stands")
 		end
-
-		return renderSteppedConnection
 	end
 
-	-- Function to stop monitoring
 	local function stopMonitoringOtherStands()
-		if renderSteppedConnection then
-			renderSteppedConnection:Disconnect()
-			renderSteppedConnection = nil
+		if standsPlayerAddedConnection then
+			standsPlayerAddedConnection:Disconnect()
+			standsPlayerAddedConnection = nil
 		end
-
-		-- Clear all monitored players
-		for player, data in pairs(monitoredPlayers) do
-			monitoredPlayers[player] = nil
+		if standsPlayerRemovingConnection then
+			standsPlayerRemovingConnection:Disconnect()
+			standsPlayerRemovingConnection = nil
 		end
-		monitoredPlayers = {}
-
+		table.clear(monitoredPlayers)
 		if SettingsScript.DisplayLogs then
 			print("Stopped monitoring other players' stands")
 		end
 	end
+
 	local function addViewOtherStandsSetting()
 		local ViewStandsSetting = Instance.new("Frame", Desclabel)
 		ViewStandsSetting.Name = "ViewStandsSetting"
@@ -7741,11 +7648,11 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 		end)
 		return ViewStandsSetting, Button_ViewStands
 	end
-	
+
 	-- ============ PLAYER HIGHLIGHT (ESP) SYSTEM ============
 
 	local highlightUpdateTimer = 0
-	
+
 	local function createNameTag(player)
 		if not player or player == lpr then return end
 		local char = player.Character
@@ -7919,7 +7826,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 			highlightConnections[player] = nil
 		end
 	end
-	
+
 	local function startHighlightSystem()
 		if PlayerHighlightEnabled then return end
 		PlayerHighlightEnabled = true
@@ -7941,12 +7848,12 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 			hl:Destroy()
 		end
 		highlightsTable = {}
-		
+
 		for player, tag in pairs(nameTagsTable) do
 			tag:Destroy()
 		end
 		nameTagsTable = {}
-		
+
 		-- Disconnect all CharacterAdded connections
 		for player, conn in pairs(highlightConnections) do
 			conn:Disconnect()
@@ -7954,7 +7861,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 		highlightConnections = {}
 		print("Player Highlight (ESP) disabled")
 	end
-	
+
 	local function addHighlightSetting()
 		-- Player Highlight (ESP) Setting
 		local PlayerHighlightSetting = Instance.new("Frame", Desclabel)
@@ -8030,7 +7937,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 		UIStroke_HighlightToggle.LineJoinMode = Enum.LineJoinMode.Round
 		UIStroke_HighlightToggle.ZIndex = 6
 		UIStroke_HighlightToggle.Transparency = 0
-		
+
 		Button_HighlightToggle.MouseButton1Click:Connect(function()
 			if not PlayerHighlightEnabled then
 				startHighlightSystem()
@@ -8074,8 +7981,10 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 		if SlapBattlesSettings.GloveBigHitBox then
 			applyGloveHitbox(CurrentGloveHitboxScale)
 		end
+
+		updateOtherStands()
 	end)
-	
+
 	-- Import button
 	ImportButton.MouseButton1Click:Connect(function()
 		local url = ImportUrlBox.Text
@@ -8253,7 +8162,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 		end
 		popup.Parent = Settings
 	end)
-	
+
 	--// BUTTONS
 	ButtonSettings.MouseButton1Click:Connect(function()
 		if Settings.Visible == false then
@@ -8284,7 +8193,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 			end
 		end
 	end)
-	
+
 	Button_GloveResizeToggle.MouseButton1Click:Connect(function()
 		gloveResizeEnabled = not gloveResizeEnabled
 		SlapBattlesSettings.GloveBigHitBox = gloveResizeEnabled
@@ -8302,7 +8211,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 			restoreGloveHitbox()
 		end
 	end)
-	
+
 
 	-- // DETECTORS
 	UIS.InputBegan:Connect(function(p6, p7)
@@ -8391,7 +8300,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 			updatePlayerList2()
 		end
 	end)
-	
+
 	-- AUTO CLEANUP ON DESTROY APP
 	local appConnection = nil
 	appConnection = TranslationUI.Destroying:Connect(function()
@@ -8420,7 +8329,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 	startAutoUpdate()
 	createTeleportUI()
 	loadImportedModels()
-	
+
 	print("Running on version:" ..tostring(BuildVersion));
 	return TranslationApp;
 
