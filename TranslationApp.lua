@@ -5,7 +5,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 	local l__TweenService__5 = game:GetService("TweenService");
 	local UIS = game:GetService("UserInputService");
 	local u6 = game:GetService("RunService")
-	local BuildVersion = "3.23.9.5"
+	local BuildVersion = "3.23.9.6"
 	local versionLabel = "v"..BuildVersion;
 	local SettingsScript = {
 		DisplayLogs = true,
@@ -60,6 +60,21 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 
 	--[ Custom Beatdown Var
 	local CustomBeatdownUI = nil
+	-- Detached originals allow this skin to be removed when another skin is selected.
+	local FuturePredictionSkinStates = setmetatable({}, {__mode = "k"})
+	local function clearFuturePredictionSkin(standModel)
+		local state = FuturePredictionSkinStates[standModel]
+		if not state then return end
+		FuturePredictionSkinStates[standModel] = nil
+		if state.cutscene then state.cutscene.finish(true) end
+		if state.destroyConnection then state.destroyConnection:Disconnect() end
+		for index = #state.generated, 1, -1 do
+			state.generated[index]:Destroy()
+		end
+		for _, original in ipairs(state.originals) do
+			original.object.Parent = original.parent
+		end
+	end
 	local CustomBeatdownModels = {
 		{
 			id = "evil_beatdown",
@@ -2803,6 +2818,467 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 						replaceGloveWithSword(RightArmPart);
 					end
 				end
+			end
+		},
+		{
+			id = "YU_FinalFuturePrediction_beatdown",
+			name = "YU Final Future Prediction Beatdown",
+			description = "Your_Uncle's Final Future Prediction form with red body flames, glowing eyes, signature clothing, and a red platform aura.",
+			color = Color3.fromRGB(255, 0, 0),
+			fireColor = Color3.fromRGB(255, 5, 5),
+			material = Enum.Material.Plastic,
+			transparency = 0,
+			icon = "rbxassetid://5912420913",
+			iconColor = Color3.fromRGB(255, 5, 5),
+			soundSpeed = 0.7,
+			customSounds = {
+				["Nukem"] = 0.7,
+				["Male Scream Short Yelling Bursts Death Cries (SFX)"] = 0.75,
+				["explosion2"] = 0.7,
+				["Gun1"] = 0.7,
+				["Gun2"] = 0.75,
+				["Yell"] = 0.7,
+				["Hit"] = 0.5,
+				["Implosion"] = 0.7,
+			},
+			enabled = false,
+			specialEffects = function(parts)
+				local standModel = parts[1] and parts[1].Parent
+				if not standModel then return end
+				local head = standModel:FindFirstChild("Head")
+				local root = standModel:FindFirstChild("HumanoidRootPart") or standModel:FindFirstChild("Torso")
+				if not head or not root then return end
+				local bodyParts = {}
+				for _, name in ipairs({"Head", "Torso", "Left Arm", "Right Arm", "Left Leg", "Right Leg"}) do
+					local part = standModel:FindFirstChild(name)
+					if not part or not part:IsA("BasePart") then return end
+					table.insert(bodyParts, part)
+				end
+				-- The common skin handler reapplies appearance every frame.
+				for _, part in ipairs(bodyParts) do
+					part.Color = Color3.fromRGB(255, 0, 0)
+					part.Material = Enum.Material.Plastic
+					part.Reflectance = 0
+					part.Transparency = 0
+				end
+				if root.Name == "HumanoidRootPart" then root.Transparency = 1 end
+				if FuturePredictionSkinStates[standModel] then return end
+				local state = {originals = {}, generated = {}}
+				FuturePredictionSkinStates[standModel] = state
+				local function rememberOriginal(object)
+					table.insert(state.originals, {object = object, parent = object.Parent})
+					object.Parent = nil
+				end
+				local ok, failure = pcall(function()
+					local function makeVisual(className, name, properties, parent)
+						local object = Instance.new(className)
+						table.insert(state.generated, object)
+						object.Name = name
+						for property, setting in pairs(properties) do object[property] = setting end
+						object.Parent = parent
+						return object
+					end
+					local function attachVisual(part, target, offset)
+						part.Anchored = false
+						part.CanCollide = false
+						part.CanTouch = false
+						part.CanQuery = false
+						part.Massless = true
+						part.CFrame = target.CFrame * offset
+						local weld = Instance.new("Weld")
+						weld.Name = "YUFinalFuturePredictionWeld"
+						weld.Part0 = target
+						weld.Part1 = part
+						weld.C0 = offset
+						weld.Parent = part
+					end
+					local function addBodyFire(part)
+						makeVisual("ParticleEmitter", "fire2", {
+							Brightness = 0.915000021458,
+							Color = ColorSequence.new({ColorSequenceKeypoint.new(0, Color3.new(1, 0.0196078438312, 0.0196078438312)), ColorSequenceKeypoint.new(1, Color3.new(1, 0.0196078438312, 0.0196078438312))}),
+							Lifetime = NumberRange.new(0.479999989271, 0.479999989271),
+							LightEmission = 1,
+							Rate = 100,
+							RotSpeed = NumberRange.new(-100, 100),
+							Rotation = NumberRange.new(-360, 360),
+							Size = NumberSequence.new({NumberSequenceKeypoint.new(0, 0.600000023842, 0.600000023842), NumberSequenceKeypoint.new(1, 0, 0)}),
+							Speed = NumberRange.new(2.40000009537, 2.40000009537),
+							SpreadAngle = Vector2.new(-360, 360),
+							Texture = "rbxassetid://5407029762",
+							Transparency = NumberSequence.new({NumberSequenceKeypoint.new(0, 1, 0), NumberSequenceKeypoint.new(0.302286177874, 0, 0), NumberSequenceKeypoint.new(0.699407279491, 0, 0), NumberSequenceKeypoint.new(1, 1, 0)}),
+							ZOffset = -1,
+						}, part)
+						makeVisual("ParticleEmitter", "fire3", {
+							Brightness = 0.915000021458,
+							Color = ColorSequence.new({ColorSequenceKeypoint.new(0, Color3.new(1, 0.0196078438312, 0.0196078438312)), ColorSequenceKeypoint.new(1, Color3.new(1, 0.0196078438312, 0.0196078438312))}),
+							Lifetime = NumberRange.new(0.479999989271, 0.479999989271),
+							LightEmission = 1,
+							Rate = 100,
+							RotSpeed = NumberRange.new(-100, 100),
+							Rotation = NumberRange.new(-360, 360),
+							Size = NumberSequence.new({NumberSequenceKeypoint.new(0, 0.600000023842, 0.600000023842), NumberSequenceKeypoint.new(1, 0, 0)}),
+							Speed = NumberRange.new(2.40000009537, 2.40000009537),
+							SpreadAngle = Vector2.new(-360, 360),
+							Texture = "rbxassetid://5407030718",
+							Transparency = NumberSequence.new({NumberSequenceKeypoint.new(0, 1, 0), NumberSequenceKeypoint.new(0.300592720509, 0, 0), NumberSequenceKeypoint.new(0.700254023075, 0, 0), NumberSequenceKeypoint.new(1, 1, 0)}),
+							ZOffset = -1,
+						}, part)
+						makeVisual("ParticleEmitter", "fire4", {
+							Brightness = 0.915000021458,
+							Color = ColorSequence.new({ColorSequenceKeypoint.new(0, Color3.new(1, 0.0196078438312, 0.0196078438312)), ColorSequenceKeypoint.new(1, Color3.new(1, 0.0196078438312, 0.0196078438312))}),
+							Lifetime = NumberRange.new(0.479999989271, 0.479999989271),
+							LightEmission = 1,
+							Rate = 100,
+							RotSpeed = NumberRange.new(-100, 100),
+							Rotation = NumberRange.new(-360, 360),
+							Size = NumberSequence.new({NumberSequenceKeypoint.new(0, 0.600000023842, 0.600000023842), NumberSequenceKeypoint.new(1, 0, 0)}),
+							Speed = NumberRange.new(2.40000009537, 2.40000009537),
+							SpreadAngle = Vector2.new(-360, 360),
+							Texture = "rbxassetid://5407035714",
+							Transparency = NumberSequence.new({NumberSequenceKeypoint.new(0, 1, 0), NumberSequenceKeypoint.new(0.298052489758, 0, 0), NumberSequenceKeypoint.new(0.698560535908, 0, 0), NumberSequenceKeypoint.new(1, 1, 0)}),
+							ZOffset = -1,
+						}, part)
+						makeVisual("ParticleEmitter", "fire", {
+							Brightness = 0.915000021458,
+							Color = ColorSequence.new({ColorSequenceKeypoint.new(0, Color3.new(1, 0.0196078438312, 0.0196078438312)), ColorSequenceKeypoint.new(1, Color3.new(1, 0.0196078438312, 0.0196078438312))}),
+							Lifetime = NumberRange.new(0.479999989271, 0.479999989271),
+							LightEmission = 1,
+							Rate = 100,
+							RotSpeed = NumberRange.new(-100, 100),
+							Rotation = NumberRange.new(-360, 360),
+							Size = NumberSequence.new({NumberSequenceKeypoint.new(0, 0.600000023842, 0.600000023842), NumberSequenceKeypoint.new(1, 0, 0)}),
+							Speed = NumberRange.new(2.40000009537, 2.40000009537),
+							SpreadAngle = Vector2.new(-360, 360),
+							Texture = "rbxassetid://5406968633",
+							Transparency = NumberSequence.new({NumberSequenceKeypoint.new(0, 1, 0), NumberSequenceKeypoint.new(0.301439464092, 0, 0), NumberSequenceKeypoint.new(0.701100766659, 0, 0), NumberSequenceKeypoint.new(1, 1, 0)}),
+							ZOffset = -1,
+						}, part)
+					end
+					for _, part in ipairs(bodyParts) do
+						for _, child in ipairs(part:GetChildren()) do
+							if child:IsA("DataModelMesh") or child:IsA("Decal") or child:IsA("Texture") or child:IsA("ParticleEmitter") or child:IsA("Fire") or child:IsA("Smoke") or child:IsA("Sparkles") or child:IsA("Light") then
+								rememberOriginal(child)
+							end
+						end
+						addBodyFire(part)
+					end
+					do
+						local part = standModel:FindFirstChild("Head")
+						makeVisual("SpecialMesh", "Mesh", { Scale = Vector3.new(1.25, 1.25, 1.25) }, part)
+						makeVisual("Decal", "face", { Texture = "rbxassetid://7699115", Transparency = 0 }, part)
+					end
+					do
+						local part = standModel:FindFirstChild("Torso")
+						makeVisual("SpecialMesh", "Mesh", { MeshType = Enum.MeshType.FileMesh, MeshId = "rbxassetid://27111894" }, part)
+						makeVisual("Decal", "roblox", { Transparency = 0 }, part)
+					end
+					do
+						local part = standModel:FindFirstChild("Left Arm")
+						makeVisual("SpecialMesh", "Mesh", { MeshType = Enum.MeshType.FileMesh, MeshId = "rbxassetid://27111419" }, part)
+					end
+					do
+						local part = standModel:FindFirstChild("Right Arm")
+						makeVisual("SpecialMesh", "Mesh", { MeshType = Enum.MeshType.FileMesh, MeshId = "rbxassetid://27111864" }, part)
+					end
+					do
+						local part = standModel:FindFirstChild("Left Leg")
+						makeVisual("SpecialMesh", "Mesh", { MeshType = Enum.MeshType.FileMesh, MeshId = "rbxassetid://27111857" }, part)
+					end
+					do
+						local part = standModel:FindFirstChild("Right Leg")
+						makeVisual("SpecialMesh", "Mesh", { MeshType = Enum.MeshType.FileMesh, MeshId = "rbxassetid://27111882" }, part)
+					end
+					for _, child in ipairs(standModel:GetChildren()) do
+						if child:IsA("Accessory") or child:IsA("Shirt") or child:IsA("Pants") or child:IsA("ShirtGraphic") then rememberOriginal(child) end
+					end
+					makeVisual("Shirt", "YUFinalFuturePredictionShirt", { ShirtTemplate = "http://www.roblox.com/asset/?id=7677828557" }, standModel)
+					makeVisual("Pants", "YUFinalFuturePredictionPants", { PantsTemplate = "http://www.roblox.com/asset/?id=7189083559" }, standModel)
+					local visuals = Instance.new("Folder")
+					visuals.Name = "YUFinalFuturePredictionVisuals"
+					visuals.Parent = standModel
+					table.insert(state.generated, visuals)
+					do
+						local accessory = makeVisual("Accessory", "YUFinalFuturePredictionAccessory1", {}, visuals)
+						local handle = makeVisual("Part", "Handle", {
+							Size = Vector3.new(1, 1, 1),
+							Color = Color3.new(0.639215707779, 0.635294139385, 0.647058844566),
+							Material = Enum.Material.Plastic,
+							Transparency = 0,
+						}, accessory)
+						makeVisual("Attachment", "FaceCenterAttachment", {
+							CFrame = CFrame.new(-4.89999983984e-05, -0.340014070272, -0.000403999991249, 1, 7.87137466318e-09, 3.02998127145e-15, -7.87137466318e-09, 1, -4.1444255377e-16, -3.02998127145e-15, 4.14442527301e-16, 1),
+						}, handle)
+						makeVisual("SpecialMesh", "SpecialMesh", {
+							MeshType = Enum.MeshType.FileMesh,
+							MeshId = "rbxassetid://6002627774",
+							TextureId = "rbxassetid://6002608052",
+						}, handle)
+						attachVisual(handle, head, CFrame.new(0, 0.300000190735, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1))
+					end
+					do
+						local accessory = makeVisual("Accessory", "YUFinalFuturePredictionAccessory2", {}, visuals)
+						local handle = makeVisual("Part", "Handle", {
+							Size = Vector3.new(1.5, 1.5, 1.5),
+							Color = Color3.new(0.639215707779, 0.635294139385, 0.647058844566),
+							Material = Enum.Material.Plastic,
+							Transparency = 0,
+						}, accessory)
+						makeVisual("SpecialMesh", "SpecialMesh", {
+							MeshType = Enum.MeshType.FileMesh,
+							MeshId = "rbxassetid://5029193842",
+							TextureId = "rbxassetid://5270306004",
+						}, handle)
+						makeVisual("Attachment", "HatAttachment", {
+							CFrame = CFrame.new(0.00303637958132, -0.304238796234, 0.00897300243378, 1, 7.87137466318e-09, 3.02998127145e-15, -7.87137466318e-09, 1, -4.1444255377e-16, -3.02998127145e-15, 4.14442527301e-16, 1),
+						}, handle)
+						attachVisual(handle, head, CFrame.new(0, 0.909999847412, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1))
+					end
+					do
+						local eyes = makeVisual("Part", "Eyes", {
+							Size = Vector3.new(0.282129704952, 0.0685662850738, 0.148776590824),
+							Color = Color3.new(1, 0, 0),
+							Material = Enum.Material.Neon,
+							Transparency = 1,
+						}, visuals)
+						makeVisual("SpecialMesh", "Mesh", {
+							MeshType = Enum.MeshType.FileMesh,
+							MeshId = "rbxassetid://2204642788",
+							TextureId = "",
+							Scale = Vector3.new(7.6286315918, 11.9328889847, 27.9235363007),
+						}, eyes)
+						local effect = makeVisual("Sound", "Sound", {
+							SoundId = "rbxassetid://123664571745740",
+							Looped = true,
+							RollOffMaxDistance = 50,
+							RollOffMinDistance = 5,
+							RollOffMode = Enum.RollOffMode.Linear,
+						}, eyes)
+						if standModel:IsDescendantOf(workspace) then effect:Play() end
+						local effect = makeVisual("ParticleEmitter", "Eyes", {
+							Brightness = 3,
+							Color = ColorSequence.new({ColorSequenceKeypoint.new(0, Color3.new(1, 1, 1)), ColorSequenceKeypoint.new(1, Color3.new(1, 1, 1))}),
+							Drag = 1100,
+							Lifetime = NumberRange.new(0.699999988079, 0.699999988079),
+							LightEmission = 0.0010000000475,
+							LightInfluence = 0.5,
+							LockedToPart = true,
+							Rate = 41,
+							RotSpeed = NumberRange.new(-5, 5),
+							Rotation = NumberRange.new(-1, 1),
+							Size = NumberSequence.new({NumberSequenceKeypoint.new(0, 2.42693996429, 0), NumberSequenceKeypoint.new(1, 2.42693996429, 0)}),
+							Speed = NumberRange.new(0.111347138882, 0.111347138882),
+							Squash = NumberSequence.new({NumberSequenceKeypoint.new(0, -0.178000003099, 0), NumberSequenceKeypoint.new(0.230000004172, -0.158000007272, 0), NumberSequenceKeypoint.new(0.34999999404, -0.178000003099, 0), NumberSequenceKeypoint.new(0.5, -0.148000001907, 0), NumberSequenceKeypoint.new(1, -0.178000003099, 0)}),
+							Texture = "rbxassetid://16014536721",
+							Transparency = NumberSequence.new({NumberSequenceKeypoint.new(0, 1, 0), NumberSequenceKeypoint.new(0.20000000298, 0, 0), NumberSequenceKeypoint.new(0.40000000596, 0, 0), NumberSequenceKeypoint.new(0.699999988079, 1, 0), NumberSequenceKeypoint.new(1, 1, 0)}),
+							ZOffset = 1,
+						}, eyes)
+						attachVisual(eyes, head, CFrame.new(0, 0.300000190735, -0.60000038147, 1, 0, 0, 0, 1, 0, 0, 0, 1))
+					end
+					do
+						local aura = makeVisual("Part", "platformAura", {
+							Size = Vector3.new(0.00111347145867, 7.79429960251, 7.79429960251),
+							Color = Color3.new(0.639215707779, 0.635294139385, 0.647058844566),
+							Material = Enum.Material.Plastic,
+							Transparency = 1,
+						}, visuals)
+						local effect1 = makeVisual("Attachment", "Attachment", { CFrame = CFrame.new(0, 0, 0, 0, 1, -0, -1, 0, 0, 0, 0, 1) }, aura)
+						local effect2 = makeVisual("ParticleEmitter", "ParticleEmitter", {
+							Brightness = 0,
+							Color = ColorSequence.new({ColorSequenceKeypoint.new(0, Color3.new(1, 1, 1)), ColorSequenceKeypoint.new(1, Color3.new(1, 1, 1))}),
+							Lifetime = NumberRange.new(1, 1),
+							Orientation = Enum.ParticleOrientation.VelocityPerpendicular,
+							Size = NumberSequence.new({NumberSequenceKeypoint.new(0, 4.11984395981, 0), NumberSequenceKeypoint.new(1, 0, 0)}),
+							Speed = NumberRange.new(0.00111347145867, 0.00111347145867),
+							Texture = "rbxassetid://1084982817",
+							Transparency = NumberSequence.new({NumberSequenceKeypoint.new(0, 0, 0), NumberSequenceKeypoint.new(1, 0, 0)}),
+						}, effect1)
+						local effect3 = makeVisual("ParticleEmitter", "ParticleEmitter", {
+							Brightness = 5,
+							Color = ColorSequence.new({ColorSequenceKeypoint.new(0, Color3.new(1, 0.321568638086, 0.321568638086)), ColorSequenceKeypoint.new(1, Color3.new(1, 0.321568638086, 0.321568638086))}),
+							Lifetime = NumberRange.new(1, 1),
+							Orientation = Enum.ParticleOrientation.VelocityPerpendicular,
+							Rate = 10,
+							RotSpeed = NumberRange.new(750, 750),
+							Rotation = NumberRange.new(-180, 180),
+							Size = NumberSequence.new({NumberSequenceKeypoint.new(0, 4.11984395981, 0), NumberSequenceKeypoint.new(1, 0, 0)}),
+							Speed = NumberRange.new(0.00111347145867, 0.00111347145867),
+							Texture = "rbxassetid://8047533775",
+							Transparency = NumberSequence.new({NumberSequenceKeypoint.new(0, 1, 0), NumberSequenceKeypoint.new(0.195686891675, 0, 0), NumberSequenceKeypoint.new(1, 0, 0)}),
+							ZOffset = 1,
+						}, effect1)
+						local effect4 = makeVisual("ParticleEmitter", "ParticleEmitter", {
+							Brightness = 15,
+							Color = ColorSequence.new({ColorSequenceKeypoint.new(0, Color3.new(1, 0.376470595598, 0.376470595598)), ColorSequenceKeypoint.new(1, Color3.new(1, 0.376470595598, 0.376470595598))}),
+							Lifetime = NumberRange.new(1, 1),
+							Orientation = Enum.ParticleOrientation.VelocityPerpendicular,
+							Rate = 3,
+							RotSpeed = NumberRange.new(750, 750),
+							Rotation = NumberRange.new(-180, 180),
+							Size = NumberSequence.new({NumberSequenceKeypoint.new(0, 6.82001161575, 0), NumberSequenceKeypoint.new(1, 0, 0)}),
+							Speed = NumberRange.new(0.00111347145867, 0.00111347145867),
+							Texture = "rbxassetid://14590122278",
+							Transparency = NumberSequence.new({NumberSequenceKeypoint.new(0, 1, 0), NumberSequenceKeypoint.new(0.195686891675, 0, 0), NumberSequenceKeypoint.new(1, 0, 0)}),
+							ZOffset = 1,
+						}, effect1)
+						local effect5 = makeVisual("Attachment", "Attachment", {
+							CFrame = CFrame.new(0.556735694408, 0, -3.89714980125, 0, 1, 0, 1, 0, 0, 0, 0, -1),
+						}, aura)
+						local effect6 = makeVisual("ParticleEmitter", "ParticleEmitter", {
+							Brightness = 5,
+							Color = ColorSequence.new({ColorSequenceKeypoint.new(0, Color3.new(1, 0.321568638086, 0.321568638086)), ColorSequenceKeypoint.new(1, Color3.new(1, 0.321568638086, 0.321568638086))}),
+							EmissionDirection = Enum.NormalId.Right,
+							Lifetime = NumberRange.new(3, 3),
+							LockedToPart = true,
+							Orientation = Enum.ParticleOrientation.VelocityParallel,
+							Rate = 10,
+							Rotation = NumberRange.new(90, 90),
+							Shape = Enum.ParticleEmitterShape.Disc,
+							ShapePartial = 0,
+							ShapeStyle = Enum.ParticleEmitterShapeStyle.Surface,
+							Size = NumberSequence.new({NumberSequenceKeypoint.new(0, 3.34041404724, 0), NumberSequenceKeypoint.new(1, 3.34041404724, 0)}),
+							Speed = NumberRange.new(0.00111347145867, 0.00111347145867),
+							Squash = NumberSequence.new({NumberSequenceKeypoint.new(0, 0, 0), NumberSequenceKeypoint.new(0.0528905279934, -1.72500014305, 0), NumberSequenceKeypoint.new(0.130381301045, -1.61250007153, 0), NumberSequenceKeypoint.new(0.153751537204, 0.337499856949, 0), NumberSequenceKeypoint.new(0.237392365932, 1.01249980927, 0), NumberSequenceKeypoint.new(0.25584256649, -0.600000143051, 0), NumberSequenceKeypoint.new(0.31365314126, -1.65000021458, 0), NumberSequenceKeypoint.new(0.404674053192, 1.08749961853, 0), NumberSequenceKeypoint.new(0.520295202732, 2.02499961853, 0), NumberSequenceKeypoint.new(0.573185741901, -0.262499809265, 0), NumberSequenceKeypoint.new(0.690036892891, -1.27500021458, 0), NumberSequenceKeypoint.new(0.753997504711, 0.225000143051, 0), NumberSequenceKeypoint.new(0.836408376694, 1.3125, 0), NumberSequenceKeypoint.new(0.901598989964, 0.262499809265, 0), NumberSequenceKeypoint.new(1, 0, 0)}),
+							Texture = "rbxassetid://1269254614",
+							Transparency = NumberSequence.new({NumberSequenceKeypoint.new(0, 1, 0), NumberSequenceKeypoint.new(0.0151757188141, 0.551351308823, 0), NumberSequenceKeypoint.new(0.0471245981753, 0.367567539215, 0), NumberSequenceKeypoint.new(0.101437695324, 0.0918918848038, 0), NumberSequenceKeypoint.new(0.147763580084, 0, 0), NumberSequenceKeypoint.new(0.754792332649, 0, 0), NumberSequenceKeypoint.new(0.811501562595, 0.0918918848038, 0), NumberSequenceKeypoint.new(0.90654951334, 0.340540528297, 0), NumberSequenceKeypoint.new(0.963258743286, 0.605405390263, 0), NumberSequenceKeypoint.new(1, 1, 0)}),
+						}, aura)
+						local effect7 = makeVisual("Attachment", "Attachment", { CFrame = CFrame.new(0, 2.22694277763, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1) }, aura)
+						local effect8 = makeVisual("PointLight", "PointLight", {
+							Brightness = 0.300000011921,
+							Color = Color3.new(1, 0.592156887054, 0.180392161012),
+							Range = 20,
+							Shadows = true,
+						}, effect7)
+						local effect9 = makeVisual("Attachment", "Attachment", { CFrame = CFrame.new(7.79429960251, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1) }, aura)
+						local effect10 = makeVisual("ParticleEmitter", "ParticleEmitter", {
+							Brightness = 50,
+							Color = ColorSequence.new({ColorSequenceKeypoint.new(0, Color3.new(1, 1, 1)), ColorSequenceKeypoint.new(1, Color3.new(1, 1, 1))}),
+							EmissionDirection = Enum.NormalId.Right,
+							Lifetime = NumberRange.new(1, 1.5),
+							Rate = 40,
+							Shape = Enum.ParticleEmitterShape.Disc,
+							ShapeStyle = Enum.ParticleEmitterShapeStyle.Surface,
+							Size = NumberSequence.new({NumberSequenceKeypoint.new(0, 0.0556735694408, 0), NumberSequenceKeypoint.new(1, 0, 0)}),
+							Speed = NumberRange.new(5.56735706329, 5.56735706329),
+							SpreadAngle = Vector2.new(15, 15),
+							Texture = "rbxassetid://1084982817",
+							Transparency = NumberSequence.new({NumberSequenceKeypoint.new(0, 0, 0), NumberSequenceKeypoint.new(1, 0, 0)}),
+						}, aura)
+						local effect11 = makeVisual("Attachment", "Attachment", {
+							CFrame = CFrame.new(0.556735694408, 0, 3.89714980125, 0, -1, 0, 1, 0, -0, 0, 0, 1),
+						}, aura)
+						local effect12 = makeVisual("Beam", "Beam", {
+							Brightness = 5,
+							Color = ColorSequence.new({ColorSequenceKeypoint.new(0, Color3.new(1, 0.349019616842, 0.349019616842)), ColorSequenceKeypoint.new(1, Color3.new(1, 0.349019616842, 0.349019616842))}),
+							CurveSize1 = -3.89714980125,
+							Segments = 100,
+							Texture = "rbxassetid://14050889274",
+							TextureLength = 0.10000000149,
+							TextureSpeed = 4,
+							Transparency = NumberSequence.new({NumberSequenceKeypoint.new(0, 0, 0), NumberSequenceKeypoint.new(1, 0, 0)}),
+							Width0 = 1.11347138882,
+							Width1 = 1.11347138882,
+						}, aura)
+						local effect13 = makeVisual("Beam", "Beam", {
+							Brightness = 5,
+							Color = ColorSequence.new({ColorSequenceKeypoint.new(0, Color3.new(1, 0.349019616842, 0.349019616842)), ColorSequenceKeypoint.new(1, Color3.new(1, 0.349019616842, 0.349019616842))}),
+							CurveSize1 = -3.89714980125,
+							Segments = 100,
+							Texture = "rbxassetid://14050889274",
+							TextureLength = 0.10000000149,
+							TextureSpeed = 4,
+							Transparency = NumberSequence.new({NumberSequenceKeypoint.new(0, 0, 0), NumberSequenceKeypoint.new(1, 0, 0)}),
+							Width0 = 1.11347138882,
+							Width1 = 1.11347138882,
+						}, aura)
+						local effect14 = makeVisual("SpotLight", "SpotLight", {
+							Angle = 45,
+							Brightness = 5,
+							Color = Color3.new(1, 0.388235330582, 0.388235330582),
+							Face = Enum.NormalId.Right,
+							Range = 15,
+							Shadows = true,
+						}, aura)
+						local effect15 = makeVisual("Attachment", "Attachment", {
+							CFrame = CFrame.new(0.556735694408, 0, 3.89714980125, 0, -1, -0, -1, 0, -0, 0, 0, -1),
+						}, aura)
+						local effect16 = makeVisual("Attachment", "Attachment", {
+							CFrame = CFrame.new(0.556735694408, 0, -3.89714980125, 0, 1, -0, -1, 0, 0, 0, 0, 1),
+						}, aura)
+						local effect17 = makeVisual("Attachment", "Attachment", {
+							CFrame = CFrame.new(0.556735694408, 3.89714980125, 0, 0, -1, 0, 0, 0, -1, 1, 0, 0),
+						}, aura)
+						local effect18 = makeVisual("Attachment", "Attachment", {
+							CFrame = CFrame.new(0.556735694408, 3.89714980125, 0, 0, 1, 0, 0, 0, -1, -1, 0, 0),
+						}, aura)
+						local effect19 = makeVisual("Attachment", "Attachment", {
+							CFrame = CFrame.new(0.556735694408, -3.89714980125, 0, 0, -1, 0, 0, 0, -1, 1, 0, 0),
+						}, aura)
+						local effect20 = makeVisual("Beam", "Beam", {
+							Brightness = 5,
+							Color = ColorSequence.new({ColorSequenceKeypoint.new(0, Color3.new(1, 0.349019616842, 0.349019616842)), ColorSequenceKeypoint.new(1, Color3.new(1, 0.349019616842, 0.349019616842))}),
+							CurveSize1 = -3.89714980125,
+							Segments = 100,
+							Texture = "rbxassetid://14050889274",
+							TextureLength = 0.10000000149,
+							TextureSpeed = 4,
+							Transparency = NumberSequence.new({NumberSequenceKeypoint.new(0, 0, 0), NumberSequenceKeypoint.new(1, 0, 0)}),
+							Width0 = 1.11347138882,
+							Width1 = 1.11347138882,
+						}, aura)
+						local effect21 = makeVisual("Beam", "Beam", {
+							Brightness = 5,
+							Color = ColorSequence.new({ColorSequenceKeypoint.new(0, Color3.new(1, 0.349019616842, 0.349019616842)), ColorSequenceKeypoint.new(1, Color3.new(1, 0.349019616842, 0.349019616842))}),
+							CurveSize1 = -3.89714980125,
+							Segments = 100,
+							Texture = "rbxassetid://14050889274",
+							TextureLength = 0.10000000149,
+							TextureSpeed = 4,
+							Transparency = NumberSequence.new({NumberSequenceKeypoint.new(0, 0, 0), NumberSequenceKeypoint.new(1, 0, 0)}),
+							Width0 = 1.11347138882,
+							Width1 = 1.11347138882,
+						}, aura)
+						local effect22 = makeVisual("Beam", "Beam", {
+							Brightness = 5,
+							Color = ColorSequence.new({ColorSequenceKeypoint.new(0, Color3.new(1, 0.349019616842, 0.349019616842)), ColorSequenceKeypoint.new(1, Color3.new(1, 0.349019616842, 0.349019616842))}),
+							FaceCamera = true,
+							Texture = "rbxassetid://12191903502",
+							TextureLength = 0.5,
+							TextureSpeed = 0.5,
+							Transparency = NumberSequence.new({NumberSequenceKeypoint.new(0, 0, 0), NumberSequenceKeypoint.new(0.65734821558, 0, 0), NumberSequenceKeypoint.new(1, 1, 0)}),
+							Width0 = 7.79429960251,
+							Width1 = 11.1347141266,
+						}, aura)
+						local effect23 = makeVisual("Attachment", "Attachment", {
+							CFrame = CFrame.new(0.556735694408, -3.89714980125, 0, 0, 1, 0, 0, 0, -1, -1, 0, 0),
+						}, aura)
+						effect12.Attachment0 = effect15
+						effect12.Attachment1 = effect19
+						effect13.Attachment0 = effect18
+						effect13.Attachment1 = effect5
+						effect20.Attachment0 = effect17
+						effect20.Attachment1 = effect11
+						effect21.Attachment0 = effect16
+						effect21.Attachment1 = effect23
+						effect22.Attachment0 = effect1
+						effect22.Attachment1 = effect9
+						attachVisual(aura, root, CFrame.new(0, -2.99945068359, 0, 0, 1, 0, 1, 0, 0, 0, 0, -1))
+					end
+					if standModel:FindFirstAncestorWhichIsA("ViewportFrame") and not standModel:FindFirstChildOfClass("Humanoid") then
+						local humanoid = Instance.new("Humanoid")
+						humanoid.DisplayDistanceType = Enum.HumanoidDisplayDistanceType.None
+						humanoid.RequiresNeck = false
+						humanoid.Parent = standModel
+						table.insert(state.generated, humanoid)
+					end
+				end)
+				if not ok then
+					clearFuturePredictionSkin(standModel)
+					error(failure)
+				end
+				state.destroyConnection = standModel.Destroying:Connect(function()
+					for _, original in ipairs(state.originals) do original.object:Destroy() end
+					FuturePredictionSkinStates[standModel] = nil
+				end)
 			end
 		},
 	}
@@ -5780,6 +6256,9 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 	end;
 	local function ApplyCustomBeatdownModel(StandModel, modelData, CurrentPlayer)
 		if not StandModel or not modelData then return end
+		if modelData.id ~= "YU_FinalFuturePrediction_beatdown" then
+			clearFuturePredictionSkin(StandModel)
+		end
 		for _, child in ipairs(StandModel:GetChildren()) do
 			--[[
 			if child:IsA("Shirt") or child:IsA("Pants") or child:IsA("ShirtGraphic") then
@@ -7112,6 +7591,176 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 											soundName ~= "Implosion" and soundName ~= "Male Scream Short Yelling Bursts Death Cries (SFX)" then
 											s.PlaybackSpeed = modelData.soundSpeed
 										end
+									end
+								elseif modelData.id == "YU_FinalFuturePrediction_beatdown" then
+									local skinState = FuturePredictionSkinStates[StandModel]
+									if soundName == "Nukem" and not s.IsPlaying then
+										s:SetAttribute("YUFinalFuturePredictionCutsceneStarted", nil)
+									end
+									if soundName == "Nukem" and s.IsPlaying and skinState then
+										if not s:GetAttribute("YUFinalFuturePredictionCutsceneStarted") then
+											s:SetAttribute("YUFinalFuturePredictionCutsceneStarted", true)
+											if skinState.cutscene then skinState.cutscene.finish(true) end
+											local soundService = game:GetService("SoundService")
+											local cutscene = {sound = s, connections = {}, finished = false, resumed = false}
+											skinState.cutscene = cutscene
+								
+											local function playTimeSound(name, volume)
+												local sound = soundService:FindFirstChild(name)
+												if sound and sound:IsA("Sound") then
+													sound.Volume = volume
+													sound:Play()
+												end
+											end
+								
+											cutscene.resumeTime = function()
+												if cutscene.resumed then return end
+												cutscene.resumed = true
+												if CurrentPlayer == lpr then
+													setDayNight(false)
+													soundService.AmbientReverb = Enum.ReverbType.NoReverb
+													local timeStop = soundService:FindFirstChild("Timestop")
+													if timeStop and timeStop:IsA("Sound") then timeStop.Volume = 0.5 end
+													playTimeSound("Timeresume", 2.5)
+												end
+											end
+								
+											cutscene.finish = function(immediate)
+												if cutscene.finished then return end
+												cutscene.finished = true
+												for _, connection in ipairs(cutscene.connections) do connection:Disconnect() end
+												cutscene.resumeTime()
+												if cutscene.voice then cutscene.voice:Destroy() end
+												if cutscene.startTween then cutscene.startTween:Cancel() end
+												if cutscene.effect then
+													local effect = cutscene.effect
+													if immediate then
+														effect:Destroy()
+													else
+														local endTween = l__TweenService__5:Create(effect, TweenInfo.new(1.5, Enum.EasingStyle.Linear, Enum.EasingDirection.Out), {
+															Saturation = 0,
+															Brightness = 0,
+															Contrast = 0,
+															TintColor = Color3.fromRGB(255, 255, 255),
+														})
+														endTween.Completed:Once(function() effect:Destroy() end)
+														endTween:Play()
+													end
+												end
+												if skinState.cutscene == cutscene then skinState.cutscene = nil end
+											end
+								
+											table.insert(cutscene.connections, StandModel.Destroying:Connect(function()
+												cutscene.finish(true)
+											end))
+											table.insert(cutscene.connections, s.Destroying:Connect(function()
+												cutscene.finish(true)
+											end))
+											table.insert(cutscene.connections, s.Ended:Connect(function()
+												s:SetAttribute("YUFinalFuturePredictionCutsceneStarted", nil)
+												cutscene.finish(false)
+											end))
+											table.insert(cutscene.connections, s.Stopped:Connect(function()
+												s:SetAttribute("YUFinalFuturePredictionCutsceneStarted", nil)
+												cutscene.finish(true)
+											end))
+								
+											if not s:FindFirstChildOfClass("ReverbSoundEffect") then
+												local CustomReverb = Instance.new("ReverbSoundEffect", s)
+												CustomReverb.DecayTime = 3.682
+												CustomReverb.Density = 1
+												CustomReverb.Diffusion = 0
+												CustomReverb.DryLevel = 0
+												CustomReverb.Priority = 1
+												CustomReverb.WetLevel = -0.5
+												CustomReverb.Enabled = true
+											end
+								
+											if CurrentPlayer == lpr then
+												-- Keep this skin's color effect separate from the other skin cutscenes.
+												local effect = Instance.new("ColorCorrectionEffect")
+												effect.Name = "YUFinalFuturePredictionCutscene"
+												effect.Saturation = 0
+												effect.TintColor = Color3.fromRGB(209, 209, 209)
+												effect.Parent = game:GetService("Lighting")
+												cutscene.effect = effect
+												cutscene.startTween = l__TweenService__5:Create(effect, TweenInfo.new(1.5, Enum.EasingStyle.Linear, Enum.EasingDirection.Out), {
+													Saturation = 0.1,
+													Brightness = 0.1,
+													Contrast = 1.03,
+													TintColor = modelData.fireColor,
+												})
+												cutscene.startTween:Play()
+												setDayNight(true)
+												soundService.AmbientReverb = Enum.ReverbType.Quarry
+												playTimeSound("Timestop", 4)
+												task.spawn(function()
+													if cutscene.finished or skinState.cutscene ~= cutscene then return end
+													local rootPart = StandModel:FindFirstChild("Torso")
+													if rootPart and rootPart:IsA("BasePart") then
+														local startPos = rootPart.Position + Vector3.new(0, 90, 0)
+														local endPos = rootPart.Position + Vector3.new(0, -10, 0)
+														CreateLightning(startPos, endPos, 4, 255, 5, 5)
+													end
+												end)
+												if SettingsScript.DisplayLogs then print("Send Signal | YU Final Future Prediction") end
+											end
+								
+											task.delay(1, function()
+												if cutscene.finished or skinState.cutscene ~= cutscene or not StandModel.Parent or not s.Parent or not s.IsPlaying then return end
+												if s:FindFirstChild("CutsenceMuda") then return end
+												local Muda = Instance.new("Sound", s)
+												cutscene.voice = Muda
+												Muda.Name = "CutsenceMuda"
+												Muda.SoundId = "rbxassetid://92536405916305"
+												Muda.Volume = 0.8
+												Muda.PlaybackSpeed = 0.87
+												Muda.TimePosition = 1.13
+												Muda.RollOffMode = Enum.RollOffMode.Inverse
+												Muda.RollOffMaxDistance = 100
+												Muda.RollOffMinDistance = 10
+												local CustomReverb = Instance.new("ReverbSoundEffect", Muda)
+												CustomReverb.DecayTime = 3.085
+												CustomReverb.Density = 1
+												CustomReverb.Diffusion = 1
+												CustomReverb.DryLevel = 0
+												CustomReverb.Priority = 1
+												CustomReverb.WetLevel = 1
+												CustomReverb.Enabled = true
+												Muda.Ended:Once(function() Muda:Destroy() end)
+												Muda:Play()
+											end)
+										end
+									end
+								
+									if modelData.customSounds and modelData.customSounds[soundName] then
+										if soundName == "Male Scream Short Yelling Bursts Death Cries (SFX)" then
+											s.SoundId = "rbxassetid://139005512098246"
+											s.PlaybackSpeed = modelData.soundSpeed
+											local cutscene = skinState and skinState.cutscene
+											if cutscene and s.IsPlaying and not cutscene.screamScheduled then
+												cutscene.screamScheduled = true
+												task.delay(0.76, function()
+													if not cutscene.finished and skinState.cutscene == cutscene then cutscene.resumeTime() end
+												end)
+												task.delay(1, function()
+													if skinState.cutscene == cutscene then cutscene.finish(false) end
+												end)
+											end
+										elseif soundName == "Yell" then
+											s.SoundId = "rbxassetid://6191764144"
+											s.PlaybackSpeed = modelData.soundSpeed
+										elseif soundName == "Gun1" then
+											s.SoundId = "rbxassetid://116210184916893"
+											s.PlaybackSpeed = modelData.soundSpeed
+										elseif soundName == "Gun2" then
+											s.SoundId = "rbxassetid://124883416643368"
+											s.PlaybackSpeed = modelData.soundSpeed
+										else
+											s.PlaybackSpeed = modelData.customSounds[soundName]
+										end
+									elseif soundName ~= "explosion2" and soundName ~= "Hit" and soundName ~= "Implosion" and soundName ~= "Male Scream Short Yelling Bursts Death Cries (SFX)" then
+										s.PlaybackSpeed = modelData.soundSpeed
 									end
 								elseif modelData.customHandler then
 									-- Imported custom model with its own handler
