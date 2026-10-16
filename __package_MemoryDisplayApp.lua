@@ -1,221 +1,166 @@
--- ============================================================
--- TaskManager System App (Windows 10-style Task Manager)
--- ============================================================
+-- Task Manager package v3.0.0. The interface is provided by ZolinModules.TaskManagerApp.
+-- Install(gui) upgrades the launch template; already-open windows update on their next launch.
 local __TaskManagerPackage = {}
+local APP_NAME = "TaskManager"
+local VERSION = "3.0.0"
+local ICON = "rbxassetid://12905435514"
 
-function __TaskManagerPackage.Install()
-    local AppName = "TaskManager"
-    local ZolinOS = game.Players.LocalPlayer.PlayerGui:FindFirstChild("ZolinOS")
-    if not ZolinOS then warn("ZolinOS not found"); return end
-
-    local replicatedWindowSys = ZolinOS:FindFirstChild("ReplicatedWindow_Sys")
-    if not replicatedWindowSys then warn("ReplicatedWindow_Sys not found"); return end
-
-    local __Zolin = ZolinOS:FindFirstChild("__Zolin")
-    if not __Zolin then warn("__Zolin not found"); return end
-
-    local __AppsLaunchArgFolder = __Zolin:FindFirstChild("__AppsLaunchArgFolder")
-    if not __AppsLaunchArgFolder then
-        __AppsLaunchArgFolder = Instance.new("Folder")
-        __AppsLaunchArgFolder.Name = "__AppsLaunchArgFolder"
-        __AppsLaunchArgFolder.Parent = __Zolin
-    end
-
-    -- Prevent double installation
-    if __AppsLaunchArgFolder:FindFirstChild(AppName) and replicatedWindowSys:FindFirstChild(AppName) then
-        warn(tostring(AppName) .. " already installed")
-        return
-    end
-
-    -- ============================================================
-    -- BUILD APP FRAME
-    -- ============================================================
-    local app = Instance.new("Frame")
-    app.Name = AppName
-    app.AnchorPoint = Vector2.new(0.5, 0.5)
-    app.BackgroundTransparency = 0
-    app.BackgroundColor3 = Color3.fromRGB(15, 15, 25)
-    app.Size = UDim2.new(1, 0, 1, 0)
-    app.Position = UDim2.new(0.5, 0, 0.5, 0)
-    app.ZIndex = 6
-    app.Visible = false
-    app.Parent = replicatedWindowSys
-
-    -- Data folder (metadata)
-    local dataFolder = Instance.new("Folder")
-    dataFolder.Name = "Data"
-    dataFolder.Parent = app
-
-    Instance.new("StringValue", dataFolder).Name = "Description"
-    dataFolder.Description.Value = "Monitor system performance, processes, and resource usage"
-
-    Instance.new("StringValue", dataFolder).Name = "Version"
-    dataFolder.Version.Value = "2.0.0"
-
-    -- ============================================================
-    -- UI CONTAINER
-    -- ============================================================
-    local ui = Instance.new("Frame")
-    ui.Name = "UI"
-    ui.AnchorPoint = Vector2.new(0.5, 0.5)
-    ui.Position = UDim2.new(0.5, 0, 0.495, 0)
-    ui.Size = UDim2.new(1, 0, 0.89, 0)
-    ui.BackgroundColor3 = Color3.fromRGB(20, 20, 30)
-    ui.BackgroundTransparency = 0.2
-    ui.ZIndex = app.ZIndex - 1
-    ui.Parent = app
-
-    -- ============================================================
-    -- PREVIEW (for App Drawer)
-    -- ============================================================
-    local preview = Instance.new("Frame")
-    preview.Name = "PreviewAppInfoZL"
-    preview.AnchorPoint = Vector2.new(0.5, 0.5)
-    preview.AutomaticSize = Enum.AutomaticSize.XY
-    preview.BackgroundColor3 = Color3.fromRGB(59, 232, 189)
-    preview.BackgroundTransparency = 0.35
-    preview.Position = UDim2.new(0.082, 0, 0.031, 0)
-    preview.Size = UDim2.new(0.165, 0, 0.061, 0)
-    preview.ZIndex = 8
-    preview.Visible = false
-    preview.Parent = app
-
-    local previewLabel = Instance.new("TextLabel")
-    previewLabel.Name = "AppNameLabel"
-    previewLabel.AnchorPoint = Vector2.new(0.5, 0.5)
-    previewLabel.Position = UDim2.new(0.409, 0, 0.5, 0)
-    previewLabel.Size = UDim2.new(0, 150, 0, 25)
-    previewLabel.BackgroundTransparency = 1
-    previewLabel.TextScaled = true
-    previewLabel.Font = Enum.Font.Oswald
-    previewLabel.Text = AppName
-    previewLabel.Parent = preview
-
-    local previewIcon = Instance.new("ImageLabel")
-    previewIcon.AnchorPoint = Vector2.new(0.5, 0.5)
-    previewIcon.AutomaticSize = Enum.AutomaticSize.XY
-    previewIcon.BackgroundTransparency = 1
-    previewIcon.Position = UDim2.new(0.9, 0, 0.5, 0)
-    previewIcon.Size = UDim2.new(0, 39, 0, 39)
-    previewIcon.Image = "rbxassetid://12905435514"  -- Replace with a task manager icon
-    previewIcon.ScaleType = Enum.ScaleType.Fit
-    previewIcon.Parent = preview
-
-    -- ============================================================
-    -- MAIN UI ELEMENTS (Title Bar + Tabs)
-    -- ============================================================
-
-    -- Title Bar
-    local titleBar = Instance.new("Frame")
-    titleBar.Name = "TitleBar"
-    titleBar.Size = UDim2.new(1, 0, 0.06, 0)
-    titleBar.Position = UDim2.new(0, 0, 0, 0)
-    titleBar.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
-    titleBar.BorderSizePixel = 0
-    titleBar.ZIndex = ui.ZIndex + 1
-    titleBar.Parent = ui
-
-    -- Title
-    local title = Instance.new("TextLabel")
-    title.Size = UDim2.new(1, -100, 1, 0)
-    title.Position = UDim2.new(0, 15, 0, 0)
-    title.BackgroundTransparency = 1
-    title.Text = "🔧 Task Manager"
-    title.TextColor3 = Color3.new(1, 1, 1)
-    title.TextXAlignment = Enum.TextXAlignment.Left
-    title.Font = Enum.Font.GothamBold
-    title.TextScaled = true
-    title.ZIndex = ui.ZIndex + 2
-    title.Parent = titleBar
-
-    -- Close Button (Desktop only)
-    local closeBtn = Instance.new("TextButton")
-    closeBtn.Name = "CloseButton"
-    closeBtn.Size = UDim2.new(0, 30, 0, 30)
-    closeBtn.Position = UDim2.new(1, -40, 0.5, -15)
-    closeBtn.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
-    closeBtn.Text = "✕"
-    closeBtn.TextColor3 = Color3.new(1, 1, 1)
-    closeBtn.Font = Enum.Font.GothamBold
-    closeBtn.TextSize = 16
-    closeBtn.ZIndex = ui.ZIndex + 3
-    closeBtn.Parent = titleBar
-    local closeCorner = Instance.new("UICorner")
-    closeCorner.CornerRadius = UDim.new(1, 0)
-    closeCorner.Parent = closeBtn
-
-    -- Tab Container
-    local tabContainer = Instance.new("Frame")
-    tabContainer.Size = UDim2.new(1, 0, 0.05, 0)
-    tabContainer.Position = UDim2.new(0, 0, 0.06, 0)
-    tabContainer.BackgroundColor3 = Color3.fromRGB(25, 25, 35)
-    tabContainer.BorderSizePixel = 0
-    tabContainer.ZIndex = ui.ZIndex + 1
-    tabContainer.Parent = ui
-
-    -- ============================================================
-    -- TABS (Performance, Processes, App History)
-    -- ============================================================
-    local tabNames = {"Performance", "Processes", "App History"}
-    local tabButtons = {}
-    local currentTab = "Performance"
-
-    for i, tabName in ipairs(tabNames) do
-        local btn = Instance.new("TextButton")
-        btn.Size = UDim2.new(1 / #tabNames, 0, 1, 0)
-        btn.Position = UDim2.new((i - 1) / #tabNames, 0, 0, 0)
-        btn.BackgroundColor3 = (i == 1) and Color3.fromRGB(50, 50, 60) or Color3.fromRGB(25, 25, 35)
-        btn.Text = tabName
-        btn.TextColor3 = Color3.new(1, 1, 1)
-        btn.Font = Enum.Font.Gotham
-        btn.TextSize = 14
-        btn.BorderSizePixel = 0
-        btn.ZIndex = tabContainer.ZIndex + 1
-        btn.Parent = tabContainer
-        tabButtons[tabName] = btn
-
-        btn.MouseButton1Click:Connect(function()
-            for _, b in pairs(tabButtons) do
-                b.BackgroundColor3 = Color3.fromRGB(25, 25, 35)
-            end
-            btn.BackgroundColor3 = Color3.fromRGB(50, 50, 60)
-            currentTab = tabName
-            SwitchTab(tabName)
-        end)
-    end
-
-    -- ============================================================
-    -- CONTENT CONTAINER (swaps content per tab)
-    -- ============================================================
-    local contentContainer = Instance.new("Frame")
-    contentContainer.Name = "ContentContainer"
-    contentContainer.Size = UDim2.new(1, 0, 0.89, 0)
-    contentContainer.Position = UDim2.new(0, 0, 0.11, 0)
-    contentContainer.BackgroundTransparency = 1
-    contentContainer.ZIndex = ui.ZIndex + 1
-    contentContainer.Parent = ui
-
-    -- ============================================================
-    -- TAB CONTENT FUNCTIONS (to be filled by the logic script)
-    -- ============================================================
-    -- These will be populated by the TaskManager logic script
-    -- The UI frame structure is ready for the logic to fill in
-
-    -- ============================================================
-    -- REGISTER THE APP
-    -- ============================================================
-    local appEntry = __AppsLaunchArgFolder:FindFirstChild(AppName)
-    if not appEntry then
-        appEntry = Instance.new("StringValue")
-        appEntry.Name = AppName
-        appEntry.Parent = __AppsLaunchArgFolder
-    end
-    appEntry.Value = "ZolinModules"  -- Mark as built-in module
-
-    print(AppName .. " package installed successfully!")
+local function defaultMainUI()
+	local player = game:GetService("Players").LocalPlayer
+	local gui = player and player:FindFirstChildOfClass("PlayerGui")
+	return gui and gui:FindFirstChild("ZolinOS")
 end
 
--- ============================================================
--- INSTALL
--- ============================================================
-__TaskManagerPackage.Install()
+local function folder(parent, name, required)
+	local found
+	for _, child in ipairs(parent:GetChildren()) do
+		if child.Name == name then
+			assert(child:IsA("Folder"), name .. " must be a Folder")
+			assert(not found, "Multiple " .. name .. " folders; repair the container first")
+			found = child
+		end
+	end
+	assert(found or not required, name .. " was not found")
+	return found
+end
+
+local function setString(parent, name, value)
+	local item
+	for _, child in ipairs(parent:GetChildren()) do
+		if child.Name == name then
+			if not item and child:IsA("StringValue") then item = child else child:Destroy() end
+		end
+	end
+	if not item then item = Instance.new("StringValue"); item.Name = name; item.Parent = parent end
+	item.Value = value
+	return item
+end
+
+function __TaskManagerPackage.Install(mainUI)
+	mainUI = mainUI or defaultMainUI()
+	if typeof(mainUI) ~= "Instance" then return false, "ZolinOS was not found; use Install(gui) to select a GUI" end
+	local app, newRegistry, registryEntry
+	local detached = {}
+	local ok, result = pcall(function()
+		local templates = folder(mainUI, "ReplicatedWindow_Sys", true)
+		local userTemplates = folder(mainUI, "ReplicatedWindow", false)
+		local zolin = folder(mainUI, "__Zolin", true)
+		local registry = folder(zolin, "__AppsLaunchArgFolder", false)
+		local oldApps, oldEntries = {}, {}
+		local function collectApps(parent)
+			if not parent then return end
+			for _, item in ipairs(parent:GetChildren()) do
+				if item.Name == APP_NAME then table.insert(oldApps, item) end
+			end
+		end
+		collectApps(templates)
+		collectApps(userTemplates)
+		if registry then
+			for _, item in ipairs(registry:GetChildren()) do
+				if item.Name == APP_NAME then table.insert(oldEntries, item) end
+			end
+		end
+
+		-- Build the replacement before touching the installed template.
+		app = Instance.new("Frame")
+		app.Name = "TaskManager"
+		app.AnchorPoint = Vector2.new(0.5, 0.5)
+		app.Position = UDim2.fromScale(0.5, 0.5)
+		app.Size = UDim2.fromScale(1, 1)
+		app.BackgroundColor3 = Color3.fromRGB(16, 20, 29)
+		app.BorderSizePixel = 0
+		app.ZIndex = 6
+		app.Visible = false
+		app:SetAttribute("PackageVersion", VERSION)
+
+		local oldApp = oldApps[1]
+		if oldApp then
+			for name, value in pairs(oldApp:GetAttributes()) do
+				if name ~= "PackageVersion" then app:SetAttribute(name, value) end
+			end
+		end
+		local oldData = oldApp and oldApp:FindFirstChild("Data")
+		local data = oldData and oldData:IsA("Folder") and oldData:Clone() or Instance.new("Folder")
+		data.Name, data.Parent = "Data", app
+		setString(data, "Description", "Monitor Roblox performance and manage ZolinOS applications")
+		setString(data, "Version", VERSION)
+		setString(data, "Icon", ICON)
+
+		local ui = Instance.new("Frame")
+		ui.Name = "UI"
+		ui.AnchorPoint = Vector2.new(0.5, 0.5)
+		ui.Position = UDim2.fromScale(0.5, 0.495)
+		ui.Size = UDim2.fromScale(1, 0.89)
+		ui.BackgroundColor3 = Color3.fromRGB(16, 20, 29)
+		ui.BorderSizePixel = 0
+		ui.ClipsDescendants = true
+		ui.ZIndex = 7
+		ui.Parent = app
+
+		local preview = Instance.new("Frame")
+		preview.Name = "PreviewAppInfoZL"
+		preview.Size = UDim2.fromOffset(190, 40)
+		preview.BackgroundTransparency = 1
+		preview.Visible = false
+		preview.ZIndex = 8
+		preview.Parent = app
+		local label = Instance.new("TextLabel")
+		label.Name = "AppNameLabel"
+		label.Size = UDim2.new(1, -44, 1, 0)
+		label.BackgroundTransparency = 1
+		label.Text = "Task Manager"
+		label.Font = Enum.Font.GothamBold
+		label.TextSize = 16
+		label.TextColor3 = Color3.fromRGB(237, 241, 248)
+		label.ZIndex = 9
+		label.Parent = preview
+		local icon = Instance.new("ImageLabel")
+		icon.Name = "ImageLabel"
+		icon.Position = UDim2.new(1, -40, 0, 0)
+		icon.Size = UDim2.fromOffset(40, 40)
+		icon.BackgroundTransparency = 1
+		icon.Image, icon.ScaleType = ICON, Enum.ScaleType.Fit
+		icon.ZIndex = 9
+		icon.Parent = preview
+
+		if not registry then
+			newRegistry = Instance.new("Folder")
+			newRegistry.Name = "__AppsLaunchArgFolder"
+			registry = newRegistry
+		end
+		registryEntry = Instance.new("StringValue")
+		registryEntry.Name, registryEntry.Value = APP_NAME, "ZolinModules"
+		app.Parent = templates
+		if newRegistry then newRegistry.Parent = zolin end
+		registryEntry.Parent = registry
+		for _, group in ipairs({oldApps, oldEntries}) do
+			for _, old in ipairs(group) do
+				table.insert(detached, {object = old, parent = old.Parent})
+				old.Parent = nil
+			end
+		end
+		return app
+	end)
+	if not ok then
+		if app then app:Destroy() end
+		if registryEntry then registryEntry:Destroy() end
+		if newRegistry then newRegistry:Destroy() end
+		for _, old in ipairs(detached) do pcall(function() old.object.Parent = old.parent end) end
+		return false, "Task Manager installation failed: " .. tostring(result)
+	end
+	for _, old in ipairs(detached) do old.object:Destroy() end
+	local zolin = mainUI:FindFirstChild("__Zolin")
+	local remotes = zolin and zolin:FindFirstChild("Remotes")
+	local refresh = remotes and remotes:FindFirstChild("updateZolinLauncher")
+	if refresh and refresh:IsA("BindableEvent") then refresh:Fire() end
+	return true, result
+end
+
+-- The package remains the Store's entry point; TaskManager uses the built-in launch path.
+local gui = defaultMainUI()
+if gui then
+	local installed, appOrError = __TaskManagerPackage.Install(gui)
+	if not installed then warn("[TaskManager] " .. tostring(appOrError)) end
+end
+return __TaskManagerPackage
+
