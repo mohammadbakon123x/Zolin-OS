@@ -5,7 +5,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 	local l__TweenService__5 = game:GetService("TweenService");
 	local UIS = game:GetService("UserInputService");
 	local u6 = game:GetService("RunService")
-	local BuildVersion = "3.23.9.6"
+	local BuildVersion = "3.23.9.7"
 	local versionLabel = "v"..BuildVersion;
 	local SettingsScript = {
 		DisplayLogs = true,
@@ -2834,10 +2834,9 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 			customSounds = {
 				["Nukem"] = 0.7,
 				["Male Scream Short Yelling Bursts Death Cries (SFX)"] = 0.75,
-				["explosion2"] = 0.7,
-				["Gun1"] = 0.7,
-				["Gun2"] = 0.75,
-				["Yell"] = 0.7,
+				["Gun1"] = 1,
+				["Gun2"] = 0.8,
+				["Yell"] = 1,
 				["Hit"] = 0.5,
 				["Implosion"] = 0.7,
 			},
@@ -3081,7 +3080,17 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 							Material = Enum.Material.Plastic,
 							Transparency = 1,
 						}, visuals)
-						local effect1 = makeVisual("Attachment", "Attachment", { CFrame = CFrame.new(0, 0, 0, 0, 1, -0, -1, 0, 0, 0, 0, 1) }, aura)
+						local auraSound = makeVisual("Sound", "Aura", {
+							SoundId = "rbxassetid://6563094733",
+							Volume = 0.5,
+							PlaybackSpeed = 0.93,
+							Looped = true,
+							RollOffMode = Enum.RollOffMode.LinearSquare,
+							RollOffMinDistance = 10,
+							RollOffMaxDistance = 250,
+						}, aura)
+						if standModel:IsDescendantOf(workspace) then auraSound:Play() end
+												local effect1 = makeVisual("Attachment", "Attachment", { CFrame = CFrame.new(0, 0, 0, 0, 1, -0, -1, 0, 0, 0, 0, 1) }, aura)
 						local effect2 = makeVisual("ParticleEmitter", "ParticleEmitter", {
 							Brightness = 0,
 							Color = ColorSequence.new({ColorSequenceKeypoint.new(0, Color3.new(1, 1, 1)), ColorSequenceKeypoint.new(1, Color3.new(1, 1, 1))}),
@@ -3283,7 +3292,761 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 		},
 	}
 
-	-- LIGHTING:
+	local FuturePredictionDimension = {}
+	do
+	-- Standalone YU Final Future Prediction cutscene assets.
+	-- Both factories return unparented instances. The caller places, owns, and cleans them up.
+	-- Sounds are configured but never started by these factories.
+	
+	local function makeFuturePredictionDimensionAsset(className, properties, parent)
+		local instance = Instance.new(className)
+		for property, value in pairs(properties) do
+			instance[property] = value
+		end
+		instance.Parent = parent
+		return instance
+	end
+	
+	local function createFuturePredictionOrb()
+		local orb = makeFuturePredictionDimensionAsset("Model", { Name = "Orb of Destruction" })
+	
+		local function makeEmitter(parent, properties)
+			local emitter = makeFuturePredictionDimensionAsset("ParticleEmitter", {
+				Acceleration = Vector3.zero,
+				Brightness = 1,
+				Drag = 0,
+				EmissionDirection = Enum.NormalId.Top,
+				Enabled = true,
+				FlipbookFramerate = NumberRange.new(1),
+				FlipbookLayout = Enum.ParticleFlipbookLayout.None,
+				FlipbookMode = Enum.ParticleFlipbookMode.Loop,
+				FlipbookStartRandom = false,
+				LightEmission = 1,
+				LockedToPart = false,
+				Shape = Enum.ParticleEmitterShape.Box,
+				ShapeInOut = Enum.ParticleEmitterShapeInOut.Outward,
+				ShapePartial = 1,
+				ShapeStyle = Enum.ParticleEmitterShapeStyle.Volume,
+				Squash = NumberSequence.new(0),
+				VelocityInheritance = 0,
+				WindAffectsDrag = false,
+			})
+			for property, value in pairs(properties) do
+				emitter[property] = value
+			end
+			emitter.Parent = parent
+			return emitter
+		end
+	
+		local core = makeFuturePredictionDimensionAsset("Part", {
+			Name = "Part",
+			Anchored = true,
+			BackSurface = Enum.SurfaceType.Smooth,
+			BottomSurface = Enum.SurfaceType.Smooth,
+			CanCollide = false,
+			CanQuery = false,
+			CanTouch = false,
+			CastShadow = true,
+			CFrame = CFrame.new(0, 0, 0, 1, -1.9363644021552773e-9, -1.1920928955078125e-7, 1.9363142200745642e-9, 1, -4.2182313109151437e-7, 1.1920928955078125e-7, 4.2182313109151437e-7, 1),
+			Color = Color3.new(0, 0, 0),
+			FrontSurface = Enum.SurfaceType.Smooth,
+			LeftSurface = Enum.SurfaceType.Smooth,
+			Massless = false,
+			Material = Enum.Material.Neon,
+			MaterialVariant = "",
+			PivotOffset = CFrame.identity,
+			Reflectance = 0,
+			RightSurface = Enum.SurfaceType.Smooth,
+			Shape = Enum.PartType.Ball,
+			Size = Vector3.new(12.74018383026123, 12.74018383026123, 12.74018383026123),
+			TopSurface = Enum.SurfaceType.Smooth,
+			Transparency = 0,
+		}, orb)
+	
+		makeFuturePredictionDimensionAsset("PointLight", {
+			Name = "PointLightFar",
+			Brightness = 16.979999542236328,
+			Color = Color3.new(0.9764706492424011, 0.250980406999588, 0.29019609093666077),
+			Enabled = true,
+			Range = 120,
+			Shadows = true,
+		}, core)
+	
+		makeFuturePredictionDimensionAsset("Sound", {
+			Name = "Chain_mask1",
+			EmitterSize = 10,
+			Looped = true,
+			PlaybackSpeed = 1,
+			PlayOnRemove = false,
+			RollOffMaxDistance = 150,
+			RollOffMinDistance = 10,
+			RollOffMode = Enum.RollOffMode.Inverse,
+			SoundId = "rbxassetid://136906369476719",
+			TimePosition = 0,
+			Volume = 0.5,
+		}, core)
+	
+		makeFuturePredictionDimensionAsset("PointLight", {
+			Name = "PointLight",
+			Brightness = 8.34000015258789,
+			Color = Color3.new(0.5490196347236633, 0.1411764770746231, 0.16078431904315948),
+			Enabled = true,
+			Range = 24,
+			Shadows = true,
+		}, core)
+	
+		makeFuturePredictionDimensionAsset("Sound", {
+			Name = "blue Star implosion",
+			EmitterSize = 5,
+			Looped = false,
+			PlaybackSpeed = 1,
+			PlayOnRemove = false,
+			RollOffMaxDistance = 150,
+			RollOffMinDistance = 5,
+			RollOffMode = Enum.RollOffMode.LinearSquare,
+			SoundId = "rbxassetid://134279653018458",
+			TimePosition = 0,
+			Volume = 1,
+		}, core)
+	
+		-- MeshPart geometry is recreated with a file mesh; ParticleEmitter parents stay on the shell.
+		local shell = makeFuturePredictionDimensionAsset("Part", {
+			Name = "MeshPart",
+			Anchored = true,
+			BackSurface = Enum.SurfaceType.Smooth,
+			BottomSurface = Enum.SurfaceType.Smooth,
+			CanCollide = false,
+			CanQuery = false,
+			CanTouch = false,
+			CastShadow = true,
+			CFrame = CFrame.identity,
+			Color = Color3.new(1, 0, 0),
+			FrontSurface = Enum.SurfaceType.Smooth,
+			LeftSurface = Enum.SurfaceType.Smooth,
+			Massless = false,
+			Material = Enum.Material.ForceField,
+			MaterialVariant = "",
+			PivotOffset = CFrame.identity,
+			Reflectance = 1,
+			RightSurface = Enum.SurfaceType.Smooth,
+			Shape = Enum.PartType.Block,
+			Size = Vector3.new(13.518719673156738, 13.518719673156738, 13.518719673156738),
+			TopSurface = Enum.SurfaceType.Smooth,
+			Transparency = 0,
+		}, orb)
+	
+		makeFuturePredictionDimensionAsset("SpecialMesh", {
+			Name = "Mesh",
+			MeshId = "rbxassetid://6813496146",
+			MeshType = Enum.MeshType.FileMesh,
+			Offset = Vector3.zero,
+			Scale = Vector3.new(4.721502590673575, 4.687091441136112, 4.709438050524431),
+			TextureId = "rbxassetid://94257533",
+			VertexColor = Vector3.new(1, 1, 1),
+		}, shell)
+	
+		local centerAttachment = makeFuturePredictionDimensionAsset("Attachment", {
+			Name = "Attachment",
+			CFrame = CFrame.identity,
+			Visible = false,
+		}, shell)
+	
+		makeEmitter(centerAttachment, {
+			Name = "core",
+			Color = ColorSequence.new(Color3.new(0.545098066329956, 0.27450981736183167, 0.27843138575553894)),
+			Lifetime = NumberRange.new(1),
+			LightInfluence = 0,
+			Orientation = Enum.ParticleOrientation.VelocityPerpendicular,
+			Rate = 80,
+			Rotation = NumberRange.new(-360, 360),
+			RotSpeed = NumberRange.new(-50, 50),
+			Size = NumberSequence.new({ NumberSequenceKeypoint.new(0, 0, 0), NumberSequenceKeypoint.new(1, 14.931734085083008, 0) }),
+			Speed = NumberRange.new(0.2876323461532593),
+			SpreadAngle = Vector2.new(360, 360),
+			Texture = "http://www.roblox.com/asset/?id=243728104",
+			TimeScale = 0.5,
+			Transparency = NumberSequence.new({ NumberSequenceKeypoint.new(0, 1, 0), NumberSequenceKeypoint.new(0.4977545142173767, 0.47499996423721313, 0), NumberSequenceKeypoint.new(1, 1, 0) }),
+			ZOffset = 0,
+		})
+	
+		makeEmitter(centerAttachment, {
+			Name = "aura",
+			Color = ColorSequence.new(Color3.new(0.545098066329956, 0.27843138575553894, 0.2862745225429535)),
+			Lifetime = NumberRange.new(1),
+			LightInfluence = 0,
+			Orientation = Enum.ParticleOrientation.VelocityPerpendicular,
+			Rate = 80,
+			Rotation = NumberRange.new(-360, 360),
+			RotSpeed = NumberRange.new(-50, 50),
+			Size = NumberSequence.new({ NumberSequenceKeypoint.new(0, 0, 0), NumberSequenceKeypoint.new(1, 15.4032621383667, 0) }),
+			Speed = NumberRange.new(0.2876323461532593),
+			SpreadAngle = Vector2.new(360, 360),
+			Texture = "rbxassetid://1084955012",
+			TimeScale = 0.5,
+			Transparency = NumberSequence.new({ NumberSequenceKeypoint.new(0, 1, 0), NumberSequenceKeypoint.new(0.5, 0.16249996423721313, 0), NumberSequenceKeypoint.new(1, 1, 0) }),
+			ZOffset = 0,
+		})
+	
+		makeEmitter(shell, {
+			Name = "Shine",
+			Color = ColorSequence.new(Color3.new(0.729411780834198, 0, 0)),
+			Lifetime = NumberRange.new(1),
+			LightInfluence = 1,
+			Orientation = Enum.ParticleOrientation.FacingCamera,
+			Rate = 100,
+			Rotation = NumberRange.new(-100, 100),
+			RotSpeed = NumberRange.new(0),
+			Size = NumberSequence.new(14.381617546081543),
+			Speed = NumberRange.new(0.14381617307662964),
+			SpreadAngle = Vector2.new(0, 0),
+			Texture = "rbxassetid://75202463",
+			TimeScale = 1,
+			Transparency = NumberSequence.new({ NumberSequenceKeypoint.new(0, 1, 0), NumberSequenceKeypoint.new(0.05000000074505806, 0.9800000190734863, 0), NumberSequenceKeypoint.new(0.14695751667022705, 0.956250011920929, 0), NumberSequenceKeypoint.new(0.770378828048706, 0.981249988079071, 0), NumberSequenceKeypoint.new(0.8479999899864197, 0.9800000190734863, 0), NumberSequenceKeypoint.new(1, 1, 0) }),
+			ZOffset = 2,
+		})
+	
+		local trailBottom = makeFuturePredictionDimensionAsset("Attachment", {
+			Name = "Attachment",
+			CFrame = CFrame.new(0, -5.993704795837402, 0, 1, 1.2272152911940726e-11, 9.834893717197701e-7, -1.2272268271051878e-11, 1, 1.1732481652870774e-10, -9.834893717197701e-7, -1.1732483040649555e-10, 1),
+			Visible = false,
+		}, shell)
+	
+		makeEmitter(shell, {
+			Name = "MatGreenPoison",
+			Color = ColorSequence.new(Color3.new(0.8352941274642944, 0.25882354378700256, 0.4431372582912445)),
+			Lifetime = NumberRange.new(3),
+			LightInfluence = 1,
+			Orientation = Enum.ParticleOrientation.FacingCamera,
+			Rate = 200,
+			Rotation = NumberRange.new(-100, 100),
+			RotSpeed = NumberRange.new(0),
+			Size = NumberSequence.new(0.11505293846130371),
+			Speed = NumberRange.new(0.5752646923065186),
+			SpreadAngle = Vector2.new(100, 100),
+			Texture = "rbxassetid://75202463",
+			TimeScale = 1,
+			Transparency = NumberSequence.new(0),
+			ZOffset = 0,
+		})
+	
+		local trailTop = makeFuturePredictionDimensionAsset("Attachment", {
+			Name = "Attachment",
+			CFrame = CFrame.new(0, 5.354761123657227, 0, 1, 6.813437834762848e-12, 5.066531798547658e-7, -6.8134972490419e-12, 1, 1.1732481652870774e-10, -5.066531798547658e-7, -1.1732481652870774e-10, 1),
+			Visible = false,
+		}, shell)
+	
+		makeFuturePredictionDimensionAsset("Trail", {
+			Name = "Trail",
+			Attachment0 = trailBottom,
+			Attachment1 = trailTop,
+			Brightness = 1,
+			Color = ColorSequence.new(Color3.new(0.7450980544090271, 0.20392157137393951, 0.21176470816135406)),
+			Enabled = true,
+			FaceCamera = true,
+			Lifetime = 3,
+			LightEmission = 0.5,
+			LightInfluence = 1,
+			MaxLength = 0,
+			MinLength = 0.2876323461532593,
+			Texture = "rbxassetid://5699911427",
+			TextureLength = 0.949999988079071,
+			TextureMode = Enum.TextureMode.Stretch,
+			Transparency = NumberSequence.new({ NumberSequenceKeypoint.new(0, 0, 0), NumberSequenceKeypoint.new(1, 1, 0) }),
+			WidthScale = NumberSequence.new({ NumberSequenceKeypoint.new(0, 0.9375, 0), NumberSequenceKeypoint.new(0.05396096408367157, 1, 0), NumberSequenceKeypoint.new(0.9483352303504944, 1, 0), NumberSequenceKeypoint.new(1, 0, 0) }),
+		}, shell)
+	
+		makeEmitter(shell, {
+			Name = "GreenPoison ",
+			Color = ColorSequence.new(Color3.new(0.9882352948188782, 0.2666666805744171, 0.27843138575553894)),
+			Lifetime = NumberRange.new(3),
+			LightInfluence = 1,
+			Orientation = Enum.ParticleOrientation.FacingCamera,
+			Rate = 200,
+			Rotation = NumberRange.new(-100, 100),
+			RotSpeed = NumberRange.new(0),
+			Size = NumberSequence.new(0.11505293846130371),
+			Speed = NumberRange.new(0.5752646923065186),
+			SpreadAngle = Vector2.new(100, 100),
+			Texture = "rbxassetid://75202463",
+			TimeScale = 1,
+			Transparency = NumberSequence.new(0),
+			ZOffset = 0,
+		})
+	
+		-- The source CSG object is a concentric sphere, recreated as a Ball.
+		makeFuturePredictionDimensionAsset("Part", {
+			Name = "Sphere",
+			Anchored = true,
+			BackSurface = Enum.SurfaceType.Smooth,
+			BottomSurface = Enum.SurfaceType.Smooth,
+			CanCollide = false,
+			CanQuery = false,
+			CanTouch = false,
+			CastShadow = true,
+			CFrame = CFrame.new(0, 0, 0, 1, 4.547473508864641e-13, 0, -4.547473508864641e-13, 1, 5.8207553360611897e-11, 0, -5.8207553360611897e-11, 1),
+			Color = Color3.new(0.615686297416687, 0, 0),
+			FrontSurface = Enum.SurfaceType.Smooth,
+			LeftSurface = Enum.SurfaceType.Smooth,
+			Massless = false,
+			Material = Enum.Material.Neon,
+			MaterialVariant = "",
+			PivotOffset = CFrame.identity,
+			Reflectance = 0,
+			RightSurface = Enum.SurfaceType.Smooth,
+			Shape = Enum.PartType.Ball,
+			Size = Vector3.new(15.329961776733398, 15.329961776733398, 15.329961776733398),
+			TopSurface = Enum.SurfaceType.Smooth,
+			Transparency = 0.8999999761581421,
+		}, orb)
+	
+		orb.PrimaryPart = core
+		-- Normalize the pivot after assigning PrimaryPart while preserving all relative transforms.
+		orb:PivotTo(CFrame.identity)
+		return orb
+	end
+	
+	local function createFuturePredictionSkybox()
+		local skybox = makeFuturePredictionDimensionAsset("Part", {
+			Name = "Skybox part",
+			Anchored = true,
+			BackSurface = Enum.SurfaceType.Smooth,
+			BottomSurface = Enum.SurfaceType.Inlet,
+			CanCollide = false,
+			CanQuery = false,
+			CanTouch = false,
+			CastShadow = false,
+			CFrame = CFrame.identity,
+			Color = Color3.new(0.6392157077789307, 0.6352941393852234, 0.6470588445663452),
+			FrontSurface = Enum.SurfaceType.Smooth,
+			LeftSurface = Enum.SurfaceType.Smooth,
+			Massless = false,
+			Material = Enum.Material.Plastic,
+			MaterialVariant = "",
+			PivotOffset = CFrame.identity,
+			Reflectance = 0,
+			RightSurface = Enum.SurfaceType.Smooth,
+			Shape = Enum.PartType.Block,
+			Size = Vector3.new(317.8301086425781, 8, 344.3799133300781),
+			TopSurface = Enum.SurfaceType.Studs,
+			Transparency = 1,
+		})
+	
+		makeFuturePredictionDimensionAsset("Decal", {
+			Name = "Decal",
+			Color3 = Color3.new(1, 1, 1),
+			Face = Enum.NormalId.Bottom,
+			Texture = "rbxassetid://90546017435179",
+			Transparency = 0,
+		}, skybox)
+	
+		makeFuturePredictionDimensionAsset("SpecialMesh", {
+			Name = "Mesh",
+			MeshId = "rbxassetid://110218693",
+			MeshType = Enum.MeshType.FileMesh,
+			Offset = Vector3.zero,
+			Scale = Vector3.new(-1050, -1050, -1050),
+			TextureId = "",
+			VertexColor = Vector3.new(1, 1, 1),
+		}, skybox)
+	
+		return skybox
+	end
+	
+	
+	
+	local function prepareFuturePredictionNukem(sound, scene)
+		if scene.audio then return end
+		local candidateId = "rbxassetid://140027648193529"
+		local audio = {
+			originalSoundId = sound.SoundId,
+			originalPosition = sound.TimePosition,
+			originalLooped = sound.Looped,
+			originalPlaybackSpeed = sound.PlaybackSpeed,
+			originalEffects = {}, ownedEffects = {},
+			switched = false, restored = false, loadFinished = false,
+		}
+		scene.audio = audio
+		local function active()
+			return not scene.finished and not audio.restored and scene.audio == audio and sound.Parent ~= nil
+		end
+		local function discardProbe()
+			if audio.probe then audio.probe:Destroy(); audio.probe = nil end
+		end
+		local function replaceTrack(id, position, looped, playbackSpeed, play)
+			audio.switchSerial = (audio.switchSerial or 0) + 1
+			local switchSerial = audio.switchSerial
+			scene.switchingAudio = true
+			local ok = pcall(function()
+				sound.SoundId = id
+				sound.Looped = looped
+				if playbackSpeed then sound.PlaybackSpeed = playbackSpeed end
+				if play then sound:Play() end
+				sound.TimePosition = math.max(0, position)
+			end)
+			task.defer(function()
+				if audio.switchSerial == switchSerial then scene.switchingAudio = false end
+			end)
+			return ok
+		end
+		scene.restoreNukem = function()
+			if audio.restored then return end
+			audio.restored = true
+			audio.loadFinished = true
+			discardProbe()
+			for _, effect in ipairs(audio.ownedEffects) do effect:Destroy() end
+			for effect, enabled in pairs(audio.originalEffects) do
+				if effect.Parent then effect.Enabled = enabled end
+			end
+			if audio.switched and sound.Parent and sound.SoundId == candidateId then
+				replaceTrack(audio.originalSoundId, sound.TimePosition, audio.originalLooped, audio.originalPlaybackSpeed, false)
+			end
+		end
+		scene.applyDimensionAudio = function()
+			if not active() then return false end
+			if audio.dimensionApplied then return true end
+			audio.dimensionApplied = true
+			for _, effect in ipairs(sound:GetChildren()) do
+				if effect:IsA("SoundEffect") then
+					audio.originalEffects[effect] = effect.Enabled
+					effect.Enabled = false
+				end
+			end
+			local reverb = Instance.new("ReverbSoundEffect")
+			table.insert(audio.ownedEffects, reverb)
+			reverb.Name = "YUFinalFuturePredictionDimensionReverb"
+			reverb.DecayTime = 7.861
+			reverb.Density = 1
+			reverb.Diffusion = 1
+			reverb.DryLevel = 0
+			reverb.WetLevel = -11
+			reverb.Priority = 0
+			reverb.Enabled = true
+			reverb.Parent = sound
+			local equalizer = Instance.new("EqualizerSoundEffect")
+			table.insert(audio.ownedEffects, equalizer)
+			equalizer.Name = "YUFinalFuturePredictionDimensionOtherworld"
+			equalizer.HighGain = -25.1
+			equalizer.MidGain = -36.8
+			equalizer.LowGain = 7.3
+			equalizer.Priority = 0
+			equalizer.Enabled = true
+			equalizer.Parent = sound
+			return true
+		end
+		if not active() then return end
+		local probe = Instance.new("Sound")
+		probe.Name = "YUFinalFuturePredictionAudioProbe"
+		probe.SoundId = candidateId
+		audio.probe = probe
+		task.delay(6, function()
+			if audio.loadFinished then return end
+			audio.loadFinished = true
+			discardProbe()
+		end)
+		task.spawn(function()
+			if not active() or audio.loadFinished or audio.probe ~= probe then return end
+			local loadedSuccessfully = false
+			local ok = pcall(function()
+				-- A silent playback makes this Sound report IsLoaded after content fetch succeeds.
+				probe.Volume = 0
+				probe.Parent = game:GetService("SoundService")
+				probe:Play()
+				game:GetService("ContentProvider"):PreloadAsync({probe}, function(_, status)
+					loadedSuccessfully = status == Enum.AssetFetchStatus.Success
+				end)
+				while loadedSuccessfully and not audio.loadFinished and active() and audio.probe == probe and not probe.IsLoaded do
+					task.wait(0.05)
+				end
+			end)
+			if audio.loadFinished then return end
+			audio.loadFinished = true
+			local loaded = ok and loadedSuccessfully and audio.probe == probe and probe.IsLoaded
+			discardProbe()
+			if not loaded or not active() or sound.SoundId ~= audio.originalSoundId then return end
+			local position, wasPlaying = sound.TimePosition, sound.IsPlaying
+			audio.switched = true
+			local changed = replaceTrack(candidateId, position, true, nil, wasPlaying)
+			if not changed then
+				if sound.Parent then
+					replaceTrack(audio.originalSoundId, position, audio.originalLooped, audio.originalPlaybackSpeed, active() and wasPlaying)
+				end
+				audio.switched = false
+				return
+			end
+			task.delay(0.5, function()
+				if not active() or not audio.switched or sound.SoundId ~= candidateId then return end
+				if not sound.IsLoaded then
+					replaceTrack(audio.originalSoundId, math.max(position, sound.TimePosition), audio.originalLooped, audio.originalPlaybackSpeed, wasPlaying)
+					audio.switched = false
+				end
+			end)
+		end)
+	end
+	
+	
+	local dimensionOwner
+	
+	function FuturePredictionDimension.start(standModel, currentPlayer, scene)
+		local torso = standModel:FindFirstChild("Torso")
+		if not torso or not torso:IsA("BasePart") then return end
+		local isLocal = currentPlayer == lpr
+		if isLocal and dimensionOwner then dimensionOwner.cleanup(true) end
+	
+		local dimension = {connections = {}, tweens = {}, values = {}, armed = false, entered = false, destroyed = false, cleaning = false}
+		scene.dimension = dimension
+		local folder = Instance.new("Folder")
+		folder.Name = "YUFinalFuturePredictionDimension"
+		folder.Parent = workspace
+		dimension.folder = folder
+		local orb = createFuturePredictionOrb()
+		orb.Name = "Orb of Destruction"
+		orb:PivotTo(torso.CFrame)
+		dimension.orb = orb
+	
+		local function active()
+			return not scene.finished and not dimension.cleaning and not dimension.destroyed and standModel.Parent ~= nil
+		end
+	
+		local function tween(object, duration, goals, style, direction, repeats)
+			local animation = l__TweenService__5:Create(object, TweenInfo.new(duration, style or Enum.EasingStyle.Sine, direction or Enum.EasingDirection.Out, repeats or 0), goals)
+			table.insert(dimension.tweens, animation)
+			animation:Play()
+			return animation
+		end
+	
+		local function numberValue(initial)
+			local value = Instance.new("NumberValue")
+			value.Value = initial
+			table.insert(dimension.values, value)
+			return value
+		end
+	
+		local function blendedSequence(sequence, alpha)
+			local points = {}
+			for _, point in ipairs(sequence.Keypoints) do
+				table.insert(points, NumberSequenceKeypoint.new(point.Time, 1 - (1 - point.Value) * alpha, point.Envelope * alpha))
+			end
+			return NumberSequence.new(points)
+		end
+	
+		local function fadeController(root)
+			local alpha = numberValue(0)
+			local visuals = {}
+			local sounds = {}
+			local objects = {root}
+			for _, object in ipairs(root:GetDescendants()) do table.insert(objects, object) end
+			for _, object in ipairs(objects) do
+				if object:IsA("BasePart") or object:IsA("Decal") or object:IsA("Texture") then
+					table.insert(visuals, {object = object, kind = "part", original = object.Transparency})
+				elseif object:IsA("ParticleEmitter") or object:IsA("Beam") or object:IsA("Trail") then
+					table.insert(visuals, {object = object, kind = "sequence", original = object.Transparency, enabled = object.Enabled})
+				elseif object:IsA("Light") then
+					table.insert(visuals, {object = object, kind = "light", original = object.Brightness})
+				elseif object:IsA("Sound") then
+					table.insert(sounds, {object = object, volume = object.Volume})
+				end
+			end
+			local function update()
+				if dimension.destroyed then return end
+				local opacity = math.clamp(alpha.Value, 0, 1)
+				for _, visual in ipairs(visuals) do
+					local object = visual.object
+					if visual.kind == "part" then
+						object.Transparency = 1 - (1 - visual.original) * opacity
+					elseif visual.kind == "sequence" then
+						object.Transparency = blendedSequence(visual.original, opacity)
+						object.Enabled = visual.enabled and opacity > 0.001
+					else
+						object.Brightness = visual.original * opacity
+					end
+				end
+				for _, sound in ipairs(sounds) do sound.object.Volume = sound.volume * opacity end
+			end
+			table.insert(dimension.connections, alpha.Changed:Connect(update))
+			update()
+			return alpha, sounds
+		end
+	
+		local orbAlpha, orbSounds = fadeController(orb)
+		dimension.orbAlpha = orbAlpha
+		orb.Parent = folder
+		local position = Instance.new("CFrameValue")
+		position.Value = torso.CFrame
+		table.insert(dimension.values, position)
+		local rotation = numberValue(0)
+		dimension.position = position
+		dimension.rotation = rotation
+	
+		local lighting = game:GetService("Lighting")
+		if isLocal then
+			dimensionOwner = dimension
+			dimension.lightingBefore = {}
+			local goals = {
+				Ambient = Color3.new(0, 0, 0),
+				OutdoorAmbient = Color3.new(0, 0, 0),
+				Brightness = 1,
+				ClockTime = 18.7,
+				ExposureCompensation = 1,
+				EnvironmentDiffuseScale = 1,
+				EnvironmentSpecularScale = 0,
+				FogColor = Color3.new(1, 1, 1),
+				FogStart = 100000,
+				FogEnd = 100000,
+				ShadowSoftness = 0.28,
+				ColorShift_Top = Color3.new(0, 0, 0),
+				ColorShift_Bottom = Color3.new(0, 0, 0),
+			}
+			for property in pairs(goals) do dimension.lightingBefore[property] = lighting[property] end
+			dimension.globalShadowsBefore = lighting.GlobalShadows
+			lighting.GlobalShadows = true
+			tween(lighting, 1.5, goals)
+			local effect = Instance.new("ColorCorrectionEffect")
+			effect.Name = "YUFinalFuturePredictionDimensionColor"
+			effect.Parent = lighting
+			dimension.effect = effect
+			dimension.colorGoals = {
+				Brightness = -0.6,
+				Contrast = 0.6,
+				Saturation = 0.1,
+				TintColor = Color3.fromRGB(153, 43, 43),
+			}
+			dimension.colorTween = tween(effect, 1.5, dimension.colorGoals)
+		end
+	
+		local function destroyResources()
+			if dimension.destroyed then return end
+			dimension.destroyed = true
+			for _, connection in ipairs(dimension.connections) do connection:Disconnect() end
+			for _, animation in ipairs(dimension.tweens) do animation:Cancel() end
+			for _, value in ipairs(dimension.values) do value:Destroy() end
+			if dimension.effect then dimension.effect:Destroy() end
+			folder:Destroy()
+		end
+	
+		dimension.cleanup = function(immediate)
+			if dimension.destroyed then return end
+			if dimension.cleaning and not immediate then return end
+			dimension.cleaning = true
+			dimension.armed = false
+			for _, animation in ipairs(dimension.tweens) do animation:Cancel() end
+			if dimension.motionConnection then dimension.motionConnection:Disconnect() end
+			for _, sound in ipairs(folder:GetDescendants()) do
+				if sound:IsA("Sound") then sound:Stop() end
+			end
+			local ownsLighting = isLocal and dimensionOwner == dimension
+			if ownsLighting then
+				lighting.GlobalShadows = dimension.globalShadowsBefore
+				if immediate then
+					for property, original in pairs(dimension.lightingBefore) do lighting[property] = original end
+				else
+					tween(lighting, 0.8, dimension.lightingBefore)
+					if dimension.effect then
+						tween(dimension.effect, 0.8, {Brightness = 0, Contrast = 0, Saturation = 0, TintColor = Color3.new(1, 1, 1)})
+					end
+				end
+			end
+			if immediate then
+				if ownsLighting then dimensionOwner = nil end
+				destroyResources()
+			else
+				tween(orbAlpha, 0.45, {Value = 0})
+				if dimension.skyAlpha then tween(dimension.skyAlpha, 0.6, {Value = 0}) end
+				task.delay(0.85, function()
+					if dimension.destroyed then return end
+					if dimensionOwner == dimension then
+						for property, original in pairs(dimension.lightingBefore) do lighting[property] = original end
+						dimensionOwner = nil
+					end
+					destroyResources()
+				end)
+			end
+		end
+		scene.cleanupDimension = dimension.cleanup
+	
+		dimension.enter = function()
+			if not active() or not dimension.armed or dimension.entered then return end
+			dimension.entered = true
+			if scene.applyDimensionAudio then scene.applyDimensionAudio() end
+			local implosion = orb:FindFirstChild("blue Star implosion", true)
+			if implosion and implosion:IsA("Sound") then implosion:Play() end
+			if isLocal then
+				local skybox = createFuturePredictionSkybox()
+				skybox.Name = "Skybox part"
+				skybox.CFrame = CFrame.new(0, 0, 0)
+				local skyAlpha = fadeController(skybox)
+				dimension.skybox = skybox
+				dimension.skyAlpha = skyAlpha
+				skybox.Parent = folder
+				tween(skyAlpha, 0.8, {Value = 1})
+				if dimension.colorTween then dimension.colorTween:Cancel() end
+				local flash = tween(dimension.effect, 0.12, {Brightness = 0.15, TintColor = Color3.new(1, 1, 1)})
+				table.insert(dimension.connections, flash.Completed:Connect(function(playbackState)
+					if playbackState == Enum.PlaybackState.Completed and active() then
+						dimension.colorTween = tween(dimension.effect, 0.85, dimension.colorGoals)
+					end
+				end))
+			end
+		end
+	
+		local triggerRadius = 2.75
+		local previousTorsoPosition = torso.Position
+		dimension.motionConnection = u6.RenderStepped:Connect(function()
+			if not active() then return end
+			orb:PivotTo(position.Value * CFrame.Angles(0, rotation.Value, 0))
+			if dimension.armed and not dimension.entered then
+				local center = orb.PrimaryPart.Position
+				local offset = torso.Position - previousTorsoPosition
+				local distance = offset:Dot(offset)
+				local fraction = distance > 0 and math.clamp((center - previousTorsoPosition):Dot(offset) / distance, 0, 1) or 0
+				local closest = previousTorsoPosition + offset * fraction
+				if (closest - center).Magnitude <= triggerRadius then dimension.enter() end
+			end
+			previousTorsoPosition = torso.Position
+		end)
+		table.insert(dimension.connections, dimension.motionConnection)
+	
+		local trigger = Instance.new("Part")
+		trigger.Name = "DimensionEntryTrigger"
+		trigger.Shape = Enum.PartType.Ball
+		trigger.Size = Vector3.new(triggerRadius * 2, triggerRadius * 2, triggerRadius * 2)
+		trigger.CFrame = orb.PrimaryPart.CFrame
+		trigger.Transparency = 1
+		trigger.Anchored = true
+		trigger.CanCollide = false
+		trigger.CanQuery = false
+		trigger.CanTouch = true
+		trigger.Parent = orb
+		table.insert(dimension.connections, trigger.Touched:Connect(function(hit)
+			if hit == torso and (torso.Position - orb.PrimaryPart.Position).Magnitude <= triggerRadius then
+				dimension.enter()
+			end
+		end))
+	
+		tween(rotation, 6, {Value = math.pi * 2}, Enum.EasingStyle.Linear, Enum.EasingDirection.InOut, -1)
+		task.delay(3.11, function()
+			if not active() then return end
+			-- Freeze the destination so the stand can approach the orb.
+			local target = (torso.CFrame * CFrame.new(0, 0, -5)) + Vector3.new(0, 2, 0)
+			dimension.target = target
+			local movement = tween(position, 1.1, {Value = target}, Enum.EasingStyle.Quad)
+			tween(orbAlpha, 0.8, {Value = 1})
+			for _, sound in ipairs(orbSounds) do
+				if sound.object.Looped then sound.object:Play() end
+			end
+			table.insert(dimension.connections, movement.Completed:Connect(function(playbackState)
+				if playbackState == Enum.PlaybackState.Completed and active() then
+					dimension.armed = true
+					previousTorsoPosition = torso.Position
+				end
+			end))
+		end)
+	end
+	
+	
+	FuturePredictionDimension.prepareNukem = prepareFuturePredictionNukem
+	end
+	
+		-- LIGHTING:
 	local function saveCurrentSettings()
 		local lighting = game:GetService("Lighting")
 
@@ -7594,7 +8357,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 									end
 								elseif modelData.id == "YU_FinalFuturePrediction_beatdown" then
 									local skinState = FuturePredictionSkinStates[StandModel]
-									if soundName == "Nukem" and not s.IsPlaying then
+									if soundName == "Nukem" and not s.IsPlaying and not (skinState and skinState.cutscene and skinState.cutscene.switchingAudio) then
 										s:SetAttribute("YUFinalFuturePredictionCutsceneStarted", nil)
 									end
 									if soundName == "Nukem" and s.IsPlaying and skinState then
@@ -7602,7 +8365,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 											s:SetAttribute("YUFinalFuturePredictionCutsceneStarted", true)
 											if skinState.cutscene then skinState.cutscene.finish(true) end
 											local soundService = game:GetService("SoundService")
-											local cutscene = {sound = s, connections = {}, finished = false, resumed = false}
+											local cutscene = {sound = s, connections = {}, finished = false, resumed = false, previousAmbientReverb = soundService.AmbientReverb}
 											skinState.cutscene = cutscene
 								
 											local function playTimeSound(name, volume)
@@ -7617,8 +8380,7 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 												if cutscene.resumed then return end
 												cutscene.resumed = true
 												if CurrentPlayer == lpr then
-													setDayNight(false)
-													soundService.AmbientReverb = Enum.ReverbType.NoReverb
+													soundService.AmbientReverb = cutscene.previousAmbientReverb
 													local timeStop = soundService:FindFirstChild("Timestop")
 													if timeStop and timeStop:IsA("Sound") then timeStop.Volume = 0.5 end
 													playTimeSound("Timeresume", 2.5)
@@ -7631,22 +8393,8 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 												for _, connection in ipairs(cutscene.connections) do connection:Disconnect() end
 												cutscene.resumeTime()
 												if cutscene.voice then cutscene.voice:Destroy() end
-												if cutscene.startTween then cutscene.startTween:Cancel() end
-												if cutscene.effect then
-													local effect = cutscene.effect
-													if immediate then
-														effect:Destroy()
-													else
-														local endTween = l__TweenService__5:Create(effect, TweenInfo.new(1.5, Enum.EasingStyle.Linear, Enum.EasingDirection.Out), {
-															Saturation = 0,
-															Brightness = 0,
-															Contrast = 0,
-															TintColor = Color3.fromRGB(255, 255, 255),
-														})
-														endTween.Completed:Once(function() effect:Destroy() end)
-														endTween:Play()
-													end
-												end
+												if cutscene.cleanupDimension then cutscene.cleanupDimension(immediate) end
+												if cutscene.restoreNukem then cutscene.restoreNukem() end
 												if skinState.cutscene == cutscene then skinState.cutscene = nil end
 											end
 								
@@ -7657,10 +8405,12 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 												cutscene.finish(true)
 											end))
 											table.insert(cutscene.connections, s.Ended:Connect(function()
+												if cutscene.switchingAudio then return end
 												s:SetAttribute("YUFinalFuturePredictionCutsceneStarted", nil)
 												cutscene.finish(false)
 											end))
 											table.insert(cutscene.connections, s.Stopped:Connect(function()
+												if cutscene.switchingAudio then return end
 												s:SetAttribute("YUFinalFuturePredictionCutsceneStarted", nil)
 												cutscene.finish(true)
 											end))
@@ -7676,36 +8426,25 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 												CustomReverb.Enabled = true
 											end
 								
+											FuturePredictionDimension.prepareNukem(s, cutscene)
+											FuturePredictionDimension.start(StandModel, CurrentPlayer, cutscene)
 											if CurrentPlayer == lpr then
-												-- Keep this skin's color effect separate from the other skin cutscenes.
-												local effect = Instance.new("ColorCorrectionEffect")
-												effect.Name = "YUFinalFuturePredictionCutscene"
-												effect.Saturation = 0
-												effect.TintColor = Color3.fromRGB(209, 209, 209)
-												effect.Parent = game:GetService("Lighting")
-												cutscene.effect = effect
-												cutscene.startTween = l__TweenService__5:Create(effect, TweenInfo.new(1.5, Enum.EasingStyle.Linear, Enum.EasingDirection.Out), {
-													Saturation = 0.1,
-													Brightness = 0.1,
-													Contrast = 1.03,
-													TintColor = modelData.fireColor,
-												})
-												cutscene.startTween:Play()
-												setDayNight(true)
 												soundService.AmbientReverb = Enum.ReverbType.Quarry
 												playTimeSound("Timestop", 4)
 												task.spawn(function()
 													if cutscene.finished or skinState.cutscene ~= cutscene then return end
 													local rootPart = StandModel:FindFirstChild("Torso")
 													if rootPart and rootPart:IsA("BasePart") then
-														local startPos = rootPart.Position + Vector3.new(0, 90, 0)
-														local endPos = rootPart.Position + Vector3.new(0, -10, 0)
-														CreateLightning(startPos, endPos, 4, 255, 5, 5)
+														CreateLightning(rootPart.Position + Vector3.new(0, 90, 0), rootPart.Position + Vector3.new(0, -10, 0), 4, 255, 5, 5)
 													end
 												end)
 												if SettingsScript.DisplayLogs then print("Send Signal | YU Final Future Prediction") end
 											end
-								
+											
+											-- Bound the session even when the replacement theme is looped.
+											task.delay(30, function()
+												if not cutscene.finished and skinState.cutscene == cutscene then cutscene.finish(true) end
+											end)
 											task.delay(1, function()
 												if cutscene.finished or skinState.cutscene ~= cutscene or not StandModel.Parent or not s.Parent or not s.IsPlaying then return end
 												if s:FindFirstChild("CutsenceMuda") then return end
@@ -7751,10 +8490,10 @@ function TranslationApp.Init(ui, launchArgs, appFolder)
 											s.SoundId = "rbxassetid://6191764144"
 											s.PlaybackSpeed = modelData.soundSpeed
 										elseif soundName == "Gun1" then
-											s.SoundId = "rbxassetid://116210184916893"
+											s.SoundId = "rbxassetid://112670894256968"
 											s.PlaybackSpeed = modelData.soundSpeed
 										elseif soundName == "Gun2" then
-											s.SoundId = "rbxassetid://124883416643368"
+											s.SoundId = "rbxassetid://71756181673627"
 											s.PlaybackSpeed = modelData.soundSpeed
 										else
 											s.PlaybackSpeed = modelData.customSounds[soundName]
