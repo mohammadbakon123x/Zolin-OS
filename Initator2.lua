@@ -1,7 +1,7 @@
 -- Creates the V2 system registries; installed app packages populate them later.
 local Initiator = {}
 local SETUP_VERSION = 2
-local MODULES_URL = "https://raw.githubusercontent.com/mohammadbakon123x/Zolin-OS/refs/heads/main/version-3/ZolinModules.lua"
+local MODULES_URL = "https://raw.githubusercontent.com/mohammadbakon123x/Zolin-OS/refs/heads/main/ZolinModules2.lua"
 local previousImports = {
 	ZolinMusic = {template = "ZolinMusic", id = "ZolinMusic", title = "Music Player", version = "3.0.0"},
 	Changelogs = {template = "Changelogs", id = "Changelogs", title = "Changelogs", version = "3.0.0"},
