@@ -1,3 +1,5 @@
+-- V3 keeps V2's ordered GitHub loader flow while preserving V3's separate
+-- Initiator and single bundled ZolinModules architecture.
 local RunService = game:GetService("RunService")
 local inStudio = RunService:IsStudio()
 if inStudio then
@@ -19,7 +21,7 @@ if existing then
 	return
 end
 
-local RAW_BASE = "https://raw.githubusercontent.com/mohammadbakon123x/Zolin-OS/refs/heads/main/version-3/"
+local RAW_BASE = "https://raw.githubusercontent.com/mohammadbakon123x/Zolin-OS/refs/heads/main/"
 local function loadRemote(path, ...)
 	local source = game:HttpGet(RAW_BASE .. path, true)
 	local chunk, compileError = loadstring(source)
@@ -31,7 +33,7 @@ local modules
 local ok, err = xpcall(function()
 	-- Match V2's loader: Initiator sets up the library and fetches ZolinModules.
 	-- Neither module is looked up in the local DataModel.
-	local initiator = loadRemote("Initiator.lua")
+	local initiator = loadRemote("Initiator2.lua")
 	assert(type(initiator) == "table" and type(initiator.Init) == "function", "Remote V3 Initiator must return a table with Init(options)")
 	modules = initiator.Init()
 	assert(type(modules) == "table" and type(modules.Shutdown) == "function", "Remote V3 startup did not return its facade")
