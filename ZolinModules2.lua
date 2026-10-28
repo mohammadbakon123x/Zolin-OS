@@ -3681,9 +3681,12 @@ function SettingsApp.Mount(ctx, ui, args, window, api)
 	UI.list(appList, 6)
 	local about = section("About", "About")
 	note(about, "ZolinOS  /  Version 3\nYour workspace, on desktop and mobile.")
+	local palette, theme = nil, nil
 	local function refresh()
-		if destroyed then return end
-		local palette, theme = ctx.Theme:Get(), ctx.Theme:GetTheme()
+		if destroyed then
+		palette, theme = nil, nil
+		return end
+		palette, theme = ctx.Theme:Get(), ctx.Theme:GetTheme()
 		for name, button in pairs(themeButtons) do
 			button.BackgroundColor3 = name == theme and palette.Accent or palette.SurfaceAlt
 			button.TextColor3 = name == theme and palette.AccentText or palette.Text
@@ -4568,7 +4571,7 @@ local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
 local Runtime = {Current = nil}
 
-local INITIATOR_URL = "https://raw.githubusercontent.com/mohammadbakon123x/Zolin-OS/refs/heads/main/version-3/Initiator.lua"
+local INITIATOR_URL = "https://raw.githubusercontent.com/mohammadbakon123x/Zolin-OS/refs/heads/main/Initiator2.lua"
 local function folder(parent, name)
 	local found = parent:FindFirstChild(name)
 	if found then return found end
