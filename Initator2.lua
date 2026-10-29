@@ -1,6 +1,5 @@
--- Creates the V2 system registries; installed app packages populate them later.
 local Initiator = {}
-local SETUP_VERSION = 2
+local SETUP_VERSION = 3
 local MODULES_URL = "https://raw.githubusercontent.com/mohammadbakon123x/Zolin-OS/refs/heads/main/ZolinModules2.lua"
 local previousImports = {
 	ZolinMusic = {template = "ZolinMusic", id = "ZolinMusic", title = "Music Player", version = "3.0.0"},
@@ -87,7 +86,9 @@ local function systemTemplate(parent, name, title)
 end
 local function createMainUI()
 	local MainUI = nil
-	MainUI = game.Players.LocalPlayer.PlayerGui:FindFirstChild("ZolinOS") or Instance.new("ScreenGui")
+	MainUI = game.Players.LocalPlayer.PlayerGui:FindFirstChild("ZolinOS")
+	if not MainUI then
+	MainUI = Instance.new("ScreenGui")
 	MainUI.Name = "ZolinOS"
 	MainUI.ClipToDeviceSafeArea = true
 	MainUI.SafeAreaCompatibility = Enum.SafeAreaCompatibility.FullscreenExtension
@@ -97,6 +98,9 @@ local function createMainUI()
 	MainUI.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 	MainUI.Parent = game.Players.LocalPlayer.PlayerGui
 	return MainUI
+	else
+		return MainUI
+	end
 end
 function Initiator.Setup(root)
 	root = root or createMainUI();
@@ -126,14 +130,8 @@ function Initiator.Init(options)
 		root.Parent = playerGui
 	end
 	Initiator.Setup(root)
-
-	local source = game:HttpGet(MODULES_URL, true)
-	local compiler = loadstring
-	assert(type(compiler) == "function", "This client does not expose loadstring")
-	local chunk, compileError = compiler(source, "@ZolinOS3/ZolinModules.lua")
-	assert(type(chunk) == "function", "Could not compile remote ZolinModules: " .. tostring(compileError))
-	local modules = chunk()
-	assert(type(modules) == "table" and type(modules.Init) == "function", "Remote ZolinModules did not return its facade")
+	local modules = loadstring(game:HttpGet(MODULES_URL, true))()
+	assert(type(modules) == "table" and type(modules.Init) == "function", "Remote ZolinModules2 did not return its facade")
 	if type(modules.BindRoot) == "function" then assert(modules.BindRoot(root), "Could not bind V3 library root") end
 	local initOptions = table.clone(options or {})
 	initOptions.RootFolder, initOptions.Initiator = root, Initiator
