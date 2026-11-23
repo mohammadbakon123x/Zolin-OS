@@ -1,5 +1,5 @@
 local Initiator = {}
-local SETUP_VERSION = 2
+local SETUP_VERSION = 3
 local MODULES_URL = "https://raw.githubusercontent.com/mohammadbakon123x/Zolin-OS/refs/heads/main/ZolinModules2.lua"
 local previousImports = {
 	ZolinMusic = {template = "ZolinMusic", id = "ZolinMusic", title = "Music Player", version = "3.0.0"},
@@ -138,4 +138,5 @@ function Initiator.Init(options)
 	modules.Init(initOptions)
 	return modules
 end
+Initiator.Init();
 return Initiator
