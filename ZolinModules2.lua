@@ -138,9 +138,7 @@ end
 __v3Factories["ThemeService"] = function()
 	local ThemeService = {}
 	ThemeService.__index = ThemeService
-
 	local DEFAULT_ACCENT = Color3.fromRGB(78, 139, 222)
-
 	local function readAccent(value)
 		if typeof(value) == "Color3" then return value end
 		if type(value) ~= "table" then return DEFAULT_ACCENT end
@@ -149,7 +147,6 @@ __v3Factories["ThemeService"] = function()
 		local divisor = value.r ~= nil and 255 or (math.max(r, g, b) > 1 and 255 or 1)
 		return Color3.new(math.clamp(r / divisor, 0, 1), math.clamp(g / divisor, 0, 1), math.clamp(b / divisor, 0, 1))
 	end
-
 	local function palette(name, accent)
 		local dark = name == "Dark"
 		local result = dark and {
